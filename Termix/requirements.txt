@@ -1,0 +1,8 @@
+discord.py
+python-dotenv
+aiosqlite
+aiohttp
+httpx
+fastapi
+uvicorn
+python-multipart
