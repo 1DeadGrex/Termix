@@ -1,4 +1,4 @@
-# api.py
+# api.py — FastAPI web layer, runs in the same process as the bot.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,18 +16,11 @@ from utils import database as db
 
 load_dotenv()
 
-# ─────────────────────────────────────────────
-# Config
-# ─────────────────────────────────────────────
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
 DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/b73rAp5Sug")
 
-
-# ─────────────────────────────────────────────
-# Bot reference
-# ─────────────────────────────────────────────
 _bot = None
 
 def set_bot(bot_instance):
@@ -36,9 +29,6 @@ def set_bot(bot_instance):
     print(f"✅ API: bot reference registered ({type(bot_instance).__name__})")
 
 
-# ─────────────────────────────────────────────
-# Lifespan
-# ─────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.init_db()
@@ -63,7 +53,11 @@ app.add_middleware(
 # ─────────────────────────────────────────────
 @app.get("/")
 async def root():
-    return {"status": "ok", "service": "CS2 Tournament API", "bot_ready": _bot is not None}
+    return {
+        "status": "ok",
+        "service": "CS2 Tournament API",
+        "bot_ready": _bot is not None,
+    }
 
 
 # ─────────────────────────────────────────────
@@ -71,7 +65,6 @@ async def root():
 # ─────────────────────────────────────────────
 @app.get("/api/players")
 async def list_players():
-    # db helper now returns dicts already
     return await db.get_all_players()
 
 
@@ -92,7 +85,7 @@ async def list_matches(limit: int = Query(50, ge=1, le=200)):
 
 
 # ─────────────────────────────────────────────
-# Leaderboard (works with Turso via db helper)
+# Leaderboard
 # ─────────────────────────────────────────────
 @app.get("/api/leaderboard")
 async def leaderboard(guild_id: Optional[int] = None, limit: int = 20):
@@ -122,11 +115,10 @@ async def register(payload: RegisterPayload):
 
 
 # ─────────────────────────────────────────────
-# Ban check (works with Turso via db helper)
+# Ban lookup
 # ─────────────────────────────────────────────
 @app.get("/api/bans/{user_id}")
 async def check_ban(user_id: int):
-    # Requires `db.get_ban(user_id)` in utils/database.py — see note below
     ban = await db.get_ban(user_id)
     if not ban:
         raise HTTPException(status_code=404, detail="Not banned")
@@ -252,7 +244,11 @@ async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
             persona = _xml_extract(xml, "steamID")
             avatar = _xml_extract(xml, "avatarFull")
             if persona:
-                return {"personaname": persona, "avatarfull": avatar or "", "steamid": steam_id}
+                return {
+                    "personaname": persona,
+                    "avatarfull": avatar or "",
+                    "steamid": steam_id,
+                }
     except Exception as e:
         print(f"[steam] XML fetch failed: {e}")
 
@@ -270,7 +266,7 @@ def _xml_extract(xml: str, tag: str) -> Optional[str]:
 
 
 # ─────────────────────────────────────────────
-# JSON fallback success
+# JSON success fallback
 # ─────────────────────────────────────────────
 @app.get("/auth/success")
 async def auth_success():
@@ -278,7 +274,7 @@ async def auth_success():
 
 
 # ─────────────────────────────────────────────
-# Shared VHS page (used for success AND errors)
+# Shared VHS page (success AND error)
 # ─────────────────────────────────────────────
 def _vhs_page(
     *,
@@ -294,7 +290,12 @@ def _vhs_page(
     cta_href: str = "",
     extra_note: str = "",
 ) -> str:
-    """One HTML template for every response. Success or error."""
+    esc_avatar = html_lib.escape(avatar, quote=True)
+    esc_name = html_lib.escape(display_name)
+    esc_steam = html_lib.escape(steam_id) if steam_id else "NOT-LINKED"
+    is_err = status_class == "status-err"
+    result_label = "RESULT: FAIL" if is_err else "RESULT: PASS"
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -388,7 +389,7 @@ a{{color:var(--amber)}}
   <div class="panel">
     <div class="panel-h">
       <span class="sq"></span>REGISTER.EXE — CLEARANCE SCAN
-      <span class="right">{'RESULT: PASS' if status_class != 'status-err' else 'RESULT: FAIL'}</span>
+      <span class="right">{result_label}</span>
     </div>
     <div class="marquee" aria-hidden="true"><div class="mq-track">
       <span class="hot">★★★ STEAM LINK ESTABLISHED ★★★</span><span>&nbsp;OPERATIVE VERIFIED · CLEARANCE GRANTED ·&nbsp;</span><span class="hot">GLHF ★</span><span>&nbsp;·&nbsp;</span>
@@ -396,19 +397,19 @@ a{{color:var(--amber)}}
     </div></div>
 
     <div class="body">
-      <div class="granted{' err' if status_class == 'status-err' else ''}">{heading}</div>
+      <div class="granted{' err' if is_err else ''}">{heading}</div>
       <div class="sub">{sub}</div>
 
       <div class="dossier">
         <div class="frame">
-          <img id="avatar" alt="Steam avatar" data-avatar="{html_lib.escape(avatar, quote=True)}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230a0906'/%3E%3Crect x='5' y='2' width='6' height='7' fill='%23ffb000'/%3E%3Crect x='6' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='9' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='7' y='6' width='2' height='1' fill='%230a0906'/%3E%3Crect x='3' y='10' width='10' height='6' fill='%237a5c0d'/%3E%3C/svg%3E">
+          <img id="avatar" alt="Steam avatar" data-avatar="{esc_avatar}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230a0906'/%3E%3Crect x='5' y='2' width='6' height='7' fill='%23ffb000'/%3E%3Crect x='6' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='9' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='7' y='6' width='2' height='1' fill='%230a0906'/%3E%3Crect x='3' y='10' width='10' height='6' fill='%237a5c0d'/%3E%3C/svg%3E">
           <div class="f-scan"></div>
           <span class="f-tag" id="camTag">ID·CAM</span>
         </div>
         <div class="idrows">
-          <div class="kv"><b>CODENAME</b><span class="val who">{html_lib.escape(display_name)}</span></div>
-          <div class="kv"><b>STEAM ID64</b><span class="idrow"><span class="val" id="sidVal">{html_lib.escape(steam_id) if steam_id else "NOT-LINKED"}</span><button class="mini" id="copyBtn" type="button">COPY</button></span></div>
-          <div class="kv"><b>STATUS</b><span class="val {'ok' if status_class != 'status-err' else 'bad'}">{'VERIFIED ✓' if status_class != 'status-err' else 'FAILED ✗'}</span></div>
+          <div class="kv"><b>CODENAME</b><span class="val who">{esc_name}</span></div>
+          <div class="kv"><b>STEAM ID64</b><span class="idrow"><span class="val" id="sidVal">{esc_steam}</span><button class="mini" id="copyBtn" type="button">COPY</button></span></div>
+          <div class="kv"><b>STATUS</b><span class="val {'bad' if is_err else 'ok'}">{'FAILED ✗' if is_err else 'VERIFIED ✓'}</span></div>
         </div>
       </div>
 
@@ -489,7 +490,7 @@ a{{color:var(--amber)}}
 
 
 # ─────────────────────────────────────────────
-# Success page (VHS landing)
+# Success route
 # ─────────────────────────────────────────────
 @app.get("/register-success", response_class=HTMLResponse)
 async def register_success(
@@ -512,7 +513,7 @@ async def register_success(
 
 
 # ─────────────────────────────────────────────
-# Error page (same VHS style)
+# Error route (same VHS style)
 # ─────────────────────────────────────────────
 def _vhs_error(title: str, message: str, status_code: int = 400):
     return HTMLResponse(
