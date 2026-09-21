@@ -1,22 +1,38 @@
-# utils/database.py — Turso (hosted SQLite) version
+# utils/database.py — Turso (hosted SQLite over HTTP)
 import os
 import libsql_client
 
-TURSO_URL = os.getenv("TURSO_URL", "https://termix-sk11led-1deadgrex.aws-ap-south-1.turso.io")
-TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJMVVdma3JWMEVmR2F2QzRPclVtTEdnIiwib3JnX2lkIjoxMDAwMjUwNDI5fQ.H28I5BbTgMt166PLSwqdHBFHAeyOX5zm6Na6t6igsmVuqv8-gdRFbGOZvbh2BxP21QkRZA4g3civ1Y5NU9SEAQ")
+# ── Config ──
+_raw_url = os.getenv("TURSO_URL", "https://termix-sk11led-1deadgrex.aws-ap-south-1.turso.io")
+TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOWVlZnJWX0VmR2F2QzRPclVtTEdnIiwib3JnX2lkIjoxMDAwMjUwNDI5fQ.iLLvapn6248Y5WHvVYMiEVjL-nlBWOUoHHN_mlg2gkN0BGibEsThMdisWIpIWUvkee8wX_Xy60ztjSUUDah9CA")
 
-# Keep this exported for backward compatibility (api.py may reference it)
-DB_PATH = "turso"
+# Force HTTP transport (WSS is often blocked by bot hosts)
+TURSO_URL = (
+    _raw_url.replace("libsql://", "https://")
+             .replace("wss://", "https://")
+             .rstrip("/")
+)
+
+# ── Startup diagnostics ──
+print(f"🗄️  TURSO_URL raw  : {_raw_url!r}")
+print(f"🗄️  TURSO_URL used : {TURSO_URL!r}")
+print(f"🗄️  TURSO_TOKEN    : {'set (' + str(len(TURSO_TOKEN)) + ' chars)' if TURSO_TOKEN else 'MISSING'}")
 
 if not TURSO_URL or not TURSO_TOKEN:
-    print("⚠️  TURSO_URL / TURSO_TOKEN not set — DB will fail")
+    print("⚠️  Turso credentials missing — database calls will fail.")
+
+# Keep for backward-compat with old code that imports DB_PATH
+DB_PATH = TURSO_URL or "turso"
 
 
 def _client():
-    """Create a fresh libsql client. Cheap — HTTP-based."""
+    """Create a fresh libsql HTTP client. Cheap — no persistent connection."""
     return libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN)
 
 
+# ─────────────────────────────────────────────
+# Init — create tables if missing
+# ─────────────────────────────────────────────
 async def init_db():
     async with _client() as c:
         await c.execute('''CREATE TABLE IF NOT EXISTS players (
@@ -49,7 +65,9 @@ async def init_db():
         )''')
 
 
-# ── Players ──
+# ─────────────────────────────────────────────
+# Players
+# ─────────────────────────────────────────────
 async def add_player(user_id, discord_name, steam_id, verified=False):
     async with _client() as c:
         await c.execute(
@@ -57,9 +75,9 @@ async def add_player(user_id, discord_name, steam_id, verified=False):
                VALUES (?, ?, ?, ?)
                ON CONFLICT(user_id) DO UPDATE SET
                    discord_name = excluded.discord_name,
-                   steam_id = excluded.steam_id,
-                   verified = excluded.verified''',
-            [user_id, discord_name, steam_id, int(bool(verified))]
+                   steam_id     = excluded.steam_id,
+                   verified     = excluded.verified''',
+            [user_id, discord_name, steam_id, int(bool(verified))],
         )
 
 
@@ -67,17 +85,18 @@ async def get_player(user_id):
     async with _client() as c:
         result = await c.execute(
             'SELECT user_id, discord_name, steam_id, verified, registered_at '
-            'FROM players WHERE user_id = ?', [user_id]
+            'FROM players WHERE user_id = ?',
+            [user_id],
         )
         if not result.rows:
             return None
-        row = result.rows[0]
+        r = result.rows[0]
         return {
-            "user_id": row[0],
-            "discord_name": row[1],
-            "steam_id": row[2],
-            "verified": bool(row[3]),
-            "registered_at": row[4],
+            "user_id": r[0],
+            "discord_name": r[1],
+            "steam_id": r[2],
+            "verified": bool(r[3]),
+            "registered_at": r[4],
         }
 
 
@@ -102,13 +121,15 @@ async def delete_player(user_id):
         await c.execute('DELETE FROM players WHERE user_id = ?', [user_id])
 
 
-# ── Matches ──
+# ─────────────────────────────────────────────
+# Matches
+# ─────────────────────────────────────────────
 async def add_match(winner_id, loser_id, score):
     async with _client() as c:
         await c.execute(
             'INSERT INTO matches (player1_id, player2_id, winner_id, score) '
             'VALUES (?, ?, ?, ?)',
-            [winner_id, loser_id, winner_id, score]
+            [winner_id, loser_id, winner_id, score],
         )
 
 
@@ -116,7 +137,8 @@ async def get_recent_matches(limit=50):
     async with _client() as c:
         result = await c.execute(
             'SELECT id, player1_id, player2_id, winner_id, score, played_at '
-            'FROM matches ORDER BY played_at DESC LIMIT ?', [limit]
+            'FROM matches ORDER BY played_at DESC LIMIT ?',
+            [limit],
         )
         return [
             {
@@ -138,17 +160,20 @@ async def get_match_history(user_id, limit=10):
                FROM matches
                WHERE player1_id = ? OR player2_id = ?
                ORDER BY played_at DESC LIMIT ?''',
-            [user_id, user_id, limit]
+            [user_id, user_id, limit],
         )
         return [tuple(r) for r in result.rows]
 
 
-# ── XP / Leaderboard ──
+# ─────────────────────────────────────────────
+# XP / Leaderboard
+# ─────────────────────────────────────────────
 async def get_leaderboard(guild_id, limit=20):
     async with _client() as c:
         result = await c.execute(
             'SELECT user_id, xp, level FROM xp WHERE guild_id = ? '
-            'ORDER BY xp DESC LIMIT ?', [guild_id, limit]
+            'ORDER BY xp DESC LIMIT ?',
+            [guild_id, limit],
         )
         return [
             {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2]}
@@ -160,7 +185,8 @@ async def get_global_leaderboard(limit=10):
     async with _client() as c:
         result = await c.execute(
             'SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level '
-            'FROM xp GROUP BY user_id ORDER BY total_xp DESC LIMIT ?', [limit]
+            'FROM xp GROUP BY user_id ORDER BY total_xp DESC LIMIT ?',
+            [limit],
         )
         return [
             {"rank": i, "user_id": r[0], "xp": r[1] or 0, "level": r[2] or 1}
@@ -168,7 +194,6 @@ async def get_global_leaderboard(limit=10):
         ]
 
 
-# ── XP writes (used by levels cog) ──
 async def add_xp(user_id, guild_id, amount=10):
     async with _client() as c:
         await c.execute(
@@ -176,50 +201,54 @@ async def add_xp(user_id, guild_id, amount=10):
                VALUES (?, ?, ?)
                ON CONFLICT(user_id, guild_id)
                DO UPDATE SET xp = xp + ?''',
-            [user_id, guild_id, amount, amount]
+            [user_id, guild_id, amount, amount],
         )
         result = await c.execute(
             'SELECT xp FROM xp WHERE user_id = ? AND guild_id = ?',
-            [user_id, guild_id]
+            [user_id, guild_id],
         )
         xp = result.rows[0][0] if result.rows else amount
         level = int((xp / 100) ** 0.5)
         await c.execute(
             'UPDATE xp SET level = ? WHERE user_id = ? AND guild_id = ?',
-            [level, user_id, guild_id]
+            [level, user_id, guild_id],
         )
         return xp, level
 
 
-# ── Bans ──
+# ─────────────────────────────────────────────
+# Bans
+# ─────────────────────────────────────────────
 async def add_ban(user_id, reason, banned_by):
     async with _client() as c:
         await c.execute(
             '''INSERT INTO bans (user_id, reason, banned_by)
                VALUES (?, ?, ?)
                ON CONFLICT(user_id) DO UPDATE SET
-                   reason = excluded.reason,
+                   reason   = excluded.reason,
                    banned_by = excluded.banned_by''',
-            [user_id, reason, banned_by]
+            [user_id, reason, banned_by],
         )
 
 
 async def remove_ban(user_id):
     async with _client() as c:
         await c.execute('DELETE FROM bans WHERE user_id = ?', [user_id])
-        
+
+
 async def get_ban(user_id):
     async with _client() as c:
         result = await c.execute(
-            "SELECT user_id, reason, banned_by, banned_at FROM bans WHERE user_id = ?",
-            [user_id]
+            'SELECT user_id, reason, banned_by, banned_at '
+            'FROM bans WHERE user_id = ?',
+            [user_id],
         )
         if not result.rows:
             return None
-        row = result.rows[0]
+        r = result.rows[0]
         return {
-            "user_id": row[0],
-            "reason": row[1],
-            "banned_by": row[2],
-            "banned_at": row[3],
+            "user_id": r[0],
+            "reason": r[1],
+            "banned_by": r[2],
+            "banned_at": r[3],
         }
