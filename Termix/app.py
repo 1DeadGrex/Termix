@@ -1,6 +1,4 @@
-# app.py — bot-hosting.net entry point
-# Runs Discord bot + FastAPI in one process.
-
+# app.py — bot-hosting.net entry point (Discord bot + FastAPI in one process)
 import asyncio
 import os
 import sys
@@ -12,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Imports with clear errors ──
+# ── Imports with clear error messages ──
 try:
     import api
 except Exception as e:
@@ -35,7 +33,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Give the API a reference to the bot (enables /api/discord/{id})
+# Give the API a live reference to the bot (enables /api/discord/{id})
 api.set_bot(bot)
 
 
@@ -70,10 +68,9 @@ async def rotate_presence():
     if rotate_presence.current_loop % 4 == 3:
         try:
             players = await db.get_all_players()
-            count = len(players)
             activity = discord.Activity(
                 type=discord.ActivityType.watching,
-                name=f"{count} players registered",
+                name=f"{len(players)} players registered",
             )
         except Exception:
             activity = discord.Game(name="Counter-Strike 2")
@@ -122,7 +119,7 @@ async def on_ready():
 
 
 # ─────────────────────────────────────────────
-# Run bot
+# Run Discord bot
 # ─────────────────────────────────────────────
 async def run_bot():
     async with bot:
@@ -136,7 +133,7 @@ async def run_bot():
 
 
 # ─────────────────────────────────────────────
-# Run API
+# Run FastAPI
 # ─────────────────────────────────────────────
 async def run_api():
     port = int(os.getenv("SERVER_PORT") or os.getenv("PORT") or "8000")
