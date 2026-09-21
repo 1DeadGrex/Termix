@@ -207,3 +207,19 @@ async def add_ban(user_id, reason, banned_by):
 async def remove_ban(user_id):
     async with _client() as c:
         await c.execute('DELETE FROM bans WHERE user_id = ?', [user_id])
+        
+async def get_ban(user_id):
+    async with _client() as c:
+        result = await c.execute(
+            "SELECT user_id, reason, banned_by, banned_at FROM bans WHERE user_id = ?",
+            [user_id]
+        )
+        if not result.rows:
+            return None
+        row = result.rows[0]
+        return {
+            "user_id": row[0],
+            "reason": row[1],
+            "banned_by": row[2],
+            "banned_at": row[3],
+        }
