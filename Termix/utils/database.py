@@ -4,7 +4,7 @@ import libsql_client
 
 # ── Config ──
 _raw_url = os.getenv("TURSO_URL", "https://termix-sk11led-1deadgrex.aws-ap-south-1.turso.io")
-TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOWVlZnJWX0VmR2F2QzRPclVtTEdnIiwib3JnX2lkIjoxMDAwMjUwNDI5fQ.iLLvapn6248Y5WHvVYMiEVjL-nlBWOUoHHN_mlg2gkN0BGibEsThMdisWIpIWUvkee8wX_Xy60ztjSUUDah9CA")
+TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJnaWQiOiJhY2I3YmU1NC1jMTgxLTQzZDAtOTc2MS1mYTcwNTYxOGZkZjUiLCJpYXQiOjE3ODk5Njk5MDIsImtpZCI6IlppQ1d2ZDFMMThsRXJlRVo5UFdubDJsRUdGd21YMFdfV0s4ZjR2WW1md28iLCJyaWQiOiI5YzYyMjcxNC0yNWQ2LTQxYTYtYTE1YS05YzZmMTc2ODZiNzcifQ.RKK8hu0AsKHedxca8XUOMIJEPHGLrKOQwEUOmhcp3PnB70ZFO3q3KNYzV9P-CcRcI6h8FG7KrWSSIMHmmf_uAg")
 
 # Force HTTP transport (WSS is often blocked by bot hosts)
 TURSO_URL = (
