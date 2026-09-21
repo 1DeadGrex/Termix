@@ -2,8 +2,8 @@
 import os
 import libsql_client
 
-TURSO_URL = os.getenv("TURSO_URL", "")
-TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
+TURSO_URL = os.getenv("TURSO_URL", "https://termix-sk11led-1deadgrex.aws-ap-south-1.turso.io")
+TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJMVVdma3JWMEVmR2F2QzRPclVtTEdnIiwib3JnX2lkIjoxMDAwMjUwNDI5fQ.H28I5BbTgMt166PLSwqdHBFHAeyOX5zm6Na6t6igsmVuqv8-gdRFbGOZvbh2BxP21QkRZA4g3civ1Y5NU9SEAQ")
 
 # Keep this exported for backward compatibility (api.py may reference it)
 DB_PATH = "turso"
