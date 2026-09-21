@@ -1,374 +1,268 @@
-# api.py
+"""
+api.py — Termix web API.
+Runs in the SAME process as the Discord bot (app.py). The bot registers
+itself here via set_bot() so endpoints can query live Discord state.
+"""
+
+import os
+import json
+import asyncio
+import logging
+import urllib.parse
+import urllib.request
 from contextlib import asynccontextmanager
+from typing import Optional
+
+import aiosqlite
+import discord
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, HTMLResponse
-from pydantic import BaseModel
-from typing import Optional
-from urllib.parse import quote
-import httpx
-import os
-import re
-import aiosqlite
-from dotenv import load_dotenv
+from fastapi.responses import HTMLResponse, RedirectResponse
 
-from utils import database as db
-
-load_dotenv()
-
-# ─────────────────────────────────────────────
-# Config
-# ─────────────────────────────────────────────
-STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
-BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
-FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/b73rAp5Sug")
-
-
-# ─────────────────────────────────────────────
-# Bot reference (set by app.py at startup)
-# ─────────────────────────────────────────────
-_bot = None
-
-def set_bot(bot_instance):
-    """Called from app.py to give the API access to the running Discord bot."""
-    global _bot
-    _bot = bot_instance
-
-
-# ─────────────────────────────────────────────
-# Lifespan (startup + shutdown)
-# ─────────────────────────────────────────────
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await db.init_db()
-    print("✅ API started, DB initialized")
-    yield
-    print("🛑 API shutting down")
-
-
-app = FastAPI(
-    title="CS2 Tournament API",
-    version="1.0.0",
-    lifespan=lifespan
+from utils.database import (
+    DB_PATH,
+    init_db,
+    add_player,
+    get_player,
+    get_all_players,
+    get_recent_matches,
+    get_leaderboard,
+    get_global_leaderboard,
 )
 
-# ─────────────────────────────────────────────
-# CORS
-# ─────────────────────────────────────────────
-app.add_middleware(
+log = logging.getLogger("termix.api")
+
+# ── Bot handle ──
+_bot = None
+
+
+def set_bot(bot) -> None:
+    global _bot
+    _bot = bot
+    log.info("API: bot reference registered (%s)", type(bot).__name__)
+
+
+# ── Lifespan ──
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    log.info("API: database ready at %s", DB_PATH)
+    yield
+
+
+fastapi_app = FastAPI(title="Termix API", version="2.1", lifespan=lifespan)
+app = fastapi_app  # alias so `uvicorn api:app` also works
+
+fastapi_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: tighten to ["https://yoursite.com"] in production
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ─────────────────────────────────────────────
-# Health check
-# ─────────────────────────────────────────────
-@app.get("/")
-async def root():
-    return {"status": "ok", "service": "CS2 Tournament API"}
+# ── Health ──
+@fastapi_app.get("/")
+async def health():
+    return {"status": "ok", "bot_ready": _bot is not None}
 
 
-# ─────────────────────────────────────────────
-# Players
-# ─────────────────────────────────────────────
-@app.get("/api/players")
+# ── Players ──
+@fastapi_app.get("/api/players")
 async def list_players():
-    rows = await db.get_all_players()
-    return [
-        {
-            "user_id": r[0],
-            "discord_name": r[1],
-            "steam_id": r[2],
-            "verified": bool(r[3]) if len(r) > 3 else False,
-        }
-        for r in rows
-    ]
+    return await get_all_players()
 
 
-@app.get("/api/players/{user_id}")
-async def get_player(user_id: int):
-    row = await db.get_player(user_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Player not found")
-    return {
-        "user_id": row[0],
-        "discord_name": row[1],
-        "steam_id": row[2],
-        "verified": bool(row[3]),
-        "registered_at": row[4] if len(row) > 4 else None,
-    }
+@fastapi_app.get("/api/players/{user_id}")
+async def read_player(user_id: int):
+    p = await get_player(user_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="player not found")
+    return p
 
 
-# ─────────────────────────────────────────────
-# Matches
-# ─────────────────────────────────────────────
-@app.get("/api/matches")
-async def list_matches(limit: int = Query(50, ge=1, le=200)):
-    rows = await db.get_recent_matches(limit)
-    return [
-        {
-            "id": r[0],
-            "player1_id": r[1],
-            "player2_id": r[2],
-            "winner_id": r[3],
-            "score": r[4],
-            "played_at": r[5],
-        }
-        for r in rows
-    ]
+@fastapi_app.post("/api/register")
+async def manual_register(user_id: int, discord_name: str, steam_id: str, verified: int = 0):
+    await add_player(user_id, discord_name, steam_id, verified)
+    return {"status": "ok", "user_id": user_id}
 
 
-# ─────────────────────────────────────────────
-# Leaderboard (guild_id optional)
-# ─────────────────────────────────────────────
-@app.get("/api/leaderboard")
-async def leaderboard(guild_id: Optional[int] = None, limit: int = 20):
-    """
-    Leaderboard endpoint.
-    - With guild_id: top players in that guild.
-    - Without: global top — XP summed across all guilds per user.
-    """
-    if guild_id:
-        rows = await db.get_leaderboard(guild_id, limit)
-    else:
-        # Global top — sum XP across all guilds per user
-        async with aiosqlite.connect(db.DB_PATH) as conn:
-            async with conn.execute(
-                "SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level "
-                "FROM xp GROUP BY user_id ORDER BY total_xp DESC LIMIT ?",
-                (limit,)
-            ) as cur:
-                rows = await cur.fetchall()
-
-    return [
-        {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2]}
-        for i, r in enumerate(rows, 1)
-    ]
+# ── Matches ──
+@fastapi_app.get("/api/matches")
+async def list_matches(limit: int = Query(default=50, le=100)):
+    return await get_recent_matches(limit)
 
 
-# ─────────────────────────────────────────────
-# Manual register (optional — used by website)
-# ─────────────────────────────────────────────
-class RegisterPayload(BaseModel):
-    user_id: int
-    discord_name: str
-    steam_id: str
+# ── Leaderboard (guild optional) ──
+@fastapi_app.get("/api/leaderboard")
+async def leaderboard(
+    guild_id: Optional[int] = Query(default=None),
+    limit: int = Query(default=10, le=50),
+):
+    if guild_id is not None:
+        return await get_leaderboard(guild_id, limit)
+    return await get_global_leaderboard(limit)
 
 
-@app.post("/api/register")
-async def register(payload: RegisterPayload):
-    await db.add_player(
-        user_id=payload.user_id,
-        discord_name=payload.discord_name,
-        steam_id=payload.steam_id,
-        verified=False,
-    )
-    return {"status": "registered", "user_id": payload.user_id}
-
-
-# ─────────────────────────────────────────────
-# Ban check — used by frontend clearance scan
-# ─────────────────────────────────────────────
-@app.get("/api/bans/{user_id}")
-async def check_ban(user_id: int):
-    """
-    Check if a user is banned.
-    404 if not banned (frontend treats this as 'clear').
-    200 with ban record if banned.
-    """
-    async with aiosqlite.connect(db.DB_PATH) as conn:
-        async with conn.execute(
-            "SELECT user_id, reason, banned_by, banned_at FROM bans WHERE user_id = ?",
-            (user_id,)
-        ) as cur:
-            row = await cur.fetchone()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Not banned")
-
-    return {
-        "user_id": row[0],
-        "reason": row[1],
-        "banned_by": row[2],
-        "banned_at": row[3],
-    }
-
-
-# ─────────────────────────────────────────────
-# Discord presence — is the user in the server?
-# ─────────────────────────────────────────────
-@app.get("/api/discord/{user_id}")
-async def discord_presence(user_id: int, guild_id: Optional[int] = None):
-    """
-    Check if a Discord user is a member of the guild the bot is in.
-    Returns {"in_guild": true/false, ...}.
-    """
-    if _bot is None:
-        raise HTTPException(status_code=503, detail="Bot not available")
-
-    guild = None
-    if guild_id:
-        guild = _bot.get_guild(guild_id)
-    else:
-        guild = _bot.guilds[0] if _bot.guilds else None
-
-    if guild is None:
-        raise HTTPException(status_code=503, detail="Bot not in any guild")
-
-    member = guild.get_member(user_id)
-    if member is None:
-        # Cache miss — try a live fetch (requires Server Members intent)
-        try:
-            member = await guild.fetch_member(user_id)
-        except Exception:
-            member = None
-
-    return {
-        "in_guild": member is not None,
-        "user_id": user_id,
-        "guild_id": guild.id,
-    }
-
-
-# ─────────────────────────────────────────────
-# Steam OpenID — Step 1: redirect to Steam
-# ─────────────────────────────────────────────
-@app.get("/auth/steam")
-async def steam_login(discord_id: int):
-    return_to = f"{BASE_URL}/auth/steam/callback?discord_id={discord_id}"
-    steam_url = (
-        "https://steamcommunity.com/openid/login"
-        "?openid.ns=http://specs.openid.net/auth/2.0"
-        "&openid.mode=checkid_setup"
-        f"&openid.return_to={return_to}"
-        f"&openid.realm={BASE_URL}"
-        "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select"
-        "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select"
-    )
-    return RedirectResponse(steam_url)
-
-
-# ─────────────────────────────────────────────
-# Steam OpenID — Step 2: handle callback
-# ─────────────────────────────────────────────
-@app.get("/auth/steam/callback")
-async def steam_callback(discord_id: int, request: Request):
-    params = dict(request.query_params)
-    params["openid.mode"] = "check_authentication"
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.post(
-            "https://steamcommunity.com/openid/login",
-            data=params,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+# ── Discord presence ──
+@fastapi_app.get("/api/discord/{user_id}")
+async def discord_presence(user_id: int):
+    if _bot is None or not getattr(_bot, "is_ready", lambda: False)():
+        raise HTTPException(
+            status_code=503,
+            detail="bot not ready yet — still connecting, retry in a few seconds",
         )
 
-    if "is_valid:true" not in r.text:
-        raise HTTPException(status_code=400, detail="Steam authentication failed")
+    for guild in _bot.guilds:
+        member = guild.get_member(user_id)
+        if member is None:
+            try:
+                member = await guild.fetch_member(user_id)
+            except discord.NotFound:
+                member = None
+            except discord.HTTPException as e:
+                log.warning("fetch_member(%s) failed: %s", user_id, e)
+                member = None
+        if member is not None:
+            return {"in_guild": True, "user_id": user_id, "guild_id": guild.id}
 
-    claimed_id = params.get("openid.claimed_id", "")
-    steam_id64 = claimed_id.rsplit("/", 1)[-1]
+    return {"in_guild": False}
 
-    if not steam_id64.isdigit():
-        raise HTTPException(status_code=400, detail="Invalid Steam ID")
 
-    # Fetch profile (works even without API key — XML fallback)
-    profile = await fetch_steam_profile(steam_id64)
-    persona = (profile or {}).get("personaname") or "Unknown"
-    avatar = (profile or {}).get("avatarfull") or ""
+# ── Ban lookup ──
+@fastapi_app.get("/api/bans/{user_id}")
+async def ban_lookup(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT reason, banned_by, banned_at FROM bans "
+            "WHERE user_id = ? ORDER BY banned_at DESC LIMIT 1",
+            (user_id,),
+        ) as cur:
+            row = await cur.fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="no ban on record")
+    return {
+        "reason": row["reason"],
+        "banned_by": row["banned_by"],
+        "banned_at": row["banned_at"],
+    }
 
-    print(f"[steam] linked {discord_id} → {steam_id64} ({persona})")
 
-    await db.add_player(
-        user_id=discord_id,
-        discord_name=persona if persona != "Unknown" else f"Steam: {steam_id64}",
-        steam_id=steam_id64,
-        verified=True,
+# ── Steam OpenID ──
+STEAM_OPENID = "https://steamcommunity.com/openid/login"
+
+
+def _base_url() -> str:
+    return os.getenv("BASE_URL", "http://localhost:8000").rstrip("/")
+
+
+def _page(title: str, msg: str, ok: bool = False) -> str:
+    color = "#57e389" if ok else "#ff5238"
+    return f"""<!doctype html><html><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>TERMIX — {title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel=stylesheet>
+<style>body{{background:#0b0907;color:#ffb000;font:22px/1.6 VT323,monospace;display:grid;place-items:center;min-height:100vh;margin:0;padding:18px}}
+div{{border:3px solid {color};padding:26px 32px;box-shadow:8px 8px 0 #000;max-width:90vw}}
+h1{{font:14px 'Press Start 2P',monospace;color:{color};margin:0 0 14px}}</style></head>
+<body><div><h1>{title}</h1><p>{msg}</p></div></body></html>"""
+
+
+async def fetch_steam_profile(steam_id: str) -> dict:
+    key = os.getenv("STEAM_API_KEY", "")
+    if not key:
+        return {}
+
+    url = (
+        "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
+        f"?key={key}&steamids={steam_id}"
     )
 
-    # Redirect to styled success page, passing name + avatar via query params
-    qp = f"steam_id={steam_id64}&name={quote(persona)}"
-    if avatar:
-        qp += f"&avatar={quote(avatar, safe='')}"
+    def _get() -> dict:
+        with urllib.request.urlopen(url, timeout=10) as r:
+            return json.loads(r.read().decode("utf-8", "replace"))
 
-    return RedirectResponse(f"{BASE_URL}/register-success?{qp}")
-
-
-# ─────────────────────────────────────────────
-# Steam profile fetch — API key optional
-# ─────────────────────────────────────────────
-async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
-    """
-    Fetch Steam profile data.
-    1. If STEAM_API_KEY is set → official Web API (JSON).
-    2. Otherwise (or if API fails) → public XML profile (no key required).
-    """
-    # 1) Official API (only if key present)
-    if STEAM_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                r = await client.get(
-                    "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/",
-                    params={"key": STEAM_API_KEY, "steamids": steam_id},
-                )
-            players = r.json().get("response", {}).get("players", [])
-            if players:
-                return players[0]
-        except Exception as e:
-            print(f"[steam] Web API fetch failed: {e}")
-
-    # 2) Public XML fallback (no key)
     try:
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            r = await client.get(
-                f"https://steamcommunity.com/profiles/{steam_id}/?xml=1",
-                headers={"User-Agent": "Mozilla/5.0 (TermixBot/1.0)"},
-            )
-        if r.status_code == 200:
-            xml = r.text
-            persona = _xml_extract(xml, "steamID")
-            avatar = _xml_extract(xml, "avatarFull")
-            if persona:
-                return {
-                    "personaname": persona,
-                    "avatarfull": avatar or "",
-                    "steamid": steam_id,
-                }
+        data = await asyncio.to_thread(_get)
+        players = data.get("response", {}).get("players", [])
+        return players[0] if players else {}
     except Exception as e:
-        print(f"[steam] XML fetch failed: {e}")
+        log.warning("steam profile fetch failed: %s", e)
+        return {}
 
-    return None
+
+@fastapi_app.get("/auth/steam")
+async def auth_steam(discord_id: int):
+    base = _base_url()
+    params = {
+        "openid.ns": "http://specs.openid.net/auth/2.0",
+        "openid.mode": "checkid_setup",
+        "openid.return_to": f"{base}/auth/steam/callback?discord_id={discord_id}",
+        "openid.realm": base,
+        "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+        "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+    }
+    return RedirectResponse(STEAM_OPENID + "?" + urllib.parse.urlencode(params))
 
 
-def _xml_extract(xml: str, tag: str) -> Optional[str]:
-    """Extract a tag value from Steam's XML (CDATA or plain)."""
-    m = re.search(
-        rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>",
-        xml, re.DOTALL | re.IGNORECASE
+@fastapi_app.get("/auth/steam/callback")
+async def auth_steam_callback(request: Request):
+    form = dict(request.query_params)
+    form["openid.mode"] = "check_authentication"
+
+    def _verify() -> str:
+        data = urllib.parse.urlencode(form).encode()
+        req = urllib.request.Request(STEAM_OPENID, data=data)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.read().decode("utf-8", "replace")
+
+    try:
+        body = await asyncio.to_thread(_verify)
+    except Exception:
+        return HTMLResponse(
+            _page("VERIFY FAILED", "Could not reach Steam. Try again."),
+            status_code=502,
+        )
+
+    if "is_valid:true" not in body:
+        return HTMLResponse(
+            _page("VERIFY FAILED", "Steam rejected this login attempt."),
+            status_code=400,
+        )
+
+    claimed = request.query_params.get("openid.claimed_id", "")
+    steam_id = claimed.rstrip("/").rsplit("/", 1)[-1]
+    if not steam_id.isdigit():
+        return HTMLResponse(
+            _page("VERIFY FAILED", "No SteamID64 in Steam's response."),
+            status_code=400,
+        )
+
+    try:
+        discord_id = int(request.query_params.get("discord_id", "0"))
+    except ValueError:
+        discord_id = 0
+
+    if discord_id <= 0:
+        return HTMLResponse(
+            _page("MISSING DISCORD ID", "Open /register in Discord instead."),
+            status_code=400,
+        )
+
+    profile = await fetch_steam_profile(steam_id)
+    name = profile.get("personaname") or f"steam_{steam_id[-4:]}"
+    await add_player(discord_id, name, steam_id, 1)
+
+    return RedirectResponse(_base_url() + "/register-success")
+
+
+@fastapi_app.get("/register-success")
+async def register_success():
+    return HTMLResponse(
+        _page("VERIFIED ✓", "Steam linked. You're on the roster — see you at check-in.", ok=True)
     )
-    if m:
-        return m.group(1).strip()
-    m = re.search(
-        rf"<{tag}>\s*(.*?)\s*</{tag}>",
-        xml, re.DOTALL | re.IGNORECASE
-    )
-    if m:
-        return m.group(1).strip()
-    return None
-
-
-# ─────────────────────────────────────────────
-# Plain success endpoint (fallback, JSON)
-# ─────────────────────────────────────────────
-@app.get("/auth/success")
-async def auth_success():
-    return {"message": "✅ Steam account linked! You can close this tab."}
-
 
 # ─────────────────────────────────────────────
 # Styled success page
