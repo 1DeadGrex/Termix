@@ -4,8 +4,12 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse
 from pydantic import BaseModel
+from typing import Optional
+from urllib.parse import quote
 import httpx
 import os
+import re
+import aiosqlite
 from dotenv import load_dotenv
 
 from utils import database as db
@@ -18,9 +22,18 @@ load_dotenv()
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-
-# Your Discord invite — change this to your real invite
 DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/b73rAp5Sug")
+
+
+# ─────────────────────────────────────────────
+# Bot reference (set by app.py at startup)
+# ─────────────────────────────────────────────
+_bot = None
+
+def set_bot(bot_instance):
+    """Called from app.py to give the API access to the running Discord bot."""
+    global _bot
+    _bot = bot_instance
 
 
 # ─────────────────────────────────────────────
@@ -45,7 +58,7 @@ app = FastAPI(
 # ─────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your website domain
+    allow_origins=["*"],  # TODO: tighten to ["https://yoursite.com"] in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -111,11 +124,27 @@ async def list_matches(limit: int = Query(50, ge=1, le=200)):
 
 
 # ─────────────────────────────────────────────
-# Leaderboard
+# Leaderboard (guild_id optional)
 # ─────────────────────────────────────────────
 @app.get("/api/leaderboard")
-async def leaderboard(guild_id: int, limit: int = 20):
-    rows = await db.get_leaderboard(guild_id, limit)
+async def leaderboard(guild_id: Optional[int] = None, limit: int = 20):
+    """
+    Leaderboard endpoint.
+    - With guild_id: top players in that guild.
+    - Without: global top — XP summed across all guilds per user.
+    """
+    if guild_id:
+        rows = await db.get_leaderboard(guild_id, limit)
+    else:
+        # Global top — sum XP across all guilds per user
+        async with aiosqlite.connect(db.DB_PATH) as conn:
+            async with conn.execute(
+                "SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level "
+                "FROM xp GROUP BY user_id ORDER BY total_xp DESC LIMIT ?",
+                (limit,)
+            ) as cur:
+                rows = await cur.fetchall()
+
     return [
         {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2]}
         for i, r in enumerate(rows, 1)
@@ -140,6 +169,70 @@ async def register(payload: RegisterPayload):
         verified=False,
     )
     return {"status": "registered", "user_id": payload.user_id}
+
+
+# ─────────────────────────────────────────────
+# Ban check — used by frontend clearance scan
+# ─────────────────────────────────────────────
+@app.get("/api/bans/{user_id}")
+async def check_ban(user_id: int):
+    """
+    Check if a user is banned.
+    404 if not banned (frontend treats this as 'clear').
+    200 with ban record if banned.
+    """
+    async with aiosqlite.connect(db.DB_PATH) as conn:
+        async with conn.execute(
+            "SELECT user_id, reason, banned_by, banned_at FROM bans WHERE user_id = ?",
+            (user_id,)
+        ) as cur:
+            row = await cur.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Not banned")
+
+    return {
+        "user_id": row[0],
+        "reason": row[1],
+        "banned_by": row[2],
+        "banned_at": row[3],
+    }
+
+
+# ─────────────────────────────────────────────
+# Discord presence — is the user in the server?
+# ─────────────────────────────────────────────
+@app.get("/api/discord/{user_id}")
+async def discord_presence(user_id: int, guild_id: Optional[int] = None):
+    """
+    Check if a Discord user is a member of the guild the bot is in.
+    Returns {"in_guild": true/false, ...}.
+    """
+    if _bot is None:
+        raise HTTPException(status_code=503, detail="Bot not available")
+
+    guild = None
+    if guild_id:
+        guild = _bot.get_guild(guild_id)
+    else:
+        guild = _bot.guilds[0] if _bot.guilds else None
+
+    if guild is None:
+        raise HTTPException(status_code=503, detail="Bot not in any guild")
+
+    member = guild.get_member(user_id)
+    if member is None:
+        # Cache miss — try a live fetch (requires Server Members intent)
+        try:
+            member = await guild.fetch_member(user_id)
+        except Exception:
+            member = None
+
+    return {
+        "in_guild": member is not None,
+        "user_id": user_id,
+        "guild_id": guild.id,
+    }
 
 
 # ─────────────────────────────────────────────
@@ -184,40 +277,89 @@ async def steam_callback(discord_id: int, request: Request):
     if not steam_id64.isdigit():
         raise HTTPException(status_code=400, detail="Invalid Steam ID")
 
+    # Fetch profile (works even without API key — XML fallback)
     profile = await fetch_steam_profile(steam_id64)
-    persona = profile.get("personaname", "Unknown") if profile else "Unknown"
+    persona = (profile or {}).get("personaname") or "Unknown"
+    avatar = (profile or {}).get("avatarfull") or ""
+
+    print(f"[steam] linked {discord_id} → {steam_id64} ({persona})")
 
     await db.add_player(
         user_id=discord_id,
-        discord_name=f"Steam: {persona}",
+        discord_name=persona if persona != "Unknown" else f"Steam: {steam_id64}",
         steam_id=steam_id64,
         verified=True,
     )
 
-    # Redirect to the styled success page
-    return RedirectResponse(
-        f"{BASE_URL}/register-success?steam_id={steam_id64}&name={persona}"
-    )
+    # Redirect to styled success page, passing name + avatar via query params
+    qp = f"steam_id={steam_id64}&name={quote(persona)}"
+    if avatar:
+        qp += f"&avatar={quote(avatar, safe='')}"
+
+    return RedirectResponse(f"{BASE_URL}/register-success?{qp}")
 
 
 # ─────────────────────────────────────────────
-# Steam profile fetch (optional)
+# Steam profile fetch — API key optional
 # ─────────────────────────────────────────────
-async def fetch_steam_profile(steam_id: str):
-    if not STEAM_API_KEY:
-        return None
-    url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
+async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
+    """
+    Fetch Steam profile data.
+    1. If STEAM_API_KEY is set → official Web API (JSON).
+    2. Otherwise (or if API fails) → public XML profile (no key required).
+    """
+    # 1) Official API (only if key present)
+    if STEAM_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/",
+                    params={"key": STEAM_API_KEY, "steamids": steam_id},
+                )
+            players = r.json().get("response", {}).get("players", [])
+            if players:
+                return players[0]
+        except Exception as e:
+            print(f"[steam] Web API fetch failed: {e}")
+
+    # 2) Public XML fallback (no key)
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             r = await client.get(
-                url, params={"key": STEAM_API_KEY, "steamids": steam_id}
+                f"https://steamcommunity.com/profiles/{steam_id}/?xml=1",
+                headers={"User-Agent": "Mozilla/5.0 (TermixBot/1.0)"},
             )
-        data = r.json()
-        players = data.get("response", {}).get("players", [])
-        return players[0] if players else None
+        if r.status_code == 200:
+            xml = r.text
+            persona = _xml_extract(xml, "steamID")
+            avatar = _xml_extract(xml, "avatarFull")
+            if persona:
+                return {
+                    "personaname": persona,
+                    "avatarfull": avatar or "",
+                    "steamid": steam_id,
+                }
     except Exception as e:
-        print(f"Steam profile fetch failed: {e}")
-        return None
+        print(f"[steam] XML fetch failed: {e}")
+
+    return None
+
+
+def _xml_extract(xml: str, tag: str) -> Optional[str]:
+    """Extract a tag value from Steam's XML (CDATA or plain)."""
+    m = re.search(
+        rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>",
+        xml, re.DOTALL | re.IGNORECASE
+    )
+    if m:
+        return m.group(1).strip()
+    m = re.search(
+        rf"<{tag}>\s*(.*?)\s*</{tag}>",
+        xml, re.DOTALL | re.IGNORECASE
+    )
+    if m:
+        return m.group(1).strip()
+    return None
 
 
 # ─────────────────────────────────────────────
@@ -232,9 +374,14 @@ async def auth_success():
 # Styled success page
 # ─────────────────────────────────────────────
 @app.get("/register-success", response_class=HTMLResponse)
-async def register_success(steam_id: str = None, name: str = None):
+async def register_success(
+    steam_id: Optional[str] = None,
+    name: Optional[str] = None,
+    avatar: Optional[str] = None,
+):
     display_name = name if name and name != "Unknown" else "Player"
     steam_line = f'<div class="steam-id">Steam ID: {steam_id}</div>' if steam_id else ""
+    avatar_attr = f' data-avatar="{avatar}"' if avatar else ""
 
     return f"""
     <!DOCTYPE html>
@@ -271,7 +418,6 @@ async def register_success(steam_id: str = None, name: str = None):
             ::selection{{background:var(--amber);color:#140f02}}
             a{{color:var(--amber)}}
 
-            /* ── CRT / VHS layers ── */
             .fx-scan{{position:fixed;inset:0;z-index:900;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px)}}
             .fx-vig{{position:fixed;inset:0;z-index:900;pointer-events:none;background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.5) 100%)}}
             .fx-noise{{position:fixed;inset:0;z-index:901;pointer-events:none;opacity:.10;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");animation:noiseShift .35s steps(3) infinite}}
@@ -283,14 +429,12 @@ async def register_success(steam_id: str = None, name: str = None):
             @keyframes blink{{50%{{opacity:0}}}}
             @keyframes led{{0%,55%{{opacity:1}}56%,100%{{opacity:.2}}}}
 
-            /* ── VHS OSD overlays ── */
             .osd{{position:fixed;z-index:905;pointer-events:none;font:20px var(--mono);color:var(--amber2);letter-spacing:2px;text-shadow:0 0 7px rgba(255,176,0,.35);opacity:.9}}
             .osd.tl{{top:14px;left:18px}}
             .osd.tr{{top:14px;right:18px;text-align:right}}
             .osd.bl{{bottom:12px;left:18px;color:var(--dim)}}
             .rec{{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);animation:blink 1s steps(1) infinite;margin-right:7px;vertical-align:1px}}
 
-            /* ── card shell ── */
             .wrap{{position:relative;z-index:10;width:min(600px,100%);animation:crtIn .5s both}}
             @keyframes crtIn{{0%{{opacity:0;transform:scaleY(.75)}}45%{{opacity:.7;transform:scaleY(1.03)}}70%{{opacity:.85;transform:scaleY(.99)}}100%{{opacity:1;transform:none}}}}
             .panel{{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 0 1px #000,0 24px 60px rgba(0,0,0,.7)}}
@@ -308,7 +452,6 @@ async def register_success(steam_id: str = None, name: str = None):
             .granted{{font:clamp(15px,4.6vw,23px) var(--disp);color:var(--amber);line-height:1.55;letter-spacing:1px;text-shadow:2px 0 rgba(255,60,60,.25),-2px 0 rgba(60,220,255,.25),0 0 18px rgba(255,176,0,.22);margin-bottom:8px}}
             .sub{{font:19px var(--mono);letter-spacing:3px;color:var(--dim);margin-bottom:22px}}
 
-            /* ── operative dossier ── */
             .dossier{{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:stretch;background:var(--ink);border:1px solid var(--line2);padding:16px;text-align:left}}
             .frame{{position:relative;width:150px;height:150px;background:#000;border:1px solid var(--line2);overflow:hidden}}
             .frame img{{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.35) sepia(.85) saturate(2.1) hue-rotate(-12deg) contrast(1.22) brightness(.86);animation:crtFlick 5s infinite}}
@@ -380,7 +523,7 @@ async def register_success(steam_id: str = None, name: str = None):
 
                     <div class="dossier">
                         <div class="frame">
-                            <img id="avatar" alt="Steam avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230a0906'/%3E%3Crect x='5' y='2' width='6' height='7' fill='%23ffb000'/%3E%3Crect x='6' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='9' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='7' y='6' width='2' height='1' fill='%230a0906'/%3E%3Crect x='3' y='10' width='10' height='6' fill='%237a5c0d'/%3E%3C/svg%3E">
+                            <img id="avatar" alt="Steam avatar" data-avatar="{avatar or ''}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230a0906'/%3E%3Crect x='5' y='2' width='6' height='7' fill='%23ffb000'/%3E%3Crect x='6' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='9' y='4' width='1' height='1' fill='%230a0906'/%3E%3Crect x='7' y='6' width='2' height='1' fill='%230a0906'/%3E%3Crect x='3' y='10' width='10' height='6' fill='%237a5c0d'/%3E%3C/svg%3E">
                             <div class="f-scan"></div>
                             <span class="f-tag" id="camTag">ID·CAM</span>
                         </div>
@@ -443,7 +586,9 @@ async def register_success(steam_id: str = None, name: str = None):
                 }});
             }}
 
-            /* steam avatar — profile XML pulled through CORS-open relays (no API key) */
+            /* ── AVATAR: server-provided first, CORS proxies as fallback ── */
+            var serverAvatar = img.getAttribute('data-avatar') || q.get('avatar') || '';
+
             function setAvatar(url){{
                 var probe = new Image();
                 probe.onload = function(){{ img.src = url; tag.textContent = 'LIVE FEED'; tag.style.color = '#5ce07f'; }};
@@ -455,7 +600,12 @@ async def register_success(steam_id: str = None, name: str = None):
                         txt.match(/<avatarFull>\\s*(https[^<\\s]+)\\s*<\\/avatarFull>/i);
                 return m ? m[1] : null;
             }}
-            if (sid && /^\\d{{15,20}}$/.test(sid)) {{
+
+            if (serverAvatar && /^https?:/i.test(serverAvatar)) {{
+                /* Fast path — the server already fetched it for us */
+                setAvatar(serverAvatar);
+            }} else if (sid && /^\\d{{15,20}}$/.test(sid)) {{
+                /* Fallback — client-side fetch via CORS relays */
                 var target = 'https://steamcommunity.com/profiles/' + sid + '/?xml=1';
                 var relays = [
                     'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
