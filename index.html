@@ -10,11 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0907; --panel:#141008; --panel2:#1d1609; --ink:#0f0c06;
-  --line:#3a2f14; --line2:#5c4918; --deep:#8a6a10; --amber:#ffb000; --amber2:#ffd75e;
-  --txt:#efe6c8; --mut:#a8976a; --dim:#6f6140; --red:#ff5238; --green:#57e389;
-}
+:root{--bg:#0b0907;--panel:#141008;--panel2:#1d1609;--ink:#0f0c06;--line:#3a2f14;--line2:#5c4918;--deep:#8a6a10;--amber:#ffb000;--amber2:#ffd75e;--txt:#efe6c8;--mut:#a8976a;--dim:#6f6140;--red:#ff5238;--green:#57e389}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scrollbar-color:var(--line2) var(--bg)}
 body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.55;min-height:100vh}
@@ -28,34 +24,27 @@ body.noscroll{overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 a{color:var(--amber);text-decoration:none}
 a:hover{color:var(--amber2)}
-img{max-width:100%}
 .px{font-family:'Press Start 2P',monospace}
 .vt{font-family:'VT323',monospace}
 .mutc{color:var(--mut)}
-
-.fx{position:fixed;inset:0;pointer-events:none;z-index:1100}
-.fx.scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
-.fx.vig{background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.45))}
-
+.fx.scan{position:fixed;inset:0;pointer-events:none;z-index:1100;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.fx.vig{position:fixed;inset:0;pointer-events:none;z-index:1100;background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.45))}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);background:var(--panel2);border:1px solid var(--line2);padding:12px 16px;box-shadow:4px 4px 0 #000;text-transform:uppercase;user-select:none;text-align:center}
 .btn:hover:not(:disabled){color:var(--amber2);border-color:var(--amber)}
 .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.primary{background:var(--amber);color:#140d00;border-color:var(--amber)}
-.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2);color:#140d00}
+.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2)}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--red);border-color:var(--red)}
-.btn.danger:hover:not(:disabled){color:#ff8371;border-color:#ff8371}
 .btn.sm{padding:8px 10px;font-size:8px}
-
 .panel{background:var(--panel);border:1px solid var(--line);box-shadow:6px 6px 0 #000}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--panel2);border-bottom:1px solid var(--line);padding:12px 16px}
 .phead h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--amber);letter-spacing:1px}
 .phead-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
+.tag{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
 .tag.off{color:var(--red);border-color:var(--red)}
 .pbody{padding:16px}
-
 .badge{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;padding:5px 8px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
 .badge.live{color:var(--red);border-color:var(--red);animation:blink 1.2s steps(1) infinite}
 .badge.open{color:var(--green);border-color:var(--green)}
@@ -65,29 +54,24 @@ img{max-width:100%}
 .led.g{background:var(--green);box-shadow:0 0 6px var(--green)}
 .led.r{background:var(--red);box-shadow:0 0 6px var(--red);animation:blink 1s steps(1) infinite}
 .led.y{background:var(--amber2);box-shadow:0 0 6px var(--amber2)}
-
 @keyframes blink{50%{opacity:0}}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .shake{animation:shake .4s both}
 .cursor{display:inline-block;width:.62em;height:1em;background:var(--amber);vertical-align:-.12em;margin-left:6px;animation:blink 1s steps(1) infinite}
-
 .empty{text-align:center;padding:56px 20px;border:1px dashed var(--line2);background:var(--ink);color:var(--mut);font-family:'VT323',monospace;font-size:21px}
 .empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px;letter-spacing:1px}
-
 .fl{display:block;font-weight:600;font-size:10px;letter-spacing:1.5px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase}
 .fl .opt{color:var(--dim)}
 .inp{width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--amber2);font-family:'VT323',monospace;font-size:20px;padding:8px 10px}
 .inp:focus{outline:none;border-color:var(--amber);box-shadow:3px 3px 0 #000}
 .inp::placeholder{color:var(--dim)}
 select.inp option{background:var(--ink);color:var(--amber2)}
-textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.5}
 .hint{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
-.err-msg{display:none;color:var(--red);font-size:12px;font-weight:600;margin-top:10px;line-height:1.5}
+.err-msg{display:none;color:var(--red);font-size:12px;font-weight:600;margin-top:10px}
 .err-msg.show{display:block}
 .check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:11.5px;color:var(--mut);cursor:pointer;line-height:1.6}
 .check input{margin-top:2px;accent-color:var(--amber);width:15px;height:15px;flex:none}
 .check:hover{color:var(--txt)}
-
 .shell{display:flex;min-height:100vh}
 #sidebar{width:250px;flex:0 0 250px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;padding:16px 14px;z-index:1000}
 .logo{border:1px solid var(--line2);background:var(--panel2);padding:14px;box-shadow:4px 4px 0 #000}
@@ -109,12 +93,10 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 #backdrop{position:fixed;inset:0;background:rgba(5,4,2,.7);z-index:900;opacity:0;pointer-events:none;transition:opacity .2s}
 #backdrop.open{opacity:1;pointer-events:auto}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-
 #topbar{position:sticky;top:0;z-index:950;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
 #burger{display:none}
 .tb-tag{font-family:'VT323',monospace;font-size:18px;color:var(--deep);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-sp{flex:1}
-
 #marquee{border-bottom:1px solid var(--line);background:var(--ink);overflow:hidden;white-space:nowrap}
 .mq-track{display:inline-block;padding:6px 0;animation:mq 42s linear infinite;will-change:transform}
 #marquee:hover .mq-track{animation-play-state:paused}
@@ -122,11 +104,9 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .mq-i b{color:var(--amber);font-weight:400}
 .mq-sep{color:var(--line2);margin-left:44px}
 @keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
 #screens{flex:1;width:100%;max-width:1440px;margin:0 auto;padding:22px 20px 30px}
 .screen{display:none}
 .screen.active{display:block}
-
 .hero-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:24px}
 #heroBadge{margin-bottom:16px}
 #heroTitle{font-family:'Press Start 2P',monospace;font-size:clamp(16px,2.6vw,27px);line-height:1.55;color:var(--amber);text-shadow:3px 3px 0 #000;word-wrap:break-word}
@@ -139,10 +119,8 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .cd{font-family:'VT323',monospace;font-size:clamp(40px,4.6vw,58px);color:var(--amber);line-height:1;margin:12px 0 6px;text-shadow:2px 2px 0 #000;letter-spacing:2px}
 .cd-sub{font-size:11px;color:var(--dim);letter-spacing:1px}
 .hero-r .btn{margin-top:auto;align-self:stretch}
-
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
-#prizeWrap{position:relative;border:1px solid var(--line);background:var(--ink);overflow:hidden;aspect-ratio:16/7;cursor:pointer}
-#prizeWrap.drag{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+#prizeWrap{position:relative;border:1px solid var(--line);background:var(--ink);overflow:hidden;aspect-ratio:16/7}
 #prizeImg{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) sepia(1) saturate(2.7) hue-rotate(-12deg) contrast(1.3) brightness(.8)}
 .crt-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
 .crt-noise{position:absolute;inset:0;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -160,13 +138,9 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .hp{height:8px;border:1px solid var(--line);background:#201808;width:min(440px,100%);margin-top:5px}
 .hp i{display:block;height:100%;width:100%;background:var(--amber)}
 .hp.lose i{background:var(--red);transition:width .6s linear}
-@keyframes hpflash{0%,55%{box-shadow:0 0 9px var(--red);border-color:var(--red)}100%{box-shadow:none;border-color:var(--line)}}
-.hp.lose.flash{animation:hpflash .6s linear 1}
-
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
 .stat{border:1px solid var(--line);background:var(--panel);box-shadow:4px 4px 0 #000;padding:14px 16px}
 .stat .mv{font-size:38px;margin-top:10px}
-
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
 .tcard{padding:14px;display:flex;flex-direction:column}
 .tc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -174,7 +148,7 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .tname{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.75;color:var(--amber2);margin:13px 0 8px;word-wrap:break-word}
 .tdesc{font-size:12.5px;color:var(--mut);line-height:1.6;min-height:40px}
 .spec{border:1px solid var(--line);background:var(--ink);margin:12px 0}
-.srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px;letter-spacing:.5px}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px}
 .srow:last-child{border-bottom:none}
 .srow span{color:var(--dim);letter-spacing:1px;white-space:nowrap}
 .srow b{color:var(--txt);font-weight:600;text-align:right;word-break:break-word}
@@ -186,7 +160,6 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .slots-cap{font-family:'VT323',monospace;font-size:16px;color:var(--dim);letter-spacing:1px;margin:7px 0 13px}
 .tc-btn{margin-top:auto}
 .tc-btn .btn{width:100%}
-
 .tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);letter-spacing:1px;white-space:nowrap}
@@ -205,7 +178,6 @@ tr.top3 .opname{color:var(--amber2)}
 .win-t{color:var(--green);font-weight:600}
 .lose-t{color:var(--red)}
 .score{color:var(--amber2)}
-
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .step{border:1px solid var(--line);background:var(--ink);padding:14px;box-shadow:4px 4px 0 #000}
 .s-num{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--amber);text-shadow:2px 2px 0 #000}
@@ -218,14 +190,11 @@ tr.top3 .opname{color:var(--amber2)}
 .cmd span{font-size:12px;color:var(--mut)}
 .modnote{border:1px solid var(--red);background:rgba(255,82,56,.05);padding:14px 16px;font-size:12.5px;color:var(--mut);line-height:1.7}
 .modnote b{color:var(--red)}
-
 #hud{position:sticky;bottom:0;margin-top:auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 16px;background:var(--panel);border-top:1px solid var(--line);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--dim);z-index:940}
 #hud .px{font-size:8px;color:var(--deep)}
 .hud-i{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .hud-sp{flex:1}
 #hud a{color:var(--mut)}
-#hud a:hover{color:var(--amber)}
-
 #modalWrap{position:fixed;inset:0;z-index:1050;display:none;align-items:center;justify-content:center;background:rgba(4,3,1,.84);padding:20px}
 #modalWrap.open{display:flex}
 .modal{width:min(580px,100%);max-height:92vh;overflow-y:auto;border-color:var(--line2)}
@@ -238,66 +207,36 @@ tr.top3 .opname{color:var(--amber2)}
 .chip:hover{border-color:var(--amber)}
 .chip input:checked ~ .chip-b{color:#140d00;background:var(--amber)}
 .chip input:checked ~ .chip-s{color:var(--amber2)}
-.chip input:focus-visible ~ .chip-b{outline:2px solid var(--amber);outline-offset:2px}
 .mrow{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
 .okpanel{border:1px solid var(--green);background:rgba(87,227,137,.05);padding:26px 20px;text-align:center}
 .okcheck{font-family:'VT323',monospace;font-size:56px;color:var(--green);line-height:1;animation:blink 1.4s steps(1) infinite}
 .okt{font-size:13px;color:var(--green);margin:14px 0 10px}
 .okpanel p{font-size:12.5px;color:var(--mut)}
 .okid{font-size:18px !important;color:var(--amber2) !important;margin-top:10px}
-
 #toasts{position:fixed;right:16px;bottom:16px;z-index:1300;display:flex;flex-direction:column;gap:10px;max-width:min(420px,92vw)}
-.toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word;transition:opacity .2s}
+.toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word}
 .toast.err{border-color:var(--red);color:#ffb4a5}
 .toast.ok{border-color:var(--green);color:var(--green)}
-
 #bios{position:fixed;inset:0;z-index:2000;background:#050402;color:var(--amber);font-family:'VT323',monospace;font-size:21px;line-height:1.55;padding:46px;cursor:pointer}
 #biosText div{word-break:break-all}
 #biosText::after{content:'▮';animation:blink .9s steps(1) infinite}
 #biosText .ok{color:var(--green)}
 #biosText .bad{color:var(--red)}
 .bios-cue{position:absolute;left:46px;bottom:36px;color:var(--dim);font-size:17px;letter-spacing:2px}
-
-@media (max-width:860px){
-  #sidebar{position:fixed;left:0;top:0;bottom:0;height:100%;transform:translateX(-102%);transition:transform .22s steps(5);box-shadow:8px 0 0 rgba(0,0,0,.5)}
-  #sidebar.open{transform:none}
-  #burger{display:inline-flex}
-  .hero-grid{grid-template-columns:1fr}
-}
-@media (max-width:640px){
-  .two-col{grid-template-columns:1fr}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .hero-meta{grid-template-columns:1fr 1fr}
-  .chips{grid-template-columns:1fr}
-  .col-opt{display:none}
-  #modalWrap{padding:0}
-  .modal{width:100%;max-height:100vh;height:100%;border-left:none;border-right:none;box-shadow:none}
-  #toasts{right:10px;left:10px;bottom:10px;max-width:none}
-}
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
-  .mq-track{animation:none !important}
-  .crt-bar{display:none}
-  #bios{display:none !important}
-}
+@media (max-width:860px){#sidebar{position:fixed;left:0;top:0;bottom:0;height:100%;transform:translateX(-102%);transition:transform .22s steps(5);box-shadow:8px 0 0 rgba(0,0,0,.5)}#sidebar.open{transform:none}#burger{display:inline-flex}.hero-grid{grid-template-columns:1fr}}
+@media (max-width:640px){.two-col{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.hero-meta{grid-template-columns:1fr 1fr}.chips{grid-template-columns:1fr}.col-opt{display:none}#modalWrap{padding:0}.modal{width:100%;height:100%;max-height:100vh;border-left:none;border-right:none;box-shadow:none}#toasts{right:10px;left:10px;bottom:10px;max-width:none}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}.mq-track{animation:none !important}.crt-bar{display:none}#bios{display:none !important}}
 </style>
 </head>
 <body>
-<div id="bios" aria-hidden="true">
-  <div id="biosText"></div>
-  <div class="bios-cue">PRESS ANY KEY TO SKIP</div>
-</div>
-
+<div id="bios" aria-hidden="true"><div id="biosText"></div><div class="bios-cue">PRESS ANY KEY TO SKIP</div></div>
 <div class="fx scan" aria-hidden="true"></div>
 <div class="fx vig" aria-hidden="true"></div>
 <div id="toasts" aria-live="polite"></div>
 
 <div class="shell">
   <aside id="sidebar" aria-label="Main navigation">
-    <div class="logo">
-      <div class="logo-t">TERMIX<span class="cursor"></span></div>
-      <div class="logo-s">CS2 TOURNAMENT GRID</div>
-    </div>
+    <div class="logo"><div class="logo-t">TERMIX<span class="cursor"></span></div><div class="logo-s">CS2 TOURNAMENT GRID</div></div>
     <nav class="nav" aria-label="Screens">
       <button class="nav-btn active" data-screen="briefing"><span class="nnum">01</span>BRIEFING</button>
       <button class="nav-btn" data-screen="modes"><span class="nnum">02</span>MODES</button>
@@ -306,7 +245,7 @@ tr.top3 .opname{color:var(--amber2)}
       <button class="nav-btn" data-screen="intel"><span class="nnum">05</span>INTEL</button>
     </nav>
     <button id="ctaRegister" class="btn primary">REGISTER.EXE ►</button>
-    <div class="side-status" role="status" aria-label="System status">
+    <div class="side-status" role="status">
       <div class="ss-head">SYS STATUS</div>
       <div class="ss-row"><span>SEASON</span><span class="ss-v">04 · MIDNIGHT OPS</span></div>
       <div class="ss-row"><span>SLOTS</span><span class="ss-v" id="ssSlots">——</span></div>
@@ -314,7 +253,7 @@ tr.top3 .opname{color:var(--amber2)}
       <div class="ss-row"><span>BOT</span><span class="ss-v"><span class="led y" id="ssBotLed"></span> <span id="ssBot">SYNC…</span></span></div>
     </div>
     <div class="side-foot">
-      <div>TERMIX v2.4.0 — AMBER BUILD</div>
+      <div>TERMIX v2.5.0 — AMBER BUILD</div>
       <div><a id="adminLink" href="admin.html">ADMIN</a> · <a class="js-discord" href="#" target="_blank" rel="noopener">DISCORD ↗</a></div>
     </div>
   </aside>
@@ -322,7 +261,7 @@ tr.top3 .opname{color:var(--amber2)}
 
   <div class="main">
     <header id="topbar">
-      <button id="burger" class="btn sm ghost" aria-label="Toggle navigation menu">☰</button>
+      <button id="burger" class="btn sm ghost" aria-label="Toggle navigation">☰</button>
       <div class="tb-tag">// 1v1 / 2v2 / 5v5 LADDER — CHECK-IN FRI 18:30 UTC</div>
       <div class="tb-sp"></div>
       <button id="retryBtn" class="btn sm danger" hidden>⟳ RETRY UPLINK</button>
@@ -349,7 +288,7 @@ tr.top3 .opname{color:var(--amber2)}
             </div>
             <div class="hero-r">
               <div class="mk">T-MINUS LOCK-IN</div>
-              <div class="cd" id="countdown" aria-live="off">--D --:--:--</div>
+              <div class="cd" id="countdown">--D --:--:--</div>
               <div class="cd-sub">TARGET: <span id="cdTarget">——</span></div>
               <button id="heroJoin" class="btn primary" hidden>JOIN NOW ►</button>
             </div>
@@ -360,22 +299,20 @@ tr.top3 .opname{color:var(--amber2)}
           <div class="panel">
             <div class="phead"><h2>PRIZE SHOWCASE</h2><span class="tag" id="tagPrize">CRT-FEED</span></div>
             <div class="pbody">
-              <div id="prizeWrap" role="button" tabindex="0" aria-label="Prize showcase — click or drop an image to replace the feed">
+              <div id="prizeWrap" aria-label="Prize showcase — set by admin">
                 <img id="prizeImg" alt="Prize showcase feed">
                 <div class="crt-lines"></div><div class="crt-noise"></div><div class="crt-bar"></div>
-                <div class="prize-cap">CLICK / DROP IMAGE TO REPLACE FEED</div>
+                <div class="prize-cap">ADMIN-SET PRIZE FEED</div>
               </div>
             </div>
           </div>
           <div class="panel">
             <div class="phead"><h2>MATCH FEED</h2><span class="tag" id="tagFeed">SYNC…</span></div>
-            <div class="pbody">
-              <div id="feedBox" aria-live="polite"><div class="idle">&gt; AWAITING MATCH DATA…</div></div>
-            </div>
+            <div class="pbody"><div id="feedBox" aria-live="polite"><div class="idle">&gt; AWAITING MATCH DATA…</div></div></div>
           </div>
         </div>
 
-        <div class="stats" aria-label="Live statistics">
+        <div class="stats">
           <div class="stat"><div class="mk">OPERATIVES</div><div class="mv" id="stPlayers">——</div></div>
           <div class="stat"><div class="mk">MATCHES LOGGED</div><div class="mv" id="stMatches">——</div></div>
           <div class="stat"><div class="mk">PRIZE POOL</div><div class="mv" id="stPrize">——</div></div>
@@ -404,15 +341,15 @@ tr.top3 .opname{color:var(--amber2)}
         </div>
       </section>
 
-      <section id="screen-intel" class="screen" aria-label="Intel and how to enter">
+      <section id="screen-intel" class="screen" aria-label="Intel">
         <div class="panel">
           <div class="phead"><h2>05 // INTEL — HOW TO ENTER</h2><span class="tag">STATIC</span></div>
           <div class="pbody">
             <div class="steps">
-              <div class="step"><div class="s-num">01</div><h3>JOIN THE GRID</h3><p>Enter the Termix Discord server. All match coordination, check-ins and announcements run through the bot — the site is only the storefront.</p></div>
-              <div class="step"><div class="s-num">02</div><h3>STEAM VERIFY</h3><p>Run /whoami in Discord and complete Steam verification. Unverified accounts cannot be checked in for any tournament.</p></div>
-              <div class="step"><div class="s-num">03</div><h3>CLEARANCE SCAN</h3><p>The bot screens your ID against the bans and strikes tables at registration. Clean record — you're through instantly.</p></div>
-              <div class="step"><div class="s-num">04</div><h3>CHECK-IN</h3><p>Check-in opens 30 minutes before start. Miss the window and your slot is released to the waitlist.</p></div>
+              <div class="step"><div class="s-num">01</div><h3>JOIN THE GRID</h3><p>Enter the Termix Discord server. All match coordination runs through the bot.</p></div>
+              <div class="step"><div class="s-num">02</div><h3>STEAM VERIFY</h3><p>Run /whoami and complete Steam verification. Unverified accounts can't check in.</p></div>
+              <div class="step"><div class="s-num">03</div><h3>CLEARANCE SCAN</h3><p>The bot screens your ID against bans and strikes at registration.</p></div>
+              <div class="step"><div class="s-num">04</div><h3>CHECK-IN</h3><p>Opens 30 min before start. Miss the window and your slot is released.</p></div>
             </div>
           </div>
         </div>
@@ -420,25 +357,25 @@ tr.top3 .opname{color:var(--amber2)}
           <div class="phead"><h2>BOT COMMANDS</h2><span class="tag">CHEAT-SHEET</span></div>
           <div class="pbody cmdlist">
             <div class="cmd"><code>/register</code><span>Sign up for the next open tournament in your mode.</span></div>
-            <div class="cmd"><code>/whoami</code><span>Show your Discord ↔ Steam linkage, XP and clearance state.</span></div>
-            <div class="cmd"><code>/leaderboard</code><span>Full XP ladder with levels, not just the top 10.</span></div>
-            <div class="cmd"><code>/myxp</code><span>Your personal XP, level and distance to next level.</span></div>
-            <div class="cmd"><code>/matchhistory</code><span>Your personal match log with scores and results.</span></div>
-            <div class="cmd"><code>/giveaway</code><span>Enter the active skin giveaway. One entry per operative.</span></div>
-            <div class="cmd"><code>/report_match</code><span>Submit a result after your lobby. Both parties confirm.</span></div>
+            <div class="cmd"><code>/whoami</code><span>Show your Discord ↔ Steam linkage, XP and clearance.</span></div>
+            <div class="cmd"><code>/leaderboard</code><span>Top 10 XP earners.</span></div>
+            <div class="cmd"><code>/myxp</code><span>Your personal XP, level, distance to next level.</span></div>
+            <div class="cmd"><code>/matchhistory</code><span>Your personal match log.</span></div>
+            <div class="cmd"><code>/ticket</code><span>Open a ticket — support, report, appeal, other.</span></div>
+            <div class="cmd"><code>/report_match</code><span>Staff only — record a match result.</span></div>
           </div>
         </div>
         <div class="panel" style="margin-top:22px">
           <div class="phead"><h2>MODERATION NOTICE</h2><span class="tag off">ENFORCED</span></div>
           <div class="pbody">
-            <p class="modnote"><b>ZERO TOLERANCE.</b> Cheating (any DMA/aim-assist/scrip-tool class), smurfing on unregistered accounts, queue dodging, and toxicity toward opponents or staff result in an immediate ban — ban hits are checked at registration and at check-in. Appeals run through the Discord ticket system only. The moderation team's decision is final.</p>
+            <p class="modnote"><b>ZERO TOLERANCE.</b> Cheating, smurfing on unregistered accounts, queue dodging, and toxicity toward opponents or staff result in an immediate ban. Ban hits are checked at registration and at check-in. Appeals run through the Discord ticket system only.</p>
           </div>
         </div>
       </section>
     </main>
 
     <footer id="hud">
-      <span class="px">TERMIX v2.4.0</span>
+      <span class="px">TERMIX v2.5.0</span>
       <span class="hud-i">UPLINK <span class="led y" id="hudUplink"></span> <span id="hudUpTxt">SYNC</span></span>
       <span class="hud-i">BOT <span class="led y" id="hudBot"></span></span>
       <span class="hud-i">PING <span id="hudPing">——</span></span>
@@ -449,11 +386,11 @@ tr.top3 .opname{color:var(--amber2)}
   </div>
 </div>
 
-<div id="modalWrap" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+<div id="modalWrap" role="dialog" aria-modal="true">
   <div class="modal panel">
     <div class="phead">
       <h2 id="mTitle">REGISTER FOR TOURNAMENT</h2>
-      <button id="mClose" class="btn sm ghost" aria-label="Close registration dialog">✕</button>
+      <button id="mClose" class="btn sm ghost">✕</button>
     </div>
     <div class="pbody">
       <div class="mstep vt" id="mStepLbl">STEP 1 OF 3 · FILL IN YOUR DETAILS</div>
@@ -499,7 +436,6 @@ tr.top3 .opname{color:var(--amber2)}
     </div>
   </div>
 </div>
-<input type="file" id="prizeFile" accept="image/*" hidden>
 
 <script>
 'use strict';
@@ -517,16 +453,15 @@ const CFG = {
     'DISCORD GIVEAWAY: 3X SKINS — /giveaway TO ENTER'
   ]
 };
-
 const S = {
-  live:false, offlineToastShown:false, prizeCustom:false, snd:true,
+  live:false, offlineToastShown:false, snd:true,
   latency:null, botReady:null,
   tournaments:[], players:[], leaderboard:[], matches:[],
   httpErr:{ tournaments:null, players:null, leaderboard:null, matches:null },
   nameMap:new Map(), topMatchId:0, featured:null,
+  prizeImageLoaded:false,
   reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
 };
-
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -554,73 +489,47 @@ function fmtStarts(iso){
 }
 const fmtMatchTime = ts => { const p = parseDB(ts); return p ? pad2(p.mo)+'-'+pad2(p.d)+' '+pad2(p.h)+':'+pad2(p.mi) : '——'; };
 const fmtMatchHM   = ts => { const p = parseDB(ts); return p ? pad2(p.h)+':'+pad2(p.mi) : '--:--'; };
-function nameOf(id){
-  const n = S.nameMap.get(Number(id));
-  return n || 'OP-' + String(id).slice(-4);
-}
+function nameOf(id){ const n = S.nameMap.get(Number(id)); return n || 'OP-' + String(id).slice(-4); }
 function setTag(sel, txt, ep){
   const el = $(sel); if (!el) return;
   const err = ep ? S.httpErr[ep] : null;
   if (!S.live){ el.textContent = 'OFFLINE'; el.classList.add('off'); return; }
   if (err){ el.textContent = 'ERR ' + err + ' · /api/' + ep; el.classList.add('off'); return; }
-  el.textContent = txt;
-  el.classList.remove('off');
+  el.textContent = txt; el.classList.remove('off');
 }
-function setLED(sel, state){
-  const el = $(sel); if (el) el.className = 'led ' + state;
-}
-
+function setLED(sel, state){ const el = $(sel); if (el) el.className = 'led ' + state; }
 function toast(msg, kind){
   const box = $('#toasts');
   const t = document.createElement('div');
   t.className = 'toast' + (kind === 'error' ? ' err' : kind === 'ok' ? ' ok' : '');
-  t.setAttribute('role','status');
   t.textContent = String(msg);
   box.appendChild(t);
   if (kind === 'error') beep(220,.09); else if (kind === 'ok') beep(880,.05);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 4000);
 }
-
 let AC = null;
-function ensureAC(){
-  if (!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; } }
-}
+function ensureAC(){ if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } } }
 document.addEventListener('pointerdown', () => { if (S.snd) ensureAC(); }, { once:true, capture:true });
 function beep(freq, dur){
   if (!S.snd || !AC) return;
-  try{
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.type = 'square'; o.frequency.value = freq; g.gain.value = .025;
-    o.connect(g); g.connect(AC.destination);
-    o.start(); o.stop(AC.currentTime + dur);
-  }catch(e){}
+  try{ const o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.value=freq; g.gain.value=.025; o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }catch(e){}
 }
-
 async function api(path, { method='GET', body=null, headers={}, timeout=CFG.FETCH_MS } = {}){
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), timeout);
   const t0 = performance.now();
   try{
     const opts = { method, signal: c.signal, headers: { ...headers } };
-    if (body !== null){
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = typeof body === 'string' ? body : JSON.stringify(body);
-    }
+    if (body !== null){ opts.headers['Content-Type']='application/json'; opts.body = typeof body === 'string' ? body : JSON.stringify(body); }
     const r = await fetch(CFG.API_BASE + path, opts);
     S.latency = Math.round(performance.now() - t0);
-    let data = null;
-    try{ data = await r.json(); }catch(e){ data = null; }
+    let data = null; try{ data = await r.json(); }catch(e){ data=null; }
     return { ok:r.ok, status:r.status, data };
   } finally { clearTimeout(t); }
 }
 async function pingUplink(){
-  try{
-    const r = await api('/', { timeout: 1500 });
-    if (r.ok && r.data && r.data.status === 'ok'){ S.botReady = !!r.data.bot_ready; return true; }
-    return false;
-  }catch(e){ return false; }
+  try{ const r = await api('/', { timeout:1500 }); if (r.ok && r.data && r.data.status==='ok'){ S.botReady=!!r.data.bot_ready; return true; } return false; }catch(e){ return false; }
 }
-
 function bootSequence(){
   return new Promise(resolve => {
     const ov = $('#bios'), box = $('#biosText');
@@ -631,44 +540,25 @@ function bootSequence(){
     window.addEventListener('keydown', skip, { once:true });
     ov.addEventListener('pointerdown', skip, { once:true });
     (async () => {
-      const lines = [
-        'TERMIX BIOS v2.4 — GRID TERMINAL',
-        'CPU: Z80-XT @ 4.77 MHZ ................ OK',
-        'MEM: 640K CONVENTIONAL ................ OK',
-        'VID: AMBER PHOSPHOR CRT ............... OK',
-        'SND: SQUAREWAVE BLASTER ............... OK'
-      ];
-      for (const ln of lines){
-        const div = document.createElement('div');
-        box.appendChild(div);
-        for (let i = 0; i < ln.length; i++){ div.textContent = ln.slice(0, i + 1); await sleep(4); }
-        await sleep(40);
-      }
-      const net = document.createElement('div');
-      box.appendChild(net);
-      net.textContent = 'NET: UPLINK TEST';
+      const lines = ['TERMIX BIOS v2.5 — GRID TERMINAL','CPU: Z80-XT @ 4.77 MHZ ................ OK','MEM: 640K CONVENTIONAL ................ OK','VID: AMBER PHOSPHOR CRT ............... OK','SND: SQUAREWAVE BLASTER ............... OK'];
+      for (const ln of lines){ const div = document.createElement('div'); box.appendChild(div); for (let i=0;i<ln.length;i++){ div.textContent = ln.slice(0,i+1); await sleep(4); } await sleep(40); }
+      const net = document.createElement('div'); box.appendChild(net); net.textContent = 'NET: UPLINK TEST';
       const dots = setInterval(() => { net.textContent += '.'; }, 140);
       const pong = await Promise.race([pingUplink(), sleep(1200).then(() => null)]);
       clearInterval(dots);
-      if (pong === true) net.innerHTML = 'NET: UPLINK OK · ' + (S.latency ?? '??') + 'MS · BOT ' + (S.botReady ? 'READY' : 'WARM-UP') + ' <span class="ok">■</span>';
+      if (pong === true) net.innerHTML = 'NET: UPLINK OK · ' + (S.latency ?? '??') + 'MS · BOT ' + (S.botReady?'READY':'WARM-UP') + ' <span class="ok">■</span>';
       else net.innerHTML = 'NET: UPLINK FAILED — OFFLINE MODE <span class="bad">■</span>';
-      await sleep(280);
-      clearTimeout(kill);
-      finish();
+      await sleep(280); clearTimeout(kill); finish();
     })();
   });
 }
-
 function buildMarquee(){
   const track = $('#mqTrack');
   const items = CFG.ANNOUNCEMENTS.map(a => '<span class="mq-i">' + esc(a) + '<span class="mq-sep">◆</span></span>').join('');
   track.innerHTML = items + items;
   if (S.reducedMotion) track.style.animation = 'none';
 }
-function startClock(){
-  const tick = () => { const el = $('#hudClock'); if (el) el.textContent = new Date().toISOString().slice(11,19); };
-  tick(); setInterval(tick, 1000);
-}
+function startClock(){ const tick = () => { const el = $('#hudClock'); if (el) el.textContent = new Date().toISOString().slice(11,19); }; tick(); setInterval(tick, 1000); }
 let cdTarget = null;
 function nextFridayUTC(){
   const now = new Date();
@@ -681,16 +571,11 @@ function nextFridayUTC(){
 function tickCountdown(){
   const el = $('#countdown'); if (!el) return;
   if (!cdTarget){ el.textContent = '——'; return; }
-  let ms = cdTarget.getTime() - Date.now();
-  if (ms < 0) ms = 0;
-  const d  = Math.floor(ms / 86400000);
-  const h  = Math.floor(ms % 86400000 / 3600000);
-  const m  = Math.floor(ms % 3600000 / 60000);
-  const s  = Math.floor(ms % 60000 / 1000);
+  let ms = cdTarget.getTime() - Date.now(); if (ms < 0) ms = 0;
+  const d = Math.floor(ms/86400000), h = Math.floor(ms%86400000/3600000), m = Math.floor(ms%3600000/60000), s = Math.floor(ms%60000/1000);
   el.textContent = d + 'D ' + pad2(h) + ':' + pad2(m) + ':' + pad2(s);
 }
 setInterval(tickCountdown, 1000);
-
 async function refreshData(){
   const [t, p, l, m] = await Promise.all([
     api('/api/tournaments').catch(() => null),
@@ -720,48 +605,35 @@ function computeFeatured(){
   S.featured = live[0] || open[0] || rest[0] || S.tournaments[0] || null;
   const st = S.featured && S.featured.starts_at ? new Date(S.featured.starts_at) : null;
   cdTarget = (st && !isNaN(st)) ? st : nextFridayUTC();
-  const lbl = $('#cdTarget');
-  if (lbl) lbl.textContent = fmtStarts(cdTarget.toISOString());
+  const lbl = $('#cdTarget'); if (lbl) lbl.textContent = fmtStarts(cdTarget.toISOString());
 }
 function setLive(v){
   S.live = v;
   document.body.classList.toggle('offline', !v);
   $('#retryBtn').hidden = v;
   if (v) S.offlineToastShown = false;
-  setLED('#hudUplink', v ? 'g' : 'r');
-  setLED('#ssUplinkLed', v ? 'g' : 'r');
+  setLED('#hudUplink', v ? 'g' : 'r'); setLED('#ssUplinkLed', v ? 'g' : 'r');
   const botOk = v && S.botReady !== false;
-  setLED('#hudBot', botOk ? 'g' : 'r');
-  setLED('#ssBotLed', botOk ? 'g' : 'r');
+  setLED('#hudBot', botOk ? 'g' : 'r'); setLED('#ssBotLed', botOk ? 'g' : 'r');
   $('#hudUpTxt').textContent = v ? 'OK' : 'DOWN';
   $('#ssUplink').textContent = v ? 'ONLINE' : 'OFFLINE';
   $('#ssBot').textContent = v ? (S.botReady ? 'READY' : 'WARM-UP') : 'DOWN';
   $('#hudPing').textContent = S.latency == null ? '——' : S.latency + 'MS';
 }
 async function loadAll(){
-  try{
-    await refreshData();
-    setLive(true);
-    renderAll();
-  }catch(e){
-    setLive(false);
-    renderAll();
-    if (!S.offlineToastShown){
-      S.offlineToastShown = true;
-      toast('UPLINK OFFLINE — GRID RUNNING ON LOCAL SHELL', 'error');
-    }
+  try{ await refreshData(); setLive(true); renderAll(); }
+  catch(e){
+    setLive(false); renderAll();
+    if (!S.offlineToastShown){ S.offlineToastShown = true; toast('UPLINK OFFLINE — GRID RUNNING ON LOCAL SHELL', 'error'); }
   }
 }
 function sortedMatches(){ return [...S.matches].sort((a, b) => (Number(b.id)||0) - (Number(a.id)||0)); }
-
 function renderAll(){
   renderHero(); renderStats(); renderFeed(); renderModes();
-  renderRankings(); renderLog(); renderSlotsStatus();
-  if (!S.prizeCustom) defaultPrizeArt();
+  renderRankings(); renderLog(); renderSlotsStatus(); renderPrizeImage();
 }
-function emptyHTML(head, sub){
-  return '<div class="empty" style="grid-column:1/-1"><b>' + esc(head) + '</b>' + esc(sub) + ' <span class="cursor"></span></div>';
-}
+function emptyHTML(head, sub){ return '<div class="empty" style="grid-column:1/-1"><b>' + esc(head) + '</b>' + esc(sub) + ' <span class="cursor"></span></div>'; }
+
 function renderHero(){
   setTag('#tagHero', 'LIVE · /api/tournaments', 'tournaments');
   const badge = $('#heroBadge'), title = $('#heroTitle'), sub = $('#heroSub');
@@ -771,24 +643,21 @@ function renderHero(){
     title.innerHTML = 'SIGNAL LOST<span class="cursor"></span>';
     sub.textContent = 'Uplink to the tournament grid is down. Hit ⟳ RETRY UPLINK in the top bar.';
     $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true;
-    return;
+    $('#heroJoin').hidden = true; return;
   }
   if (S.httpErr.tournaments){
     badge.className = 'badge live'; badge.textContent = 'ERR ' + S.httpErr.tournaments;
     title.innerHTML = 'TOURNAMENT FEED ERROR<span class="cursor"></span>';
-    sub.textContent = 'GET /api/tournaments → HTTP ' + S.httpErr.tournaments + '. The grid is reachable but this endpoint is failing — other panels are still live.';
+    sub.textContent = 'GET /api/tournaments → HTTP ' + S.httpErr.tournaments + '.';
     $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true;
-    return;
+    $('#heroJoin').hidden = true; return;
   }
   if (!f){
     badge.className = 'badge warn'; badge.textContent = 'NO DATA';
     title.innerHTML = 'AWAITING TOURNAMENT DATA<span class="cursor"></span>';
-    sub.textContent = 'The grid is online but no tournaments are posted yet. Watch the Discord for announcements.';
+    sub.textContent = 'The grid is online but no tournaments are posted yet.';
     $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true;
-    return;
+    $('#heroJoin').hidden = true; return;
   }
   const st = String(f.status || '').toLowerCase();
   badge.className = 'badge ' + (st === 'live' ? 'live' : st === 'open' ? 'open' : 'done');
@@ -803,22 +672,16 @@ function renderHero(){
   $('#heroCheckin').textContent = (sd && !isNaN(sd)) ? fmtStarts(new Date(sd.getTime() - 30*60000).toISOString()) : '——';
   $('#heroFormat').textContent = f.rounds || '——';
   const jb = $('#heroJoin');
-  if (st === 'open'){
-    jb.hidden = false;
-    jb.textContent = 'JOIN ' + String(f.mode || '').toUpperCase() + ' ►';
-    jb.onclick = () => openModal(f.mode, f.id);
-  } else jb.hidden = true;
+  if (st === 'open'){ jb.hidden = false; jb.textContent = 'JOIN ' + String(f.mode || '').toUpperCase() + ' ►'; jb.onclick = () => openModal(f.mode, f.id); }
+  else jb.hidden = true;
 }
 function renderStats(){
   $('#stPlayers').textContent = S.live ? S.players.length : '——';
   $('#stMatches').textContent = S.live ? S.matches.length : '——';
   const stPrizeEl = $('#stPrize');
   if (!S.live){ stPrizeEl.textContent = '——'; stPrizeEl.style.fontSize = ''; }
-  else {
-    stPrizeEl.textContent = S.featured ? fmtPrize(S.featured) : '$0';
-    stPrizeEl.style.fontSize = (S.featured && S.featured.prize_extra) ? '18px' : '';
-  }
-  $('#stLat').textContent     = S.latency == null ? '——' : S.latency + 'MS';
+  else { stPrizeEl.textContent = S.featured ? fmtPrize(S.featured) : '$0'; stPrizeEl.style.fontSize = (S.featured && S.featured.prize_extra) ? '18px' : ''; }
+  $('#stLat').textContent = S.latency == null ? '——' : S.latency + 'MS';
 }
 function renderFeed(){
   const box = $('#feedBox');
@@ -836,11 +699,8 @@ function feedLine(m, animated){
   const idle = box.querySelector('.idle'); if (idle) idle.remove();
   const loserId = Number(m.winner_id) === Number(m.player1_id) ? m.player2_id : m.player1_id;
   const plain = '[' + fmtMatchHM(m.played_at) + '] #' + Number(m.id) + ' ' + nameOf(m.winner_id) + ' def. ' + nameOf(loserId) + ' ' + (m.score || '—');
-  const row = document.createElement('div');
-  row.className = 'feed-line';
-  row.innerHTML = '<div class="fl-txt"></div>'
-    + '<div class="hp win"><i style="width:100%"></i></div>'
-    + '<div class="hp lose"><i style="width:100%"></i></div>';
+  const row = document.createElement('div'); row.className = 'feed-line';
+  row.innerHTML = '<div class="fl-txt"></div><div class="hp win"><i style="width:100%"></i></div><div class="hp lose"><i style="width:100%"></i></div>';
   box.prepend(row);
   const txt = row.querySelector('.fl-txt');
   const paint = () => {
@@ -855,10 +715,7 @@ function feedLine(m, animated){
     requestAnimationFrame(() => requestAnimationFrame(() => { li.style.width = '0%'; }));
   };
   if (animated && !S.reducedMotion){
-    (async () => {
-      for (let i = 0; i < plain.length; i++){ txt.textContent = plain.slice(0, i + 1); await sleep(9); }
-      paint(); drain();
-    })();
+    (async () => { for (let i = 0; i < plain.length; i++){ txt.textContent = plain.slice(0, i+1); await sleep(9); } paint(); drain(); })();
   } else { paint(); drain(); }
 }
 function renderSlotsStatus(){
@@ -931,8 +788,7 @@ function renderRankings(){
         + '<td class="opname">' + esc(name) + '</td>'
         + '<td class="vt lvl col-opt">LVL ' + (Number(r.level)||0) + '</td>'
         + '<td class="vt xp">' + (Number(r.xp)||0) + ' XP</td>'
-        + '<td><span class="rankbar">' + segs + '</span></td>'
-        + '</tr>';
+        + '<td><span class="rankbar">' + segs + '</span></td></tr>';
     }).join('') + '</tbody></table>';
 }
 function renderLog(){
@@ -945,29 +801,42 @@ function renderLog(){
   wrap.innerHTML = '<table><thead><tr><th>ID</th><th>WINNER</th><th>LOSER</th><th>SCORE</th><th class="col-opt">MAP</th><th>TIME</th></tr></thead><tbody>'
     + ms.map(m => {
       const loserId = Number(m.winner_id) === Number(m.player1_id) ? m.player2_id : m.player1_id;
-      return '<tr>'
-        + '<td class="vt mutc">#' + Number(m.id) + '</td>'
+      return '<tr><td class="vt mutc">#' + Number(m.id) + '</td>'
         + '<td class="win-t">' + esc(nameOf(m.winner_id)) + '</td>'
         + '<td class="lose-t">' + esc(nameOf(loserId)) + '</td>'
         + '<td class="vt score">' + esc(m.score || '—') + '</td>'
         + '<td class="col-opt mutc">—</td>'
-        + '<td class="vt mutc">' + fmtMatchTime(m.played_at) + '</td>'
-        + '</tr>';
+        + '<td class="vt mutc">' + fmtMatchTime(m.played_at) + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
+
+/* ═══ PRIZE IMAGE — admin-set only, no user interaction ═══ */
+function renderPrizeImage(){
+  const img = $('#prizeImg');
+  const f = S.featured;
+  const url = (S.live && f && f.prize_image_url && String(f.prize_image_url).trim()) || '';
+
+  if (url){
+    // Try loading the admin-set URL. On error → fallback to SVG placeholder.
+    const probe = new Image();
+    probe.onload = () => { img.src = url; S.prizeImageLoaded = true; };
+    probe.onerror = () => { defaultPrizeArt(); };
+    probe.src = url;
+  } else {
+    defaultPrizeArt();
+  }
+}
 function defaultPrizeArt(){
-  if (S.prizeCustom) return;
   const f = S.featured;
   const prize = (S.live && f) ? fmtPrize(f) : '$ ——';
   const fontSize = (S.live && f && f.prize_extra) ? 52 : 92;
   let grid = '';
-  for (let x = 40; x < 880; x += 80) grid += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="420"/>';
-  for (let y = 40; y < 420; y += 80) grid += '<line x1="0" y1="' + y + '" x2="880" y2="' + y + '"/>';
+  for (let x = 40; x < 880; x += 80) grid += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="420"/>';
+  for (let y = 40; y < 420; y += 80) grid += '<line x1="0" y1="'+y+'" x2="880" y2="'+y+'"/>';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420">'
     + '<rect width="880" height="420" fill="#0a0805"/>'
     + '<g stroke="#241c0c" stroke-width="1">' + grid + '</g>'
     + '<rect x="14" y="14" width="852" height="392" fill="none" stroke="#8a6a10" stroke-width="2"/>'
-    + '<rect x="22" y="22" width="836" height="376" fill="none" stroke="#3a2f14" stroke-width="1"/>'
     + '<text x="440" y="140" text-anchor="middle" font-family="monospace" font-size="26" letter-spacing="10" fill="#8a6a10">CHAMPIONSHIP CACHE</text>'
     + '<text x="440" y="252" text-anchor="middle" font-family="monospace" font-size="' + fontSize + '" fill="#ffb000">' + esc(prize) + '</text>'
     + '<text x="440" y="312" text-anchor="middle" font-family="monospace" font-size="20" letter-spacing="6" fill="#a8976a">TERMIX // SEASON 04</text>'
@@ -983,71 +852,41 @@ function startPolling(){
   setInterval(async () => {
     if (document.visibilityState !== 'visible' || !S.live) return;
     const prevTop = S.topMatchId;
-    try{
-      await refreshData();
-      setLive(true);
-      renderAll();
+    try{ await refreshData(); setLive(true); renderAll();
       const fresh = S.matches.filter(m => Number(m.id) > prevTop).sort((a, b) => Number(a.id) - Number(b.id));
       for (const m of fresh) feedLine(m, true);
-    }catch(e){
-      setLive(false);
-      renderAll();
-    }
+    }catch(e){ setLive(false); renderAll(); }
   }, 30000);
 }
 
-function getMode(){
-  const r = document.querySelector('input[name="mode"]:checked');
-  return r ? r.value : '1v1';
-}
+function getMode(){ const r = document.querySelector('input[name="mode"]:checked'); return r ? r.value : '1v1'; }
 function refreshTournamentOptions(preselect){
   const sel = $('#mTournament');
   const mode = getMode();
   const opts = S.tournaments.filter(t => t.mode === mode && t.status === 'open');
-  if (!opts.length){
-    sel.innerHTML = '<option value="">— no open ' + esc(mode) + ' tournaments —</option>';
-    return;
-  }
+  if (!opts.length){ sel.innerHTML = '<option value="">— no open ' + esc(mode) + ' tournaments —</option>'; return; }
   sel.innerHTML = opts.map(t => '<option value="' + Number(t.id) + '">' + esc(t.name) + ' · ' + fmtStarts(t.starts_at) + '</option>').join('');
   if (preselect != null && opts.some(t => Number(t.id) === Number(preselect))) sel.value = String(Number(preselect));
 }
 function setStep(n){
-  $('#mStep1').hidden = n !== 1;
-  $('#mStep2').hidden = n !== 2;
+  $('#mStep1').hidden = n !== 1; $('#mStep2').hidden = n !== 2;
   $('#mStepLbl').textContent = n === 1 ? 'STEP 1 OF 3 · FILL IN YOUR DETAILS' : 'STEP 2 OF 3 · CONFIRMED — STEAM VERIFY NEXT';
 }
 function openModal(mode, tid){
-  ensureAC();
-  setStep(1);
-  $('#mErr').classList.remove('show');
-  if (mode && ['1v1','2v2','5v5'].includes(mode)){
-    const r = document.querySelector('input[name="mode"][value="' + mode + '"]');
-    if (r) r.checked = true;
-  }
+  ensureAC(); setStep(1); $('#mErr').classList.remove('show');
+  if (mode && ['1v1','2v2','5v5'].includes(mode)){ const r = document.querySelector('input[name="mode"][value="' + mode + '"]'); if (r) r.checked = true; }
   refreshTournamentOptions(tid);
-  $('#mDiscordId').value = '';
-  $('#mUsername').value = '';
-  $('#mTerms').checked = false;
-  $('#modalWrap').classList.add('open');
-  document.body.classList.add('noscroll');
+  $('#mDiscordId').value = ''; $('#mUsername').value = ''; $('#mTerms').checked = false;
+  $('#modalWrap').classList.add('open'); document.body.classList.add('noscroll');
   setTimeout(() => $('#mDiscordId').focus(), 60);
 }
-function closeModal(){
-  $('#modalWrap').classList.remove('open');
-  document.body.classList.remove('noscroll');
-}
+function closeModal(){ $('#modalWrap').classList.remove('open'); document.body.classList.remove('noscroll'); }
 function modalFail(msg, shakeSel){
-  const errEl = $('#mErr');
-  errEl.textContent = msg;
-  errEl.classList.add('show');
-  if (shakeSel){
-    const el = $(shakeSel);
-    if (el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
-  }
+  const errEl = $('#mErr'); errEl.textContent = msg; errEl.classList.add('show');
+  if (shakeSel){ const el = $(shakeSel); if (el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } }
 }
 async function onRegisterSubmit(e){
-  e.preventDefault();
-  $('#mErr').classList.remove('show');
+  e.preventDefault(); $('#mErr').classList.remove('show');
   const id    = $('#mDiscordId').value.trim();
   const uname = $('#mUsername').value.trim();
   const mode  = getMode();
@@ -1061,78 +900,43 @@ async function onRegisterSubmit(e){
   try{
     if (!S.live) throw new Error('GRID OFFLINE — try again later');
     btn.textContent = 'CHECKING GUILD…';
-    let g = null;
-    try{ g = await api('/api/discord/' + id); }
-    catch(_){ throw new Error('GRID OFFLINE — try again later'); }
+    let g = null; try{ g = await api('/api/discord/' + id); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
     if (g.status !== 503){
       if (g.ok && g.data && g.data.in_guild === false) throw new Error('NOT IN GUILD — join the Discord first');
       if (!g.ok) throw new Error('DISCORD CHECK FAILED (' + g.status + ')');
     }
     btn.textContent = 'SCANNING BANS…';
-    let b = null;
-    try{ b = await api('/api/bans/' + id); }
-    catch(_){ throw new Error('GRID OFFLINE — try again later'); }
+    let b = null; try{ b = await api('/api/bans/' + id); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
     if (b.status === 200) throw new Error('YOU ARE BANNED FROM REGISTERING' + (b.data && b.data.reason ? ' — ' + b.data.reason : ''));
     btn.textContent = 'REGISTERING…';
     const payload = '{"discord_id": ' + id + ', "discord_username": ' + JSON.stringify(uname) + ', "mode": ' + JSON.stringify(mode) + '}';
-    let r = null;
-    try{ r = await api('/api/tournaments/' + tid + '/register', { method:'POST', body: payload }); }
-    catch(_){ throw new Error('GRID OFFLINE — try again later'); }
+    let r = null; try{ r = await api('/api/tournaments/' + tid + '/register', { method:'POST', body: payload }); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
     if (r.ok && r.data && r.data.status === 'registered'){
       $('#mRegId').textContent = 'REG ID #' + (r.data.registration_id ?? '—') + ' · ' + mode.toUpperCase() + ' SLOT SECURED';
       $('#mSteam').href = CFG.API_BASE + '/auth/steam?discord_id=' + id;
       $('#mDiscord').href = CFG.DISCORD_INVITE;
-      setStep(2);
-      toast('REGISTRATION CONFIRMED', 'ok');
-    } else {
-      throw new Error((r.data && r.data.detail) ? r.data.detail : 'REGISTRATION FAILED (' + r.status + ')');
-    }
-  }catch(ex){
-    modalFail(ex.message || 'REGISTRATION FAILED');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'VERIFY DISCORD ►';
-  }
+      setStep(2); toast('REGISTRATION CONFIRMED', 'ok');
+    } else throw new Error((r.data && r.data.detail) ? r.data.detail : 'REGISTRATION FAILED (' + r.status + ')');
+  }catch(ex){ modalFail(ex.message || 'REGISTRATION FAILED'); }
+  finally { btn.disabled = false; btn.textContent = 'VERIFY DISCORD ►'; }
 }
-
-function loadPrizeFile(f){
-  if (!f) return;
-  if (!f.type || !f.type.startsWith('image/')) return toast('NOT AN IMAGE FILE', 'error');
-  const rd = new FileReader();
-  rd.onload = () => {
-    $('#prizeImg').src = rd.result;
-    S.prizeCustom = true;
-    toast('PRIZE FEED REPLACED', 'ok');
-  };
-  rd.onerror = () => toast('COULD NOT READ FILE', 'error');
-  rd.readAsDataURL(f);
-}
-
 function showScreen(id){
   $$('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + id));
   $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.screen === id));
-  toggleDrawer(false);
-  window.scrollTo({ top: 0 });
+  toggleDrawer(false); window.scrollTo({ top: 0 });
 }
-function toggleDrawer(open){
-  $('#sidebar').classList.toggle('open', open);
-  $('#backdrop').classList.toggle('open', open);
-}
+function toggleDrawer(open){ $('#sidebar').classList.toggle('open', open); $('#backdrop').classList.toggle('open', open); }
 function bindUI(){
   $$('.nav-btn').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.screen)));
   $('#burger').addEventListener('click', () => toggleDrawer(true));
   $('#backdrop').addEventListener('click', () => toggleDrawer(false));
   $('#retryBtn').addEventListener('click', async () => {
-    const b = $('#retryBtn');
-    b.disabled = true; b.textContent = '⟳ SYNCING…';
-    await loadAll();
-    b.disabled = false; b.textContent = '⟳ RETRY UPLINK';
+    const b = $('#retryBtn'); b.disabled = true; b.textContent = '⟳ SYNCING…';
+    await loadAll(); b.disabled = false; b.textContent = '⟳ RETRY UPLINK';
   });
   const sndBtn = $('#sndBtn');
   sndBtn.addEventListener('click', () => {
-    S.snd = !S.snd;
-    sndBtn.textContent = S.snd ? 'SND:ON' : 'SND:OFF';
-    sndBtn.setAttribute('aria-pressed', String(S.snd));
+    S.snd = !S.snd; sndBtn.textContent = S.snd ? 'SND:ON' : 'SND:OFF'; sndBtn.setAttribute('aria-pressed', String(S.snd));
     if (S.snd){ ensureAC(); beep(660, .06); }
   });
   $('#tbRegister').addEventListener('click', () => openModal());
@@ -1145,32 +949,19 @@ function bindUI(){
   $('#regForm').addEventListener('submit', onRegisterSubmit);
   document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => refreshTournamentOptions()));
   $('#modesGrid').addEventListener('click', e => {
-    const b = e.target.closest('.join');
-    if (!b || b.disabled) return;
+    const b = e.target.closest('.join'); if (!b || b.disabled) return;
     openModal(b.dataset.mode, Number(b.dataset.id));
   });
-  const pw = $('#prizeWrap');
-  pw.addEventListener('click', () => $('#prizeFile').click());
-  pw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('#prizeFile').click(); } });
-  ['dragover','dragenter'].forEach(ev => pw.addEventListener(ev, e => { e.preventDefault(); pw.classList.add('drag'); }));
-  ['dragleave','drop'].forEach(ev => pw.addEventListener(ev, e => { e.preventDefault(); pw.classList.remove('drag'); }));
-  pw.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) loadPrizeFile(f); });
-  $('#prizeFile').addEventListener('change', e => loadPrizeFile(e.target.files[0]));
   $('#adminLink').href = CFG.ADMIN_URL;
   $('#adminLinkFoot').href = CFG.ADMIN_URL;
   $$('.js-discord').forEach(a => a.href = CFG.DISCORD_INVITE);
 }
-
 async function init(){
   const ov = $('#bios');
   setTimeout(() => { try{ ov.remove(); }catch(e){} }, 4000);
   try{
     if (location.protocol === 'file:') toast('SERVE OVER HTTP (e.g. localhost:5500) — file:// will not fetch the API', 'error');
-    bindUI();
-    buildMarquee();
-    startClock();
-    tickCountdown();
-    defaultPrizeArt();
+    bindUI(); buildMarquee(); startClock(); tickCountdown();
     const boot = S.reducedMotion ? Promise.resolve((() => { try{ ov.remove(); }catch(e){} })()) : bootSequence();
     await Promise.all([boot, loadAll()]);
     startPolling();
