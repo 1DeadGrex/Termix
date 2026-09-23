@@ -57,6 +57,8 @@ async def init_db():
             player2_id INTEGER,
             winner_id INTEGER,
             score TEXT,
+            match_name TEXT DEFAULT '',
+            match_map TEXT DEFAULT '',
             played_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
         await c.execute('''CREATE TABLE IF NOT EXISTS xp (
@@ -87,6 +89,7 @@ async def init_db():
             max_slots INTEGER DEFAULT 32,
             rules_url TEXT,
             prize_image_url TEXT DEFAULT '',
+            prize_market_url TEXT DEFAULT '',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
@@ -104,13 +107,16 @@ async def init_db():
             value TEXT
         )''')
 
-        # Migrations for old DBs
+        # Migrations for older databases
+        await _ensure_column(c, "matches", "match_name", "TEXT DEFAULT ''")
+        await _ensure_column(c, "matches", "match_map", "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_extra", "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_image_url", "TEXT DEFAULT ''")
+        await _ensure_column(c, "tournaments", "prize_market_url", "TEXT DEFAULT ''")
 
 
 # ─────────────────────────────────────────────
-# Settings (key/value)
+# Settings
 # ─────────────────────────────────────────────
 async def set_setting(key: str, value: str):
     async with _client() as c:
@@ -183,25 +189,31 @@ async def delete_player(user_id):
 # ─────────────────────────────────────────────
 # Matches
 # ─────────────────────────────────────────────
-async def add_match(winner_id, loser_id, score):
+async def add_match(winner_id, loser_id, score, match_name="", match_map=""):
     async with _client() as c:
         await c.execute(
-            'INSERT INTO matches (player1_id, player2_id, winner_id, score) VALUES (?, ?, ?, ?)',
-            [winner_id, loser_id, winner_id, score],
+            '''INSERT INTO matches
+               (player1_id, player2_id, winner_id, score, match_name, match_map)
+               VALUES (?, ?, ?, ?, ?, ?)''',
+            [winner_id, loser_id, winner_id, score, match_name or "", match_map or ""],
         )
 
 
 async def get_recent_matches(limit=50):
     async with _client() as c:
         sql = (
-            'SELECT id, player1_id, player2_id, winner_id, score, played_at '
-            'FROM matches ORDER BY played_at DESC '
+            'SELECT id, player1_id, player2_id, winner_id, score, match_name, match_map, played_at '
+            'FROM matches ORDER BY played_at DESC, id DESC '
             f'LIMIT {int(limit)}'
         )
         result = await _execute(c, sql)
         return [
-            {"id": r[0], "player1_id": r[1], "player2_id": r[2],
-             "winner_id": r[3], "score": r[4], "played_at": r[5]}
+            {
+                "id": r[0], "player1_id": r[1], "player2_id": r[2],
+                "winner_id": r[3], "score": r[4],
+                "match_name": r[5] or "", "match_map": r[6] or "",
+                "played_at": r[7],
+            }
             for r in result.rows
         ]
 
@@ -209,10 +221,10 @@ async def get_recent_matches(limit=50):
 async def get_match_history(user_id, limit=10):
     async with _client() as c:
         sql = (
-            '''SELECT id, player1_id, player2_id, winner_id, score, played_at
+            '''SELECT id, player1_id, player2_id, winner_id, score, match_name, match_map, played_at
                FROM matches
                WHERE player1_id = ? OR player2_id = ?
-               ORDER BY played_at DESC '''
+               ORDER BY played_at DESC, id DESC '''
             f'LIMIT {int(limit)}'
         )
         result = await _execute(c, sql, [user_id, user_id])
@@ -269,6 +281,51 @@ async def add_xp(user_id, guild_id, amount=10):
 
 
 # ─────────────────────────────────────────────
+# Wins / Winstreak stats
+# ─────────────────────────────────────────────
+async def get_wins_leaderboard(limit=10):
+    """Top players by total match wins (all-time)."""
+    async with _client() as c:
+        sql = (
+            'SELECT winner_id, COUNT(*) AS wins FROM matches '
+            'GROUP BY winner_id ORDER BY wins DESC, winner_id ASC '
+            f'LIMIT {int(limit)}'
+        )
+        result = await _execute(c, sql)
+        return [{"user_id": r[0], "wins": int(r[1] or 0)} for r in result.rows]
+
+
+async def get_winstreaks(limit=10):
+    """Current winstreak per player, sorted desc. Walks each player's match history from newest."""
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT winner_id, player1_id, player2_id '
+            'FROM matches ORDER BY played_at DESC, id DESC'
+        )
+        rows = result.rows
+
+    history = {}
+    for winner_id, p1, p2 in rows:
+        loser_id = p2 if winner_id == p1 else p1
+        history.setdefault(winner_id, []).append(True)
+        history.setdefault(loser_id, []).append(False)
+
+    streaks = {}
+    for uid, results in history.items():
+        streak = 0
+        for r in results:      # most recent first
+            if r:
+                streak += 1
+            else:
+                break
+        if streak > 0:
+            streaks[uid] = streak
+
+    top = sorted(streaks.items(), key=lambda x: -x[1])[:limit]
+    return [{"user_id": uid, "streak": s} for uid, s in top]
+
+
+# ─────────────────────────────────────────────
 # Bans
 # ─────────────────────────────────────────────
 async def add_ban(user_id, reason, banned_by):
@@ -308,8 +365,8 @@ async def create_tournament(data: dict) -> int:
             '''INSERT INTO tournaments
                (name, description, mode, status, prize_pool, prize_extra,
                 prize_split, entry_fee, rounds, starts_at, max_slots, rules_url,
-                prize_image_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                prize_image_url, prize_market_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             [
                 data.get("name", "Untitled"),
                 data.get("description", ""),
@@ -324,6 +381,7 @@ async def create_tournament(data: dict) -> int:
                 int(data.get("max_slots", 32) or 32),
                 data.get("rules_url", ""),
                 data.get("prize_image_url", ""),
+                data.get("prize_market_url", ""),
             ],
         )
         return result.last_insert_rowid
@@ -335,7 +393,8 @@ async def update_tournament(tid: int, data: dict):
             '''UPDATE tournaments SET
                 name=?, description=?, mode=?, status=?, prize_pool=?,
                 prize_extra=?, prize_split=?, entry_fee=?, rounds=?,
-                starts_at=?, max_slots=?, rules_url=?, prize_image_url=?,
+                starts_at=?, max_slots=?, rules_url=?,
+                prize_image_url=?, prize_market_url=?,
                 updated_at=CURRENT_TIMESTAMP
                WHERE id=?''',
             [
@@ -352,6 +411,7 @@ async def update_tournament(tid: int, data: dict):
                 int(data.get("max_slots", 32) or 32),
                 data.get("rules_url", ""),
                 data.get("prize_image_url", ""),
+                data.get("prize_market_url", ""),
                 tid,
             ],
         )
@@ -376,7 +436,7 @@ async def get_tournament(tid: int):
         result = await c.execute(
             'SELECT id, name, description, mode, status, prize_pool, prize_extra, '
             'prize_split, entry_fee, rounds, starts_at, max_slots, rules_url, '
-            'prize_image_url, created_at, updated_at '
+            'prize_image_url, prize_market_url, created_at, updated_at '
             'FROM tournaments WHERE id = ?',
             [tid],
         )
@@ -390,7 +450,8 @@ async def get_tournament(tid: int):
             "entry_fee": r[8] or "", "rounds": r[9] or "",
             "starts_at": r[10] or "", "max_slots": r[11] or 32,
             "rules_url": r[12] or "", "prize_image_url": r[13] or "",
-            "created_at": r[14], "updated_at": r[15],
+            "prize_market_url": r[14] or "",
+            "created_at": r[15], "updated_at": r[16],
         }
 
 
@@ -400,7 +461,7 @@ async def get_all_tournaments():
             '''SELECT t.id, t.name, t.description, t.mode, t.status,
                       t.prize_pool, t.prize_extra, t.prize_split, t.entry_fee,
                       t.rounds, t.starts_at, t.max_slots, t.rules_url,
-                      t.prize_image_url,
+                      t.prize_image_url, t.prize_market_url,
                       (SELECT COUNT(*) FROM tournament_registrations r
                        WHERE r.tournament_id = t.id AND r.status != 'rejected') AS reg_count
                FROM tournaments t
@@ -419,7 +480,8 @@ async def get_all_tournaments():
                 "prize_split": r[7] or "", "entry_fee": r[8] or "",
                 "rounds": r[9] or "", "starts_at": r[10] or "",
                 "max_slots": r[11] or 32, "rules_url": r[12] or "",
-                "prize_image_url": r[13] or "", "registered": r[14] or 0,
+                "prize_image_url": r[13] or "", "prize_market_url": r[14] or "",
+                "registered": r[15] or 0,
             }
             for r in result.rows
         ]
