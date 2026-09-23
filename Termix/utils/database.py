@@ -1,5 +1,6 @@
 # utils/database.py — Turso (hosted SQLite over HTTP)
 import os
+import asyncio
 import libsql_client
 
 # ── Config ──
@@ -24,10 +25,27 @@ if not TURSO_URL or not TURSO_TOKEN:
 # Backward-compat export
 DB_PATH = TURSO_URL or "turso"
 
+# Hard timeout for any single Turso query (prevents event-loop hangs)
+DB_TIMEOUT = 8.0
+
 
 def _client():
     """Fresh libsql HTTP client per call. Cheap — no persistent connection."""
     return libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN)
+
+
+async def _execute(c, sql, args=None, timeout=DB_TIMEOUT):
+    """Run a query with a hard timeout so a stalled Turso call can't freeze the loop."""
+    return await asyncio.wait_for(c.execute(sql, args or []), timeout)
+
+
+async def _ensure_column(c, table, column, coltype):
+    """Add a column if it doesn't exist. Turso lacks 'ADD COLUMN IF NOT EXISTS'."""
+    try:
+        await c.execute(f'ALTER TABLE {table} ADD COLUMN {column} {coltype}')
+        print(f"✅ Schema: added {table}.{column}")
+    except Exception:
+        pass  # column already exists — expected on subsequent startups
 
 
 # ─────────────────────────────────────────────
@@ -35,7 +53,6 @@ def _client():
 # ─────────────────────────────────────────────
 async def init_db():
     async with _client() as c:
-        # Players
         await c.execute('''CREATE TABLE IF NOT EXISTS players (
             user_id INTEGER PRIMARY KEY,
             discord_name TEXT,
@@ -43,7 +60,6 @@ async def init_db():
             verified INTEGER DEFAULT 0,
             registered_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
-        # Matches
         await c.execute('''CREATE TABLE IF NOT EXISTS matches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             player1_id INTEGER,
@@ -52,7 +68,6 @@ async def init_db():
             score TEXT,
             played_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
-        # XP
         await c.execute('''CREATE TABLE IF NOT EXISTS xp (
             user_id INTEGER,
             guild_id INTEGER,
@@ -60,14 +75,12 @@ async def init_db():
             level INTEGER DEFAULT 0,
             PRIMARY KEY (user_id, guild_id)
         )''')
-        # Bans
         await c.execute('''CREATE TABLE IF NOT EXISTS bans (
             user_id INTEGER PRIMARY KEY,
             reason TEXT,
             banned_by INTEGER,
             banned_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
-        # Tournaments
         await c.execute('''CREATE TABLE IF NOT EXISTS tournaments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -75,6 +88,7 @@ async def init_db():
             mode TEXT NOT NULL DEFAULT '1v1',
             status TEXT NOT NULL DEFAULT 'draft',
             prize_pool INTEGER DEFAULT 0,
+            prize_extra TEXT DEFAULT '',
             prize_split TEXT,
             entry_fee TEXT,
             rounds TEXT,
@@ -84,7 +98,6 @@ async def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
-        # Registrations
         await c.execute('''CREATE TABLE IF NOT EXISTS tournament_registrations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tournament_id INTEGER NOT NULL,
@@ -94,6 +107,9 @@ async def init_db():
             status TEXT DEFAULT 'pending',
             registered_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
+
+        # Migration for existing databases: add prize_extra if missing
+        await _ensure_column(c, "tournaments", "prize_extra", "TEXT DEFAULT ''")
 
 
 # ─────────────────────────────────────────────
@@ -166,11 +182,12 @@ async def add_match(winner_id, loser_id, score):
 
 async def get_recent_matches(limit=50):
     async with _client() as c:
-        result = await c.execute(
+        sql = (
             'SELECT id, player1_id, player2_id, winner_id, score, played_at '
-            'FROM matches ORDER BY played_at DESC LIMIT ?',
-            [limit],
+            'FROM matches ORDER BY played_at DESC '
+            f'LIMIT {int(limit)}'
         )
+        result = await _execute(c, sql)
         return [
             {
                 "id": r[0],
@@ -186,13 +203,14 @@ async def get_recent_matches(limit=50):
 
 async def get_match_history(user_id, limit=10):
     async with _client() as c:
-        result = await c.execute(
+        sql = (
             '''SELECT id, player1_id, player2_id, winner_id, score, played_at
                FROM matches
                WHERE player1_id = ? OR player2_id = ?
-               ORDER BY played_at DESC LIMIT ?''',
-            [user_id, user_id, limit],
+               ORDER BY played_at DESC '''
+            f'LIMIT {int(limit)}'
         )
+        result = await _execute(c, sql, [user_id, user_id])
         return [tuple(r) for r in result.rows]
 
 
@@ -201,11 +219,11 @@ async def get_match_history(user_id, limit=10):
 # ─────────────────────────────────────────────
 async def get_leaderboard(guild_id, limit=20):
     async with _client() as c:
-        result = await c.execute(
+        sql = (
             'SELECT user_id, xp, level FROM xp WHERE guild_id = ? '
-            'ORDER BY xp DESC LIMIT ?',
-            [guild_id, limit],
+            f'ORDER BY xp DESC LIMIT {int(limit)}'
         )
+        result = await _execute(c, sql, [guild_id])
         return [
             {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2]}
             for i, r in enumerate(result.rows, 1)
@@ -214,11 +232,12 @@ async def get_leaderboard(guild_id, limit=20):
 
 async def get_global_leaderboard(limit=10):
     async with _client() as c:
-        result = await c.execute(
+        sql = (
             'SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level '
-            'FROM xp GROUP BY user_id ORDER BY total_xp DESC LIMIT ?',
-            [limit],
+            'FROM xp GROUP BY user_id ORDER BY total_xp DESC '
+            f'LIMIT {int(limit)}'
         )
+        result = await _execute(c, sql)
         return [
             {"rank": i, "user_id": r[0], "xp": r[1] or 0, "level": r[2] or 1}
             for i, r in enumerate(result.rows, 1)
@@ -227,20 +246,23 @@ async def get_global_leaderboard(limit=10):
 
 async def add_xp(user_id, guild_id, amount=10):
     async with _client() as c:
-        await c.execute(
+        await _execute(
+            c,
             '''INSERT INTO xp (user_id, guild_id, xp)
                VALUES (?, ?, ?)
                ON CONFLICT(user_id, guild_id)
                DO UPDATE SET xp = xp + ?''',
             [user_id, guild_id, amount, amount],
         )
-        result = await c.execute(
+        result = await _execute(
+            c,
             'SELECT xp FROM xp WHERE user_id = ? AND guild_id = ?',
             [user_id, guild_id],
         )
         xp = result.rows[0][0] if result.rows else amount
         level = int((xp / 100) ** 0.5)
-        await c.execute(
+        await _execute(
+            c,
             'UPDATE xp SET level = ? WHERE user_id = ? AND guild_id = ?',
             [level, user_id, guild_id],
         )
@@ -292,15 +314,16 @@ async def create_tournament(data: dict) -> int:
     async with _client() as c:
         result = await c.execute(
             '''INSERT INTO tournaments
-               (name, description, mode, status, prize_pool, prize_split,
-                entry_fee, rounds, starts_at, max_slots, rules_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+               (name, description, mode, status, prize_pool, prize_extra,
+                prize_split, entry_fee, rounds, starts_at, max_slots, rules_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             [
                 data.get("name", "Untitled"),
                 data.get("description", ""),
                 data.get("mode", "1v1"),
                 data.get("status", "draft"),
                 int(data.get("prize_pool", 0) or 0),
+                data.get("prize_extra", ""),
                 data.get("prize_split", ""),
                 data.get("entry_fee", ""),
                 data.get("rounds", ""),
@@ -317,8 +340,9 @@ async def update_tournament(tid: int, data: dict):
         await c.execute(
             '''UPDATE tournaments SET
                 name=?, description=?, mode=?, status=?, prize_pool=?,
-                prize_split=?, entry_fee=?, rounds=?, starts_at=?, max_slots=?,
-                rules_url=?, updated_at=CURRENT_TIMESTAMP
+                prize_extra=?, prize_split=?, entry_fee=?, rounds=?,
+                starts_at=?, max_slots=?, rules_url=?,
+                updated_at=CURRENT_TIMESTAMP
                WHERE id=?''',
             [
                 data.get("name", "Untitled"),
@@ -326,6 +350,7 @@ async def update_tournament(tid: int, data: dict):
                 data.get("mode", "1v1"),
                 data.get("status", "draft"),
                 int(data.get("prize_pool", 0) or 0),
+                data.get("prize_extra", ""),
                 data.get("prize_split", ""),
                 data.get("entry_fee", ""),
                 data.get("rounds", ""),
@@ -356,8 +381,8 @@ async def set_tournament_status(tid: int, status: str):
 async def get_tournament(tid: int):
     async with _client() as c:
         result = await c.execute(
-            'SELECT id, name, description, mode, status, prize_pool, prize_split, '
-            'entry_fee, rounds, starts_at, max_slots, rules_url, '
+            'SELECT id, name, description, mode, status, prize_pool, prize_extra, '
+            'prize_split, entry_fee, rounds, starts_at, max_slots, rules_url, '
             'created_at, updated_at '
             'FROM tournaments WHERE id = ?',
             [tid],
@@ -372,14 +397,15 @@ async def get_tournament(tid: int):
             "mode": r[3],
             "status": r[4],
             "prize_pool": r[5] or 0,
-            "prize_split": r[6] or "",
-            "entry_fee": r[7] or "",
-            "rounds": r[8] or "",
-            "starts_at": r[9] or "",
-            "max_slots": r[10] or 32,
-            "rules_url": r[11] or "",
-            "created_at": r[12],
-            "updated_at": r[13],
+            "prize_extra": r[6] or "",
+            "prize_split": r[7] or "",
+            "entry_fee": r[8] or "",
+            "rounds": r[9] or "",
+            "starts_at": r[10] or "",
+            "max_slots": r[11] or 32,
+            "rules_url": r[12] or "",
+            "created_at": r[13],
+            "updated_at": r[14],
         }
 
 
@@ -387,11 +413,10 @@ async def get_all_tournaments():
     async with _client() as c:
         result = await c.execute(
             '''SELECT t.id, t.name, t.description, t.mode, t.status,
-                      t.prize_pool, t.prize_split, t.entry_fee, t.rounds,
-                      t.starts_at, t.max_slots, t.rules_url,
+                      t.prize_pool, t.prize_extra, t.prize_split, t.entry_fee,
+                      t.rounds, t.starts_at, t.max_slots, t.rules_url,
                       (SELECT COUNT(*) FROM tournament_registrations r
-                       WHERE r.tournament_id = t.id
-                         AND r.status != 'rejected') AS reg_count
+                       WHERE r.tournament_id = t.id AND r.status != 'rejected') AS reg_count
                FROM tournaments t
                ORDER BY
                  CASE t.status
@@ -411,13 +436,14 @@ async def get_all_tournaments():
                 "mode": r[3],
                 "status": r[4],
                 "prize_pool": r[5] or 0,
-                "prize_split": r[6] or "",
-                "entry_fee": r[7] or "",
-                "rounds": r[8] or "",
-                "starts_at": r[9] or "",
-                "max_slots": r[10] or 32,
-                "rules_url": r[11] or "",
-                "registered": r[12] or 0,
+                "prize_extra": r[6] or "",
+                "prize_split": r[7] or "",
+                "entry_fee": r[8] or "",
+                "rounds": r[9] or "",
+                "starts_at": r[10] or "",
+                "max_slots": r[11] or 32,
+                "rules_url": r[12] or "",
+                "registered": r[13] or 0,
             }
             for r in result.rows
         ]
@@ -425,7 +451,6 @@ async def get_all_tournaments():
 
 async def register_for_tournament(tid: int, discord_id: int, username: str, mode: str):
     async with _client() as c:
-        # Reject duplicates
         existing = await c.execute(
             'SELECT id FROM tournament_registrations '
             'WHERE tournament_id = ? AND discord_id = ?',
