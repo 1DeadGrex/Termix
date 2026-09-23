@@ -22,12 +22,7 @@ load_dotenv()
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/K8VndtvrHq")
-ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
-
-if ADMIN_KEY == "changeme123":
-    print("⚠️  ADMIN_KEY is still the default — set a strong value in env vars!")
-
+DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://termix-chi.vercel.app/")
 # ─────────────────────────────────────────────
 # Bot reference (set by app.py)
 # ─────────────────────────────────────────────
@@ -552,7 +547,7 @@ a{{color:var(--amber)}}
       <span class="right">{result_label}</span>
     </div>
     <div class="marquee" aria-hidden="true"><div class="mq-track">
-      <span class="hot">★★★ STEAM LINK ESTABLISHED ★★★</span><span>&nbsp;OPERATIVE VERIFIED · CLEARANCE GRANTED ·&nbsp;</span><span class="hot">GLHF ★</span><span>&nbsp;·&nbsp;</span>
+      <span class="hot"> STEAM LINK ESTABLISHED </span><span>&nbsp;OPERATIVE VERIFIED · CLEARANCE GRANTED ·&nbsp;</span><span class="hot">GLHF ★</span><span>&nbsp;·&nbsp;</span>
       <span class="hot">★★★ STEAM LINK ESTABLISHED ★★★</span><span>&nbsp;OPERATIVE VERIFIED · CLEARANCE GRANTED ·&nbsp;</span><span class="hot">GLHF ★</span><span>&nbsp;·&nbsp;</span>
     </div></div>
 
@@ -582,7 +577,7 @@ a{{color:var(--amber)}}
     </div>
 
     <div class="foot">
-      <span>TERMIX // GRID v2.4.1</span>
+      <span>TERMIX // GRID v1.4.9</span>
       <span>UPLINK OK © 2025 <span class="cur"></span></span>
     </div>
   </div>
@@ -659,13 +654,13 @@ async def register_success(
     avatar: Optional[str] = None,
 ):
     return _vhs_page(
-        title="CLEARANCE GRANTED",
+        title="Eligible",
         heading="✓ ACCESS GRANTED",
         sub="// STEAM ↔ DISCORD LINK ESTABLISHED //",
         display_name=name if name and name != "Unknown" else "Player",
         steam_id=steam_id or "",
         avatar=avatar or "",
-        status_text="ELIGIBLE — CS2 1V1 TOURNAMENT",
+        status_text="ELIGIBLE",
         status_class="status-ok",
         cta_text="PROCEED TO REGISTRATION FOR TOURNAMENT ►",
         cta_href=DISCORD_INVITE,
