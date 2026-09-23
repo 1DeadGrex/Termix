@@ -33,6 +33,7 @@ if ADMIN_KEY == "changeme123":
 # ─────────────────────────────────────────────
 _bot = None
 
+
 def set_bot(bot_instance):
     global _bot
     _bot = bot_instance
@@ -62,7 +63,7 @@ app.add_middleware(
 
 
 # ─────────────────────────────────────────────
-# Admin auth helper
+# Admin auth
 # ─────────────────────────────────────────────
 def require_admin(request: Request):
     key = request.headers.get("X-Admin-Key") or request.query_params.get("key")
@@ -199,6 +200,7 @@ class TournamentPayload(BaseModel):
     mode: str = "1v1"
     status: str = "draft"
     prize_pool: int = 0
+    prize_extra: str = ""
     prize_split: str = ""
     entry_fee: str = ""
     rounds: str = ""
@@ -275,7 +277,6 @@ async def register_for_tournament(tid: int, payload: TournamentRegisterPayload):
             detail=f"Registration closed (status: {t['status']})",
         )
 
-    # Ban check
     ban = await db.get_ban(payload.discord_id)
     if ban:
         raise HTTPException(
@@ -433,7 +434,7 @@ async def auth_success():
 
 
 # ─────────────────────────────────────────────
-# Shared VHS page (success + error)
+# Shared VHS page
 # ─────────────────────────────────────────────
 def _vhs_page(
     *,
@@ -672,7 +673,7 @@ async def register_success(
 
 
 # ─────────────────────────────────────────────
-# Error route (same VHS style)
+# Error route
 # ─────────────────────────────────────────────
 def _vhs_error(title: str, message: str, status_code: int = 400):
     return HTMLResponse(
