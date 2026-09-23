@@ -1,4 +1,4 @@
-# api.py — FastAPI web layer, runs in the same process as the bot.
+# api.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,16 +16,15 @@ from utils import database as db
 
 load_dotenv()
 
-# ─────────────────────────────────────────────
-# Config
-# ─────────────────────────────────────────────
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://termix-chi.vercel.app/")
-# ─────────────────────────────────────────────
-# Bot reference (set by app.py)
-# ─────────────────────────────────────────────
+DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/K8VndtvrHq")
+ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
+
+if ADMIN_KEY == "changeme123":
+    print("⚠️  ADMIN_KEY is still the default — set a strong value in env vars!")
+
 _bot = None
 
 
@@ -35,9 +34,6 @@ def set_bot(bot_instance):
     print(f"✅ API: bot reference registered ({type(bot_instance).__name__})")
 
 
-# ─────────────────────────────────────────────
-# Lifespan
-# ─────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.init_db()
@@ -46,20 +42,17 @@ async def lifespan(app: FastAPI):
     print("🛑 API shutting down")
 
 
-app = FastAPI(title="CS2 Tournament API", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="CS2 Tournament API", version="2.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: tighten to your Vercel domain in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ─────────────────────────────────────────────
-# Admin auth
-# ─────────────────────────────────────────────
 def require_admin(request: Request):
     key = request.headers.get("X-Admin-Key") or request.query_params.get("key")
     if key != ADMIN_KEY:
@@ -67,15 +60,18 @@ def require_admin(request: Request):
 
 
 # ─────────────────────────────────────────────
-# Health
+# Health + admin check
 # ─────────────────────────────────────────────
 @app.get("/")
 async def root():
-    return {
-        "status": "ok",
-        "service": "CS2 Tournament API",
-        "bot_ready": _bot is not None,
-    }
+    return {"status": "ok", "service": "CS2 Tournament API", "bot_ready": _bot is not None}
+
+
+@app.get("/api/admin/check")
+async def admin_check(request: Request):
+    """Protected probe — returns 200 only if X-Admin-Key is valid."""
+    require_admin(request)
+    return {"status": "ok", "admin": True}
 
 
 # ─────────────────────────────────────────────
@@ -202,6 +198,7 @@ class TournamentPayload(BaseModel):
     starts_at: str = ""
     max_slots: int = 32
     rules_url: str = ""
+    prize_image_url: str = ""
 
 
 @app.post("/api/tournaments")
@@ -267,17 +264,11 @@ async def register_for_tournament(tid: int, payload: TournamentRegisterPayload):
         raise HTTPException(status_code=404, detail="Tournament not found")
 
     if t["status"] != "open":
-        raise HTTPException(
-            status_code=400,
-            detail=f"Registration closed (status: {t['status']})",
-        )
+        raise HTTPException(status_code=400, detail=f"Registration closed (status: {t['status']})")
 
     ban = await db.get_ban(payload.discord_id)
     if ban:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Banned: {ban.get('reason', 'no reason given')}",
-        )
+        raise HTTPException(status_code=403, detail=f"Banned: {ban.get('reason', 'no reason given')}")
 
     rid = await db.register_for_tournament(
         tid, payload.discord_id, payload.discord_username, payload.mode
@@ -295,9 +286,7 @@ async def list_registrations(tid: int, request: Request):
 
 
 @app.post("/api/tournaments/{tid}/registrations/{rid}")
-async def update_registration(
-    tid: int, rid: int, payload: StatusPayload, request: Request
-):
+async def update_registration(tid: int, rid: int, payload: StatusPayload, request: Request):
     require_admin(request)
     if payload.status not in ("pending", "approved", "rejected"):
         raise HTTPException(status_code=400, detail="Invalid status")
@@ -306,7 +295,7 @@ async def update_registration(
 
 
 # ─────────────────────────────────────────────
-# Steam OpenID — Step 1
+# Steam OpenID
 # ─────────────────────────────────────────────
 @app.get("/auth/steam")
 async def steam_login(discord_id: int):
@@ -323,9 +312,6 @@ async def steam_login(discord_id: int):
     return RedirectResponse(steam_url)
 
 
-# ─────────────────────────────────────────────
-# Steam OpenID — Step 2
-# ─────────────────────────────────────────────
 @app.get("/auth/steam/callback")
 async def steam_callback(discord_id: int, request: Request):
     params = dict(request.query_params)
@@ -369,9 +355,6 @@ async def steam_callback(discord_id: int, request: Request):
     return RedirectResponse(f"{BASE_URL}/register-success?{qp}")
 
 
-# ─────────────────────────────────────────────
-# Steam profile — API key optional
-# ─────────────────────────────────────────────
 async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
     if STEAM_API_KEY:
         try:
@@ -397,32 +380,20 @@ async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
             persona = _xml_extract(xml, "steamID")
             avatar = _xml_extract(xml, "avatarFull")
             if persona:
-                return {
-                    "personaname": persona,
-                    "avatarfull": avatar or "",
-                    "steamid": steam_id,
-                }
+                return {"personaname": persona, "avatarfull": avatar or "", "steamid": steam_id}
     except Exception as e:
         print(f"[steam] XML fetch failed: {e}")
-
     return None
 
 
 def _xml_extract(xml: str, tag: str) -> Optional[str]:
-    m = re.search(
-        rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE
-    )
-    if m:
-        return m.group(1).strip()
+    m = re.search(rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE)
+    if m: return m.group(1).strip()
     m = re.search(rf"<{tag}>\s*(.*?)\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
+    if m: return m.group(1).strip()
     return None
 
 
-# ─────────────────────────────────────────────
-# JSON success fallback
-# ─────────────────────────────────────────────
 @app.get("/auth/success")
 async def auth_success():
     return {"message": "✅ Steam account linked! You can close this tab."}
