@@ -88,6 +88,7 @@ textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospa
 .aprize{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 12px;gap:10px}
 .aprize .big{font-family:'VT323',monospace;color:var(--amber);line-height:1.1;text-shadow:2px 2px 0 #000;text-align:right;word-break:break-word}
 .abtns{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.abtns .wide{grid-column:1/-1}
 .tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);white-space:nowrap}
@@ -110,7 +111,6 @@ td.vt{font-size:19px}
 <div class="fx vig" aria-hidden="true"></div>
 <div id="toasts" aria-live="polite"></div>
 
-<!-- ═══ GATE ═══ -->
 <div id="gate">
   <div class="gate panel">
     <div class="phead gate-head"><h2>AUTHENTICATION</h2><span class="tag off">RESTRICTED</span></div>
@@ -127,7 +127,6 @@ td.vt{font-size:19px}
   </div>
 </div>
 
-<!-- ═══ DASHBOARD (hidden until auth passes) ═══ -->
 <div id="dash" hidden>
   <header id="abar">
     <div class="abrand">TERMIX <span class="red">// ADMIN CONSOLE</span></div>
@@ -161,13 +160,12 @@ td.vt{font-size:19px}
   </main>
 
   <footer id="ahud">
-    <span class="px" style="font-size:8px;color:var(--deep)">TERMIX ADMIN v2.5.0</span>
+    <span class="px" style="font-size:8px;color:var(--deep)">TERMIX ADMIN v2.6.0</span>
     <span>KEY <span id="aKeyMask">——</span></span>
     <span>UTC <span id="aClock">--:--:--</span></span>
   </footer>
 </div>
 
-<!-- ═══ FORM ═══ -->
 <div id="fWrap" class="mwrap" role="dialog" aria-modal="true">
   <div class="modal panel">
     <div class="phead">
@@ -205,10 +203,13 @@ td.vt{font-size:19px}
             <input id="f-slots" class="inp" type="number" min="2" step="1" placeholder="32">
           </div>
         </div>
-        <label class="fl" for="f-extra">PRIZE EXTRA <span class="opt" style="color:var(--dim)">(SKINS / ITEMS — optional)</span></label>
+        <label class="fl" for="f-extra">PRIZE EXTRA <span style="color:var(--dim)">(SKINS / ITEMS — optional)</span></label>
         <input id="f-extra" class="inp" type="text" maxlength="160" placeholder="e.g. 3x AK-47 Redline FT">
-        <label class="fl" for="f-image">PRIZE IMAGE URL <span class="opt" style="color:var(--dim)">(shows on site — paste any public image URL)</span></label>
-        <input id="f-image" class="inp" type="text" maxlength="500" placeholder="https://... (skin image, prize photo, etc.)">
+        <label class="fl" for="f-image">PRIZE IMAGE URL <span style="color:var(--dim)">(shown on the site's prize showcase)</span></label>
+        <input id="f-image" class="inp" type="text" maxlength="500" placeholder="https://... skin image, prize photo, etc.">
+        <label class="fl" for="f-market">PRIZE COMMUNITY MARKET URL <span style="color:var(--dim)">(click-through on the site)</span></label>
+        <input id="f-market" class="inp" type="text" maxlength="500" placeholder="https://steamcommunity.com/market/listings/730/...">
+        <div class="hint">When set, clicking the prize image on the public site opens this URL in a new tab (e.g. Steam Community Market listing for float + price).</div>
         <label class="fl" for="f-split">PRIZE SPLIT</label>
         <input id="f-split" class="inp" type="text" maxlength="120" placeholder="$250 / $120 / $50 (1st–3rd)">
         <label class="fl" for="f-entry">ENTRY</label>
@@ -267,88 +268,62 @@ function toast(msg, kind){
   box.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 4000);
 }
-
 async function api(path, { method='GET', body=null, headers={}, timeout=CFG.FETCH_MS } = {}){
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), timeout);
   try{
     const opts = { method, signal: c.signal, headers: { ...headers } };
-    if (body !== null){
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = typeof body === 'string' ? body : JSON.stringify(body);
-    }
+    if (body !== null){ opts.headers['Content-Type']='application/json'; opts.body = typeof body === 'string' ? body : JSON.stringify(body); }
     const r = await fetch(CFG.API_BASE + path, opts);
-    let data = null;
-    try{ data = await r.json(); }catch(e){ data = null; }
+    let data = null; try{ data = await r.json(); }catch(e){ data = null; }
     return { ok:r.ok, status:r.status, data };
   } finally { clearTimeout(t); }
 }
-function aapi(path, opt = {}){
-  return api(path, { ...opt, headers: { 'X-Admin-Key': S.key, ...(opt.headers || {}) } });
-}
-
+function aapi(path, opt = {}){ return api(path, { ...opt, headers: { 'X-Admin-Key': S.key, ...(opt.headers || {}) } }); }
 const S = { key:'', tournaments:[], selTid:null, authed:false };
 
-/* ═══ AUTH GATE — only unlocks on verified 200 from /api/admin/check ═══ */
 async function verifyKey(k){
   const r = await api('/api/admin/check', { headers: { 'X-Admin-Key': k } });
   return r;
 }
-function gateFail(msg, shake){
+function gateFail(msg){
   const el = $('#gErr');
   el.textContent = msg;
   el.classList.add('show');
-  if (shake){
-    const inp = $('#gKey');
-    inp.classList.remove('shake'); void inp.offsetWidth;
-    inp.style.animation = 'none'; void inp.offsetWidth;
-    inp.style.animation = 'blink 0s'; // reset any prior
-    inp.classList.add('shake');
-  }
 }
 async function gateSubmit(e){
   e.preventDefault();
   $('#gErr').classList.remove('show');
   const k = $('#gKey').value.trim();
-  if (!k) return gateFail('ENTER THE ADMIN KEY', true);
+  if (!k) return gateFail('ENTER THE ADMIN KEY');
   const btn = $('#gGo');
   btn.disabled = true; btn.textContent = 'CHECKING…';
   try{
     const r = await verifyKey(k);
     if (r.status === 200 && r.data && r.data.admin === true){
-      S.key = k;
-      S.authed = true;
+      S.key = k; S.authed = true;
       localStorage.setItem(LS_KEY, k);
       enterDash();
     } else if (r.status === 401){
-      gateFail('INVALID KEY — access denied.', true);
+      gateFail('INVALID KEY — access denied.');
     } else {
-      gateFail('UNEXPECTED RESPONSE (' + r.status + '). Try again.', false);
+      gateFail('UNEXPECTED RESPONSE (' + r.status + '). Try again.');
     }
   }catch(_){
-    gateFail('UPLINK ERROR — API unreachable. Retry.', false);
+    gateFail('UPLINK ERROR — API unreachable. Retry.');
   } finally {
     btn.disabled = false; btn.textContent = 'UNLOCK CONSOLE ►';
   }
 }
-function adminLogout(){
-  localStorage.removeItem(LS_KEY);
-  location.reload();
-}
+function adminLogout(){ localStorage.removeItem(LS_KEY); location.reload(); }
 function enterDash(){
-  // Strict: never enter without verified auth
-  if (!S.authed || !S.key){
-    $('#gate').hidden = false;
-    $('#dash').hidden = true;
-    return;
-  }
+  if (!S.authed || !S.key){ $('#gate').hidden = false; $('#dash').hidden = true; return; }
   $('#gate').hidden = true;
   $('#dash').hidden = false;
   $('#aKeyMask').textContent = S.key.length > 6 ? S.key.slice(0,3) + '…' + S.key.slice(-2) : '•••';
   loadTournaments();
 }
 
-/* ═══ TOURNAMENTS ═══ */
 async function loadTournaments(silent){
   if (!S.authed) return;
   const tag = $('#aTag');
@@ -360,12 +335,10 @@ async function loadTournaments(silent){
     S.tournaments = Array.isArray(r.data) ? r.data : [];
     renderGrid();
     tag.textContent = 'LIVE · /api/tournaments';
-    tag.classList.add('on');
-    tag.classList.remove('off');
+    tag.classList.add('on'); tag.classList.remove('off');
   }catch(e){
     tag.textContent = 'OFFLINE';
-    tag.classList.remove('on');
-    tag.classList.add('off');
+    tag.classList.remove('on'); tag.classList.add('off');
     toast('UPLINK ERROR — could not load tournaments', 'error');
   }
 }
@@ -387,6 +360,7 @@ function renderGrid(){
     const reg = Math.min(Math.max(Number(t.registered)||0, 0), slots);
     const hasExtra = !!(t.prize_extra && String(t.prize_extra).trim());
     const hasImg = !!(t.prize_image_url && String(t.prize_image_url).trim());
+    const hasMkt = !!(t.prize_market_url && String(t.prize_market_url).trim());
     return '<article class="acard panel">'
       + '<div class="ac-top"><span class="modetag">' + esc(String(t.mode||'?').toUpperCase()) + '</span>' + badgeFor(t.status) + '</div>'
       + '<h3 class="aname">' + esc(t.name || 'UNTITLED') + '</h3>'
@@ -397,6 +371,7 @@ function renderGrid(){
       + (hasExtra ? '<div class="srow"><span>EXTRA PRIZE</span><b>' + esc(t.prize_extra) + '</b></div>' : '')
       + '<div class="srow"><span>PRIZE SPLIT</span><b>' + esc(t.prize_split || '—') + '</b></div>'
       + (hasImg ? '<div class="srow"><span>PRIZE IMAGE</span><b style="color:var(--green)">SET ✓</b></div>' : '')
+      + (hasMkt ? '<div class="srow"><span>MARKET LINK</span><b style="color:var(--green)">SET ✓</b></div>' : '')
       + '</div>'
       + '<div class="aprize"><span class="fl" style="margin:0">PRIZE POOL</span><span class="big" style="font-size:' + (hasExtra ? '24px' : '38px') + '">' + esc(fmtPrize(t)) + '</span></div>'
       + '<div class="abtns">'
@@ -404,6 +379,7 @@ function renderGrid(){
       + '<button class="btn sm act" data-act="regs" data-id="' + Number(t.id) + '">REGISTRATIONS</button>'
       + '<button class="btn sm act" data-act="status" data-id="' + Number(t.id) + '">STATUS ▾</button>'
       + '<button class="btn sm danger act" data-act="del" data-id="' + Number(t.id) + '">DEL</button>'
+      + '<button class="btn sm primary act wide" data-act="announce" data-id="' + Number(t.id) + '">📢 POST ANNOUNCEMENT</button>'
       + '</div></article>';
   }).join('');
 }
@@ -418,6 +394,7 @@ async function onGridAction(e){
   else if (act === 'regs') loadRegistrations(id);
   else if (act === 'status') doStatus(t);
   else if (act === 'del') doDelete(t);
+  else if (act === 'announce') doAnnounce(t);
 }
 async function doStatus(t){
   const v = prompt('NEW STATUS — draft / open / live / completed / cancelled', t.status || '');
@@ -443,8 +420,16 @@ async function doDelete(t){
     loadTournaments();
   }catch(ex){ toast('DELETE FAILED — ' + ex.message, 'error'); }
 }
+async function doAnnounce(t){
+  if (!confirm('POST ANNOUNCEMENT for "' + t.name + '" to Discord?')) return;
+  try{
+    const r = await aapi('/api/tournaments/' + Number(t.id) + '/announce', { method:'POST' });
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    toast('📢 ANNOUNCEMENT POSTED', 'ok');
+  }catch(ex){ toast('ANNOUNCE FAILED — ' + ex.message, 'error'); }
+}
 
-/* ═══ FORM ═══ */
 function toLocalInput(iso){
   const d = new Date(iso);
   if (isNaN(d)) return '';
@@ -462,182 +447,7 @@ function openForm(t){
   $('#f-slots').value = editing && t.max_slots != null ? Number(t.max_slots) : '';
   $('#f-extra').value = editing ? (t.prize_extra || '') : '';
   $('#f-image').value = editing ? (t.prize_image_url || '') : '';
+  $('#f-market').value = editing ? (t.prize_market_url || '') : '';
   $('#f-split').value = editing ? (t.prize_split || '') : '';
   $('#f-entry').value = editing ? (t.entry_fee || '') : '';
-  $('#f-format').value = editing ? (t.rounds || '') : '';
-  $('#f-starts').value = editing && t.starts_at ? toLocalInput(t.starts_at) : '';
-  $('#f-rules').value = editing ? (t.rules_url || '') : '';
-  $('#fWrap').classList.add('open');
-  document.body.classList.add('noscroll');
-  setTimeout(() => $('#f-name').focus(), 60);
-}
-function closeForm(){
-  $('#fWrap').classList.remove('open');
-  document.body.classList.remove('noscroll');
-}
-function buildPayload(){
-  const v = id => $('#' + id).value.trim();
-  const st = $('#f-starts').value;
-  return {
-    name: v('f-name'),
-    description: v('f-desc'),
-    mode: $('#f-mode').value,
-    status: $('#f-status').value,
-    prize_pool: v('f-prize') === '' ? 0 : Number(v('f-prize')),
-    max_slots: v('f-slots') === '' ? CFG.SLOTS : Number(v('f-slots')),
-    prize_extra: v('f-extra'),
-    prize_image_url: v('f-image'),
-    prize_split: v('f-split'),
-    entry_fee: v('f-entry'),
-    rounds: v('f-format'),
-    starts_at: st ? new Date(st).toISOString() : '',
-    rules_url: v('f-rules')
-  };
-}
-async function onFormSubmit(e){
-  e.preventDefault();
-  const name = $('#f-name').value.trim();
-  if (!name){
-    toast('NAME IS REQUIRED', 'error');
-    $('#f-name').focus();
-    return;
-  }
-  const btn = $('#fSave');
-  btn.disabled = true;
-  try{
-    const payload = buildPayload();
-    const editingId = $('#f-id').value;
-    const r = editingId
-      ? await aapi('/api/tournaments/' + Number(editingId), { method:'PUT', body: payload })
-      : await aapi('/api/tournaments', { method:'POST', body: payload });
-    if (r.status === 401) return adminLogout();
-    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
-    closeForm();
-    toast(editingId ? 'TOURNAMENT UPDATED' : 'TOURNAMENT CREATED', 'ok');
-    loadTournaments();
-  }catch(ex){ toast('SAVE FAILED — ' + ex.message, 'error'); }
-  finally { btn.disabled = false; }
-}
-
-/* ═══ REGISTRATIONS ═══ */
-function resetRegs(){
-  $('#rFor').textContent = '';
-  $('#rTag').textContent = 'IDLE';
-  $('#rTag').classList.remove('off','on');
-  $('#rBody').innerHTML = '<div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card.</div>';
-}
-async function loadRegistrations(tid){
-  S.selTid = tid;
-  const t = S.tournaments.find(x => Number(x.id) === Number(tid));
-  $('#rFor').textContent = '· ' + (t ? (t.name || ('#' + tid)) : ('#' + tid));
-  const tag = $('#rTag');
-  tag.textContent = 'SYNC…';
-  tag.classList.remove('off','on');
-  $('#rBody').innerHTML = '<div class="empty"><b>LOADING…</b></div>';
-  try{
-    const r = await aapi('/api/tournaments/' + Number(tid) + '/registrations');
-    if (r.status === 401) return adminLogout();
-    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
-    const rows = Array.isArray(r.data) ? r.data : [];
-    tag.textContent = 'LIVE · ' + rows.length + ' ROWS';
-    tag.classList.add('on');
-    if (!rows.length){
-      $('#rBody').innerHTML = '<div class="empty"><b>NO REGISTRATIONS</b>Nobody has signed up yet.</div>';
-      return;
-    }
-    $('#rBody').innerHTML = '<table><thead><tr><th>#</th><th>DISCORD ID</th><th>USERNAME</th><th>MODE</th><th>STATUS</th><th>REGISTERED</th><th>ACTIONS</th></tr></thead><tbody>'
-      + rows.map(rr => {
-        const st = String(rr.status || 'pending').toLowerCase();
-        return '<tr>'
-          + '<td class="vt">' + Number(rr.id) + '</td>'
-          + '<td class="vt rid">' + esc(String(rr.discord_id)) + '</td>'
-          + '<td>' + esc(rr.discord_username || '—') + '</td>'
-          + '<td>' + esc(String(rr.mode || '—').toUpperCase()) + '</td>'
-          + '<td>' + badgeFor(st) + '</td>'
-          + '<td class="vt">' + esc(String(rr.registered_at || '—')) + '</td>'
-          + '<td><div class="ractions">'
-          + '<button class="btn sm ok act-r" data-rid="' + Number(rr.id) + '" data-set="approved">✓</button>'
-          + '<button class="btn sm danger act-r" data-rid="' + Number(rr.id) + '" data-set="rejected">✕</button>'
-          + '</div></td></tr>';
-      }).join('') + '</tbody></table>';
-  }catch(ex){
-    tag.textContent = 'OFFLINE';
-    tag.classList.add('off');
-    $('#rBody').innerHTML = '<div class="empty"><b>LOAD FAILED</b>' + esc(ex.message) + '</div>';
-  }
-}
-async function onRegAction(e){
-  const b = e.target.closest('.act-r');
-  if (!b || b.disabled) return;
-  const rid = Number(b.dataset.rid);
-  const status = b.dataset.set;
-  $$('.act-r').forEach(x => x.disabled = true);
-  try{
-    const r = await aapi('/api/tournaments/' + Number(S.selTid) + '/registrations/' + rid, { method:'POST', body:{ status } });
-    if (r.status === 401) return adminLogout();
-    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
-    toast('REG #' + rid + ' → ' + status.toUpperCase(), 'ok');
-    loadRegistrations(S.selTid);
-    loadTournaments(true);
-  }catch(ex){ toast('UPDATE FAILED — ' + ex.message, 'error'); }
-  finally { $$('.act-r').forEach(x => x.disabled = false); }
-}
-
-function bindUI(){
-  $('#gateForm').addEventListener('submit', gateSubmit);
-  $('#aLogout').addEventListener('click', adminLogout);
-  $('#aRefresh').addEventListener('click', () => { loadTournaments(); if (S.selTid != null) loadRegistrations(S.selTid); });
-  $('#aCreate').addEventListener('click', () => openForm(null));
-  $('#aGrid').addEventListener('click', onGridAction);
-  $('#rBody').addEventListener('click', onRegAction);
-  $('#fForm').addEventListener('submit', onFormSubmit);
-  $('#fCancel').addEventListener('click', closeForm);
-  $('#fClose').addEventListener('click', closeForm);
-  $('#fWrap').addEventListener('click', e => { if (e.target === $('#fWrap')) closeForm(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
-}
-function startClock(){
-  const tick = () => { const el = $('#aClock'); if (el) el.textContent = new Date().toISOString().slice(11,19); };
-  tick(); setInterval(tick, 1000);
-}
-async function init(){
-  try{
-    bindUI();
-    startClock();
-    // Force dashboard hidden on load
-    $('#dash').hidden = true;
-    $('#gate').hidden = false;
-
-    const stored = localStorage.getItem(LS_KEY);
-    if (stored){
-      $('#gGo').disabled = true; $('#gGo').textContent = 'CHECKING STORED KEY…';
-      try{
-        const r = await verifyKey(stored);
-        if (r.status === 200 && r.data && r.data.admin === true){
-          S.key = stored; S.authed = true;
-          enterDash();
-          $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
-          return;
-        }
-        // Wrong or expired key
-        localStorage.removeItem(LS_KEY);
-        $('#gErr').textContent = 'STORED KEY IS NO LONGER VALID — enter a fresh key.';
-        $('#gErr').classList.add('show');
-      }catch(_){
-        // Uplink down — stay on gate
-        $('#gErr').textContent = 'UPLINK DOWN — cannot verify stored key. Try again shortly.';
-        $('#gErr').classList.add('show');
-      }
-      $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
-    }
-  }catch(err){
-    toast('BOOT FAULT — ' + (err && err.message ? err.message : 'UNKNOWN'), 'error');
-  }
-}
-setInterval(() => {
-  if (!$('#dash').hidden && document.visibilityState === 'visible' && S.authed) loadTournaments(true);
-}, 30000);
-document.addEventListener('DOMContentLoaded', init);
-</script>
-</body>
-</html>
+  $('#f-format').value = editing ? (t
