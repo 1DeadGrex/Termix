@@ -7,37 +7,23 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230b0907'/><text x='2' y='12' font-family='monospace' font-size='11' fill='%23ff5238'>A</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0907; --panel:#141008; --panel2:#1d1609; --ink:#0f0c06;
-  --line:#3a2f14; --line2:#5c4918; --deep:#8a6a10; --amber:#ffb000; --amber2:#ffd75e;
-  --txt:#efe6c8; --mut:#a8976a; --dim:#6f6140; --red:#ff5238; --green:#57e389;
-}
+:root{--bg:#0b0907;--panel:#141008;--panel2:#1d1609;--ink:#0f0c06;--line:#3a2f14;--line2:#5c4918;--deep:#8a6a10;--amber:#ffb000;--amber2:#ffd75e;--txt:#efe6c8;--mut:#a8976a;--dim:#6f6140;--red:#ff5238;--green:#57e389}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scrollbar-color:var(--line2) var(--bg)}
 body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.55;min-height:100vh}
 body.noscroll{overflow:hidden}
 ::selection{background:var(--amber);color:#140d00}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--line2);border:2px solid var(--bg)}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 [hidden]{display:none !important}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 a{color:var(--amber);text-decoration:none}
-a:hover{color:var(--amber2)}
 .px{font-family:'Press Start 2P',monospace}
 .vt{font-family:'VT323',monospace}
-.fx{position:fixed;inset:0;pointer-events:none;z-index:1100}
-.fx.scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
-.fx.vig{background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.45))}
+.fx.scan{position:fixed;inset:0;pointer-events:none;z-index:1100;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.fx.vig{position:fixed;inset:0;pointer-events:none;z-index:1100;background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.45))}
 @keyframes blink{50%{opacity:0}}
-@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.shake{animation:shake .4s both}
 .cursor{display:inline-block;width:.62em;height:1em;background:var(--red);vertical-align:-.12em;margin-left:6px;animation:blink 1s steps(1) infinite}
-
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);background:var(--panel2);border:1px solid var(--line2);padding:12px 16px;box-shadow:4px 4px 0 #000;text-transform:uppercase;user-select:none;text-align:center}
 .btn:hover:not(:disabled){color:var(--amber2);border-color:var(--amber)}
 .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
@@ -46,99 +32,77 @@ a:hover{color:var(--amber2)}
 .btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2);color:#140d00}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--red);border-color:var(--red)}
-.btn.danger:hover:not(:disabled){color:#ff8371;border-color:#ff8371}
 .btn.ok{color:var(--green);border-color:var(--green)}
-.btn.ok:hover:not(:disabled){color:#8af0ae;border-color:#8af0ae}
 .btn.sm{padding:8px 10px;font-size:8px}
-
 .panel{background:var(--panel);border:1px solid var(--line);box-shadow:6px 6px 0 #000}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--panel2);border-bottom:1px solid var(--line);padding:12px 16px}
 .phead h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--amber);letter-spacing:1px}
 .phead-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
+.tag{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
 .tag.off{color:var(--red);border-color:var(--red)}
 .tag.on{color:var(--green);border-color:var(--green)}
 .pbody{padding:16px}
-
 .badge{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;padding:5px 8px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
 .badge.live{color:var(--red);border-color:var(--red);animation:blink 1.2s steps(1) infinite}
 .badge.open{color:var(--green);border-color:var(--green)}
 .badge.done{color:var(--dim);border-color:var(--line)}
 .badge.warn{color:var(--amber2);border-color:var(--amber)}
-.badge.rejected{color:var(--red);border-color:var(--red)}
 .modetag{font-family:'Press Start 2P',monospace;font-size:8px;border:1px solid var(--amber);color:var(--amber);padding:5px 7px;letter-spacing:1px}
-
 .empty{text-align:center;padding:56px 20px;border:1px dashed var(--line2);background:var(--ink);color:var(--mut);font-family:'VT323',monospace;font-size:21px}
-.empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px;letter-spacing:1px}
-
+.empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px}
 .fl{display:block;font-weight:600;font-size:10px;letter-spacing:1.5px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase}
 .inp{width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--amber2);font-family:'VT323',monospace;font-size:20px;padding:8px 10px}
 .inp:focus{outline:none;border-color:var(--amber);box-shadow:3px 3px 0 #000}
 .inp::placeholder{color:var(--dim)}
-select.inp option, select.inp optgroup{background:var(--ink);color:var(--amber2)}
-textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.5}
+select.inp option{background:var(--ink);color:var(--amber2)}
+textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:13px}
 .hint{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
-.err-msg{display:none;color:var(--red);font-size:12px;font-weight:600;margin-top:10px;line-height:1.5}
+.err-msg{display:none;color:var(--red);font-size:12px;font-weight:600;margin-top:10px}
 .err-msg.show{display:block}
-
 #toasts{position:fixed;right:16px;bottom:16px;z-index:1300;display:flex;flex-direction:column;gap:10px;max-width:min(440px,92vw)}
-.toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word;transition:opacity .2s}
+.toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word}
 .toast.err{border-color:var(--red);color:#ffb4a5}
 .toast.ok{border-color:var(--green);color:var(--green)}
-
 #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .gate{width:min(480px,100%)}
 .gate-head{border-bottom:1px solid var(--red)}
 .gate-head h2{color:var(--red) !important}
 .gate-sub{font-family:'VT323',monospace;font-size:19px;color:var(--mut);letter-spacing:1px;border-bottom:1px dashed var(--line);padding-bottom:10px}
 .gate .btn{width:100%;margin-top:20px}
-
 #abar{position:sticky;top:0;z-index:950;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
 .abrand{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);text-shadow:2px 2px 0 #000}
 .abrand .red{color:var(--red)}
 .abar-sp{flex:1}
 .awrap{max-width:1280px;margin:0 auto;padding:22px 18px 40px;display:flex;flex-direction:column;gap:22px}
 #ahud{position:sticky;bottom:0;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 18px;background:var(--panel);border-top:1px solid var(--line);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--dim)}
-
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
 .acard{padding:14px;display:flex;flex-direction:column}
 .ac-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .aname{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.75;color:var(--amber2);margin:13px 0 8px;word-wrap:break-word}
 .adesc{font-size:12.5px;color:var(--mut);line-height:1.6;min-height:40px}
 .spec{border:1px solid var(--line);background:var(--ink);margin:12px 0}
-.srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px;letter-spacing:.5px}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px}
 .srow:last-child{border-bottom:none}
-.srow span{color:var(--dim);letter-spacing:1px;white-space:nowrap}
+.srow span{color:var(--dim);letter-spacing:1px}
 .srow b{color:var(--txt);font-weight:600;text-align:right;word-break:break-word}
-.aprize{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 12px}
-.aprize .big{font-family:'VT323',monospace;font-size:38px;color:var(--amber);line-height:1;text-shadow:2px 2px 0 #000}
+.aprize{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 12px;gap:10px}
+.aprize .big{font-family:'VT323',monospace;color:var(--amber);line-height:1.1;text-shadow:2px 2px 0 #000;text-align:right;word-break:break-word}
 .abtns{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-
 .tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);letter-spacing:1px;white-space:nowrap}
+th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);white-space:nowrap}
 td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
 tbody tr:hover td{background:var(--panel2)}
 td.vt{font-size:19px}
 .ractions{display:flex;gap:6px}
 .rid{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
 .mwrap{position:fixed;inset:0;z-index:1050;display:none;align-items:center;justify-content:center;background:rgba(4,3,1,.84);padding:20px}
 .mwrap.open{display:flex}
 .modal{width:min(620px,100%);max-height:92vh;overflow-y:auto;border-color:var(--line2)}
 .mrow{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
-
-@media (max-width:640px){
-  .mwrap{padding:0}
-  .modal{width:100%;max-height:100vh;height:100%;border-left:none;border-right:none;box-shadow:none}
-  .f2{grid-template-columns:1fr}
-  .cards{grid-template-columns:1fr}
-  .abtns{grid-template-columns:1fr 1fr}
-}
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
-}
+@media (max-width:640px){.mwrap{padding:0}.modal{width:100%;height:100%;max-height:100vh;border-left:none;border-right:none;box-shadow:none}.f2{grid-template-columns:1fr}.cards{grid-template-columns:1fr}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 </style>
 </head>
 <body>
@@ -146,6 +110,7 @@ td.vt{font-size:19px}
 <div class="fx vig" aria-hidden="true"></div>
 <div id="toasts" aria-live="polite"></div>
 
+<!-- ═══ GATE ═══ -->
 <div id="gate">
   <div class="gate panel">
     <div class="phead gate-head"><h2>AUTHENTICATION</h2><span class="tag off">RESTRICTED</span></div>
@@ -156,12 +121,13 @@ td.vt{font-size:19px}
         <input id="gKey" class="inp" type="password" placeholder="paste X-Admin-Key" autocomplete="off">
         <div id="gErr" class="err-msg" role="alert"></div>
         <button type="submit" id="gGo" class="btn danger">UNLOCK CONSOLE ►</button>
-        <div class="hint">The key is stored in localStorage under <b>termix_admin_key</b> and sent only to the API as the X-Admin-Key header. It never leaves this browser except to the grid API.</div>
+        <div class="hint">The key is stored in localStorage and sent only as the <b>X-Admin-Key</b> header to <b>/api/admin/check</b>. The console stays locked until the server confirms it.</div>
       </form>
     </div>
   </div>
 </div>
 
+<!-- ═══ DASHBOARD (hidden until auth passes) ═══ -->
 <div id="dash" hidden>
   <header id="abar">
     <div class="abrand">TERMIX <span class="red">// ADMIN CONSOLE</span></div>
@@ -189,23 +155,24 @@ td.vt{font-size:19px}
         <span class="tag" id="rTag">IDLE</span>
       </div>
       <div class="pbody tblwrap" id="rBody">
-        <div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card to load its queue.</div>
+        <div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card.</div>
       </div>
     </section>
   </main>
 
   <footer id="ahud">
-    <span class="px" style="font-size:8px;color:var(--deep)">TERMIX ADMIN v2.4.0</span>
+    <span class="px" style="font-size:8px;color:var(--deep)">TERMIX ADMIN v2.5.0</span>
     <span>KEY <span id="aKeyMask">——</span></span>
     <span>UTC <span id="aClock">--:--:--</span></span>
   </footer>
 </div>
 
-<div id="fWrap" class="mwrap" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+<!-- ═══ FORM ═══ -->
+<div id="fWrap" class="mwrap" role="dialog" aria-modal="true">
   <div class="modal panel">
     <div class="phead">
       <h2 id="fTitle">CREATE TOURNAMENT</h2>
-      <button type="button" id="fClose" class="btn sm ghost" aria-label="Close tournament form">✕</button>
+      <button type="button" id="fClose" class="btn sm ghost">✕</button>
     </div>
     <div class="pbody">
       <form id="fForm" novalidate>
@@ -215,16 +182,14 @@ td.vt{font-size:19px}
         <label class="fl" for="f-desc">DESCRIPTION</label>
         <textarea id="f-desc" class="inp" maxlength="400" placeholder="Short summary for the card."></textarea>
         <div class="f2">
-          <div>
-            <label class="fl" for="f-mode">GAME MODE</label>
+          <div><label class="fl" for="f-mode">GAME MODE</label>
             <select id="f-mode" class="inp">
               <option value="1v1">1v1</option>
               <option value="2v2" selected>2v2</option>
               <option value="5v5">5v5</option>
             </select>
           </div>
-          <div>
-            <label class="fl" for="f-status">STATUS</label>
+          <div><label class="fl" for="f-status">STATUS</label>
             <select id="f-status" class="inp">
               <option value="draft" selected>draft</option>
               <option value="open">open</option>
@@ -233,24 +198,24 @@ td.vt{font-size:19px}
               <option value="cancelled">cancelled</option>
             </select>
           </div>
-          <div>
-            <label class="fl" for="f-prize">PRIZE POOL ($)</label>
+          <div><label class="fl" for="f-prize">PRIZE POOL ($)</label>
             <input id="f-prize" class="inp" type="number" min="0" step="1" placeholder="420">
           </div>
-          <div>
-            <label class="fl" for="f-slots">MAX SLOTS</label>
+          <div><label class="fl" for="f-slots">MAX SLOTS</label>
             <input id="f-slots" class="inp" type="number" min="2" step="1" placeholder="32">
           </div>
         </div>
-        <label class="fl" for="f-extra">PRIZE EXTRA <span class="opt" style="color:var(--dim)">(SKINS / ITEMS / NON-CASH — optional)</span></label>
-        <input id="f-extra" class="inp" type="text" maxlength="160" placeholder="e.g. 3x AK-47 Redline FT + 1x AWP Asiimov BS">
+        <label class="fl" for="f-extra">PRIZE EXTRA <span class="opt" style="color:var(--dim)">(SKINS / ITEMS — optional)</span></label>
+        <input id="f-extra" class="inp" type="text" maxlength="160" placeholder="e.g. 3x AK-47 Redline FT">
+        <label class="fl" for="f-image">PRIZE IMAGE URL <span class="opt" style="color:var(--dim)">(shows on site — paste any public image URL)</span></label>
+        <input id="f-image" class="inp" type="text" maxlength="500" placeholder="https://... (skin image, prize photo, etc.)">
         <label class="fl" for="f-split">PRIZE SPLIT</label>
         <input id="f-split" class="inp" type="text" maxlength="120" placeholder="$250 / $120 / $50 (1st–3rd)">
         <label class="fl" for="f-entry">ENTRY</label>
         <input id="f-entry" class="inp" type="text" maxlength="120" placeholder="FREE — STEAM VERIFICATION REQ.">
         <label class="fl" for="f-format">FORMAT / ROUNDS</label>
         <input id="f-format" class="inp" type="text" maxlength="120" placeholder="SINGLE ELIM · BO1 · MR24">
-        <label class="fl" for="f-starts">STARTS AT (YOUR LOCAL TIME → SENT AS UTC)</label>
+        <label class="fl" for="f-starts">STARTS AT (YOUR LOCAL TIME)</label>
         <input id="f-starts" class="inp" type="datetime-local">
         <label class="fl" for="f-rules">RULES URL</label>
         <input id="f-rules" class="inp" type="text" maxlength="300" placeholder="https://…">
@@ -262,6 +227,7 @@ td.vt{font-size:19px}
     </div>
   </div>
 </div>
+
 <script>
 'use strict';
 const CFG = {
@@ -269,9 +235,7 @@ const CFG = {
   DISCORD_INVITE: 'https://discord.gg/K8VndtvrHq',
   ADMIN_URL: 'admin.html',
   SLOTS: 32,
-  CHECKIN_UTC: 19,
-  FETCH_MS: 10000,
-  ANNOUNCEMENTS: []
+  FETCH_MS: 10000
 };
 const STATUSES = ['draft', 'open', 'live', 'completed', 'cancelled'];
 const LS_KEY = 'termix_admin_key';
@@ -299,7 +263,6 @@ function toast(msg, kind){
   const box = $('#toasts');
   const t = document.createElement('div');
   t.className = 'toast' + (kind === 'error' ? ' err' : kind === 'ok' ? ' ok' : '');
-  t.setAttribute('role','status');
   t.textContent = String(msg);
   box.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 4000);
@@ -324,20 +287,24 @@ function aapi(path, opt = {}){
   return api(path, { ...opt, headers: { 'X-Admin-Key': S.key, ...(opt.headers || {}) } });
 }
 
-const S = { key:'', tournaments:[], selTid:null };
+const S = { key:'', tournaments:[], selTid:null, authed:false };
 
+/* ═══ AUTH GATE — only unlocks on verified 200 from /api/admin/check ═══ */
+async function verifyKey(k){
+  const r = await api('/api/admin/check', { headers: { 'X-Admin-Key': k } });
+  return r;
+}
 function gateFail(msg, shake){
   const el = $('#gErr');
   el.textContent = msg;
   el.classList.add('show');
   if (shake){
     const inp = $('#gKey');
-    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+    inp.classList.remove('shake'); void inp.offsetWidth;
+    inp.style.animation = 'none'; void inp.offsetWidth;
+    inp.style.animation = 'blink 0s'; // reset any prior
+    inp.classList.add('shake');
   }
-}
-async function tryKey(k){
-  const r = await api('/api/tournaments', { headers: { 'X-Admin-Key': k } });
-  return r.status;
 }
 async function gateSubmit(e){
   e.preventDefault();
@@ -347,18 +314,19 @@ async function gateSubmit(e){
   const btn = $('#gGo');
   btn.disabled = true; btn.textContent = 'CHECKING…';
   try{
-    const st = await tryKey(k);
-    if (st === 200){
+    const r = await verifyKey(k);
+    if (r.status === 200 && r.data && r.data.admin === true){
       S.key = k;
+      S.authed = true;
       localStorage.setItem(LS_KEY, k);
       enterDash();
-    } else if (st === 401){
-      gateFail('Invalid key.', true);
+    } else if (r.status === 401){
+      gateFail('INVALID KEY — access denied.', true);
     } else {
-      gateFail('UNEXPECTED RESPONSE (' + st + ')', false);
+      gateFail('UNEXPECTED RESPONSE (' + r.status + '). Try again.', false);
     }
   }catch(_){
-    gateFail('UPLINK ERROR — API unreachable. Check the network and retry.', false);
+    gateFail('UPLINK ERROR — API unreachable. Retry.', false);
   } finally {
     btn.disabled = false; btn.textContent = 'UNLOCK CONSOLE ►';
   }
@@ -368,13 +336,21 @@ function adminLogout(){
   location.reload();
 }
 function enterDash(){
+  // Strict: never enter without verified auth
+  if (!S.authed || !S.key){
+    $('#gate').hidden = false;
+    $('#dash').hidden = true;
+    return;
+  }
   $('#gate').hidden = true;
   $('#dash').hidden = false;
   $('#aKeyMask').textContent = S.key.length > 6 ? S.key.slice(0,3) + '…' + S.key.slice(-2) : '•••';
   loadTournaments();
 }
 
+/* ═══ TOURNAMENTS ═══ */
 async function loadTournaments(silent){
+  if (!S.authed) return;
   const tag = $('#aTag');
   if (!silent){ tag.textContent = 'SYNC…'; tag.classList.remove('off'); }
   try{
@@ -385,6 +361,7 @@ async function loadTournaments(silent){
     renderGrid();
     tag.textContent = 'LIVE · /api/tournaments';
     tag.classList.add('on');
+    tag.classList.remove('off');
   }catch(e){
     tag.textContent = 'OFFLINE';
     tag.classList.remove('on');
@@ -395,20 +372,21 @@ async function loadTournaments(silent){
 function badgeFor(st){
   const s = String(st).toLowerCase();
   if (s === 'approved') return '<span class="badge open">APPROVED</span>';
-  if (s === 'rejected') return '<span class="badge rejected">REJECTED</span>';
+  if (s === 'rejected') return '<span class="badge" style="color:var(--red);border-color:var(--red)">REJECTED</span>';
   if (s === 'pending')  return '<span class="badge warn">PENDING</span>';
   return '<span class="badge ' + (s==='live'?'live':s==='open'?'open':'done') + '">' + esc(s.toUpperCase()) + '</span>';
 }
 function renderGrid(){
   const grid = $('#aGrid');
   if (!S.tournaments.length){
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>NO TOURNAMENTS</b>Hit + CREATE TOURNAMENT to post the first one to the grid.</div>';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>NO TOURNAMENTS</b>Hit + CREATE TOURNAMENT to post the first one.</div>';
     return;
   }
   grid.innerHTML = S.tournaments.map(t => {
     const slots = Number(t.max_slots) > 0 ? Number(t.max_slots) : CFG.SLOTS;
     const reg = Math.min(Math.max(Number(t.registered)||0, 0), slots);
     const hasExtra = !!(t.prize_extra && String(t.prize_extra).trim());
+    const hasImg = !!(t.prize_image_url && String(t.prize_image_url).trim());
     return '<article class="acard panel">'
       + '<div class="ac-top"><span class="modetag">' + esc(String(t.mode||'?').toUpperCase()) + '</span>' + badgeFor(t.status) + '</div>'
       + '<h3 class="aname">' + esc(t.name || 'UNTITLED') + '</h3>'
@@ -418,6 +396,7 @@ function renderGrid(){
       + '<div class="srow"><span>SLOTS</span><b>' + reg + '/' + slots + ' FILLED</b></div>'
       + (hasExtra ? '<div class="srow"><span>EXTRA PRIZE</span><b>' + esc(t.prize_extra) + '</b></div>' : '')
       + '<div class="srow"><span>PRIZE SPLIT</span><b>' + esc(t.prize_split || '—') + '</b></div>'
+      + (hasImg ? '<div class="srow"><span>PRIZE IMAGE</span><b style="color:var(--green)">SET ✓</b></div>' : '')
       + '</div>'
       + '<div class="aprize"><span class="fl" style="margin:0">PRIZE POOL</span><span class="big" style="font-size:' + (hasExtra ? '24px' : '38px') + '">' + esc(fmtPrize(t)) + '</span></div>'
       + '<div class="abtns">'
@@ -441,22 +420,20 @@ async function onGridAction(e){
   else if (act === 'del') doDelete(t);
 }
 async function doStatus(t){
-  const v = prompt('NEW STATUS — one of: draft / open / live / completed / cancelled', t.status || '');
+  const v = prompt('NEW STATUS — draft / open / live / completed / cancelled', t.status || '');
   if (v === null) return;
   const s = v.trim().toLowerCase();
-  if (!STATUSES.includes(s)) return toast('INVALID STATUS "' + s + '" — allowed: ' + STATUSES.join(' / '), 'error');
+  if (!STATUSES.includes(s)) return toast('INVALID STATUS "' + s + '"', 'error');
   try{
     const r = await aapi('/api/tournaments/' + Number(t.id) + '/status', { method:'POST', body:{ status: s } });
     if (r.status === 401) return adminLogout();
     if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
     toast('STATUS → ' + s.toUpperCase(), 'ok');
     loadTournaments();
-  }catch(ex){
-    toast('STATUS UPDATE FAILED — ' + ex.message, 'error');
-  }
+  }catch(ex){ toast('FAILED — ' + ex.message, 'error'); }
 }
 async function doDelete(t){
-  if (!confirm('DELETE "' + (t.name || '#' + t.id) + '"?\nThis also removes all of its registrations.')) return;
+  if (!confirm('DELETE "' + (t.name || '#' + t.id) + '"?\nAlso removes its registrations.')) return;
   try{
     const r = await aapi('/api/tournaments/' + Number(t.id), { method:'DELETE' });
     if (r.status === 401) return adminLogout();
@@ -464,11 +441,10 @@ async function doDelete(t){
     toast('TOURNAMENT DELETED', 'ok');
     if (S.selTid === Number(t.id)){ S.selTid = null; resetRegs(); }
     loadTournaments();
-  }catch(ex){
-    toast('DELETE FAILED — ' + ex.message, 'error');
-  }
+  }catch(ex){ toast('DELETE FAILED — ' + ex.message, 'error'); }
 }
 
+/* ═══ FORM ═══ */
 function toLocalInput(iso){
   const d = new Date(iso);
   if (isNaN(d)) return '';
@@ -485,6 +461,7 @@ function openForm(t){
   $('#f-prize').value = editing && t.prize_pool != null ? Number(t.prize_pool) : '';
   $('#f-slots').value = editing && t.max_slots != null ? Number(t.max_slots) : '';
   $('#f-extra').value = editing ? (t.prize_extra || '') : '';
+  $('#f-image').value = editing ? (t.prize_image_url || '') : '';
   $('#f-split').value = editing ? (t.prize_split || '') : '';
   $('#f-entry').value = editing ? (t.entry_fee || '') : '';
   $('#f-format').value = editing ? (t.rounds || '') : '';
@@ -509,6 +486,7 @@ function buildPayload(){
     prize_pool: v('f-prize') === '' ? 0 : Number(v('f-prize')),
     max_slots: v('f-slots') === '' ? CFG.SLOTS : Number(v('f-slots')),
     prize_extra: v('f-extra'),
+    prize_image_url: v('f-image'),
     prize_split: v('f-split'),
     entry_fee: v('f-entry'),
     rounds: v('f-format'),
@@ -520,10 +498,9 @@ async function onFormSubmit(e){
   e.preventDefault();
   const name = $('#f-name').value.trim();
   if (!name){
-    const el = $('#f-name');
-    el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
-    el.focus();
-    return toast('NAME IS REQUIRED', 'error');
+    toast('NAME IS REQUIRED', 'error');
+    $('#f-name').focus();
+    return;
   }
   const btn = $('#fSave');
   btn.disabled = true;
@@ -538,18 +515,16 @@ async function onFormSubmit(e){
     closeForm();
     toast(editingId ? 'TOURNAMENT UPDATED' : 'TOURNAMENT CREATED', 'ok');
     loadTournaments();
-  }catch(ex){
-    toast('SAVE FAILED — ' + ex.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
+  }catch(ex){ toast('SAVE FAILED — ' + ex.message, 'error'); }
+  finally { btn.disabled = false; }
 }
 
+/* ═══ REGISTRATIONS ═══ */
 function resetRegs(){
   $('#rFor').textContent = '';
   $('#rTag').textContent = 'IDLE';
   $('#rTag').classList.remove('off','on');
-  $('#rBody').innerHTML = '<div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card to load its queue.</div>';
+  $('#rBody').innerHTML = '<div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card.</div>';
 }
 async function loadRegistrations(tid){
   S.selTid = tid;
@@ -558,7 +533,7 @@ async function loadRegistrations(tid){
   const tag = $('#rTag');
   tag.textContent = 'SYNC…';
   tag.classList.remove('off','on');
-  $('#rBody').innerHTML = '<div class="empty"><b>LOADING…</b>Fetching registration queue.</div>';
+  $('#rBody').innerHTML = '<div class="empty"><b>LOADING…</b></div>';
   try{
     const r = await aapi('/api/tournaments/' + Number(tid) + '/registrations');
     if (r.status === 401) return adminLogout();
@@ -567,24 +542,23 @@ async function loadRegistrations(tid){
     tag.textContent = 'LIVE · ' + rows.length + ' ROWS';
     tag.classList.add('on');
     if (!rows.length){
-      $('#rBody').innerHTML = '<div class="empty"><b>NO REGISTRATIONS</b>Nobody has signed up for this tournament yet.</div>';
+      $('#rBody').innerHTML = '<div class="empty"><b>NO REGISTRATIONS</b>Nobody has signed up yet.</div>';
       return;
     }
     $('#rBody').innerHTML = '<table><thead><tr><th>#</th><th>DISCORD ID</th><th>USERNAME</th><th>MODE</th><th>STATUS</th><th>REGISTERED</th><th>ACTIONS</th></tr></thead><tbody>'
       + rows.map(rr => {
         const st = String(rr.status || 'pending').toLowerCase();
         return '<tr>'
-          + '<td class="vt mutc">' + Number(rr.id) + '</td>'
+          + '<td class="vt">' + Number(rr.id) + '</td>'
           + '<td class="vt rid">' + esc(String(rr.discord_id)) + '</td>'
           + '<td>' + esc(rr.discord_username || '—') + '</td>'
           + '<td>' + esc(String(rr.mode || '—').toUpperCase()) + '</td>'
           + '<td>' + badgeFor(st) + '</td>'
-          + '<td class="vt mutc">' + esc(fmtStarts(rr.registered_at) === '——' ? String(rr.registered_at || '—') : fmtStarts(rr.registered_at)) + '</td>'
+          + '<td class="vt">' + esc(String(rr.registered_at || '—')) + '</td>'
           + '<td><div class="ractions">'
-          + '<button class="btn sm ok act-r" data-rid="' + Number(rr.id) + '" data-set="approved" aria-label="Approve registration ' + Number(rr.id) + '">✓</button>'
-          + '<button class="btn sm danger act-r" data-rid="' + Number(rr.id) + '" data-set="rejected" aria-label="Reject registration ' + Number(rr.id) + '">✕</button>'
-          + '</div></td>'
-          + '</tr>';
+          + '<button class="btn sm ok act-r" data-rid="' + Number(rr.id) + '" data-set="approved">✓</button>'
+          + '<button class="btn sm danger act-r" data-rid="' + Number(rr.id) + '" data-set="rejected">✕</button>'
+          + '</div></td></tr>';
       }).join('') + '</tbody></table>';
   }catch(ex){
     tag.textContent = 'OFFLINE';
@@ -605,11 +579,8 @@ async function onRegAction(e){
     toast('REG #' + rid + ' → ' + status.toUpperCase(), 'ok');
     loadRegistrations(S.selTid);
     loadTournaments(true);
-  }catch(ex){
-    toast('UPDATE FAILED — ' + ex.message, 'error');
-  } finally {
-    $$('.act-r').forEach(x => x.disabled = false);
-  }
+  }catch(ex){ toast('UPDATE FAILED — ' + ex.message, 'error'); }
+  finally { $$('.act-r').forEach(x => x.disabled = false); }
 }
 
 function bindUI(){
@@ -633,19 +604,30 @@ async function init(){
   try{
     bindUI();
     startClock();
+    // Force dashboard hidden on load
+    $('#dash').hidden = true;
+    $('#gate').hidden = false;
+
     const stored = localStorage.getItem(LS_KEY);
     if (stored){
       $('#gGo').disabled = true; $('#gGo').textContent = 'CHECKING STORED KEY…';
       try{
-        const st = await tryKey(stored);
-        if (st === 200){
-          S.key = stored;
-          $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
+        const r = await verifyKey(stored);
+        if (r.status === 200 && r.data && r.data.admin === true){
+          S.key = stored; S.authed = true;
           enterDash();
+          $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
           return;
         }
-        if (st === 401) localStorage.removeItem(LS_KEY);
-      }catch(_){}
+        // Wrong or expired key
+        localStorage.removeItem(LS_KEY);
+        $('#gErr').textContent = 'STORED KEY IS NO LONGER VALID — enter a fresh key.';
+        $('#gErr').classList.add('show');
+      }catch(_){
+        // Uplink down — stay on gate
+        $('#gErr').textContent = 'UPLINK DOWN — cannot verify stored key. Try again shortly.';
+        $('#gErr').classList.add('show');
+      }
       $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
     }
   }catch(err){
@@ -653,7 +635,7 @@ async function init(){
   }
 }
 setInterval(() => {
-  if (!$('#dash').hidden && document.visibilityState === 'visible' && S.key) loadTournaments(true);
+  if (!$('#dash').hidden && document.visibilityState === 'visible' && S.authed) loadTournaments(true);
 }, 30000);
 document.addEventListener('DOMContentLoaded', init);
 </script>
