@@ -18,7 +18,7 @@ class Levels(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # Ignore bots, DMs, and command prefixes
+        # Ignore bots, DMs, and command-prefixed messages
         if message.author.bot or not message.guild:
             return
         content = message.content or ""
@@ -37,13 +37,13 @@ class Levels(commands.Cog):
             print(f"[levels] add_xp failed for {uid}: {e}")
             return
 
-        # Level-up announcement — detect crossing by re-computing old level
-        # (add_xp returns new level; we approximate old by xp - XP_PER_MESSAGE)
+        # Level-up announcement (old level approximated from xp before this message)
         try:
             old_level = int(((xp - XP_PER_MESSAGE) / 100) ** 0.5)
             if level > old_level and level > 0:
-                ch = message.channel
-                await ch.send(f"🎉 {message.author.mention} reached **level {level}**!")
+                await message.channel.send(
+                    f"🎉 {message.author.mention} reached **level {level}**!"
+                )
         except Exception as e:
             print(f"[levels] announce failed: {e}")
 
@@ -82,7 +82,6 @@ class Levels(commands.Cog):
     @commands.hybrid_command(name="myxp", description="Show your XP and level")
     async def myxp(self, ctx):
         try:
-            # Reuse global leaderboard search for consistency
             rows = await db.get_global_leaderboard(500)
         except Exception as e:
             await ctx.send(f"❌ XP lookup unavailable: `{e}`")
@@ -97,18 +96,11 @@ class Levels(commands.Cog):
 
         next_xp = ((me["level"] + 1) ** 2) * 100
         to_next = max(0, next_xp - me["xp"])
-        embed = discord.Embed(
-            title=f"📊 {ctx.author.display_name}",
-            color=0xFFB000,
-        )
+        embed = discord.Embed(title=f"📊 {ctx.author.display_name}", color=0xFFB000)
         embed.add_field(name="Level", value=str(me["level"]), inline=True)
         embed.add_field(name="Total XP", value=f"{me['xp']}", inline=True)
         embed.add_field(name="Global Rank", value=f"#{me['rank']}", inline=True)
-        embed.add_field(
-            name="To next level",
-            value=f"{to_next} XP (at {next_xp} XP)",
-            inline=False,
-        )
+        embed.add_field(name="To next level", value=f"{to_next} XP (at {next_xp} XP)", inline=False)
         await ctx.send(embed=embed)
 
 
