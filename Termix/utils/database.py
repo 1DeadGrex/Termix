@@ -3,8 +3,8 @@ import os
 import libsql_client
 
 # ── Config ──
-_raw_url = os.getenv("TURSO_URL", "https://termix-sk11led-1deadgrex.aws-ap-south-1.turso.io")
-TURSO_TOKEN = os.getenv("TURSO_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJnaWQiOiJhY2I3YmU1NC1jMTgxLTQzZDAtOTc2MS1mYTcwNTYxOGZkZjUiLCJpYXQiOjE3ODk5Njk5MDIsImtpZCI6IlppQ1d2ZDFMMThsRXJlRVo5UFdubDJsRUdGd21YMFdfV0s4ZjR2WW1md28iLCJyaWQiOiI5YzYyMjcxNC0yNWQ2LTQxYTYtYTE1YS05YzZmMTc2ODZiNzcifQ.RKK8hu0AsKHedxca8XUOMIJEPHGLrKOQwEUOmhcp3PnB70ZFO3q3KNYzV9P-CcRcI6h8FG7KrWSSIMHmmf_uAg")
+_raw_url = os.getenv("TURSO_URL", "")
+TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
 
 # Force HTTP transport (WSS is often blocked by bot hosts)
 TURSO_URL = (
@@ -21,20 +21,21 @@ print(f"🗄️  TURSO_TOKEN    : {'set (' + str(len(TURSO_TOKEN)) + ' chars)' i
 if not TURSO_URL or not TURSO_TOKEN:
     print("⚠️  Turso credentials missing — database calls will fail.")
 
-# Keep for backward-compat with old code that imports DB_PATH
+# Backward-compat export
 DB_PATH = TURSO_URL or "turso"
 
 
 def _client():
-    """Create a fresh libsql HTTP client. Cheap — no persistent connection."""
+    """Fresh libsql HTTP client per call. Cheap — no persistent connection."""
     return libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN)
 
 
 # ─────────────────────────────────────────────
-# Init — create tables if missing
+# Init
 # ─────────────────────────────────────────────
 async def init_db():
     async with _client() as c:
+        # Players
         await c.execute('''CREATE TABLE IF NOT EXISTS players (
             user_id INTEGER PRIMARY KEY,
             discord_name TEXT,
@@ -42,6 +43,7 @@ async def init_db():
             verified INTEGER DEFAULT 0,
             registered_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
+        # Matches
         await c.execute('''CREATE TABLE IF NOT EXISTS matches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             player1_id INTEGER,
@@ -50,6 +52,7 @@ async def init_db():
             score TEXT,
             played_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
+        # XP
         await c.execute('''CREATE TABLE IF NOT EXISTS xp (
             user_id INTEGER,
             guild_id INTEGER,
@@ -57,11 +60,39 @@ async def init_db():
             level INTEGER DEFAULT 0,
             PRIMARY KEY (user_id, guild_id)
         )''')
+        # Bans
         await c.execute('''CREATE TABLE IF NOT EXISTS bans (
             user_id INTEGER PRIMARY KEY,
             reason TEXT,
             banned_by INTEGER,
             banned_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
+        # Tournaments
+        await c.execute('''CREATE TABLE IF NOT EXISTS tournaments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            mode TEXT NOT NULL DEFAULT '1v1',
+            status TEXT NOT NULL DEFAULT 'draft',
+            prize_pool INTEGER DEFAULT 0,
+            prize_split TEXT,
+            entry_fee TEXT,
+            rounds TEXT,
+            starts_at TEXT,
+            max_slots INTEGER DEFAULT 32,
+            rules_url TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
+        # Registrations
+        await c.execute('''CREATE TABLE IF NOT EXISTS tournament_registrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tournament_id INTEGER NOT NULL,
+            discord_id INTEGER NOT NULL,
+            discord_username TEXT,
+            mode TEXT,
+            status TEXT DEFAULT 'pending',
+            registered_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
 
 
@@ -252,3 +283,189 @@ async def get_ban(user_id):
             "banned_by": r[2],
             "banned_at": r[3],
         }
+
+
+# ─────────────────────────────────────────────
+# Tournaments
+# ─────────────────────────────────────────────
+async def create_tournament(data: dict) -> int:
+    async with _client() as c:
+        result = await c.execute(
+            '''INSERT INTO tournaments
+               (name, description, mode, status, prize_pool, prize_split,
+                entry_fee, rounds, starts_at, max_slots, rules_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            [
+                data.get("name", "Untitled"),
+                data.get("description", ""),
+                data.get("mode", "1v1"),
+                data.get("status", "draft"),
+                int(data.get("prize_pool", 0) or 0),
+                data.get("prize_split", ""),
+                data.get("entry_fee", ""),
+                data.get("rounds", ""),
+                data.get("starts_at", ""),
+                int(data.get("max_slots", 32) or 32),
+                data.get("rules_url", ""),
+            ],
+        )
+        return result.last_insert_rowid
+
+
+async def update_tournament(tid: int, data: dict):
+    async with _client() as c:
+        await c.execute(
+            '''UPDATE tournaments SET
+                name=?, description=?, mode=?, status=?, prize_pool=?,
+                prize_split=?, entry_fee=?, rounds=?, starts_at=?, max_slots=?,
+                rules_url=?, updated_at=CURRENT_TIMESTAMP
+               WHERE id=?''',
+            [
+                data.get("name", "Untitled"),
+                data.get("description", ""),
+                data.get("mode", "1v1"),
+                data.get("status", "draft"),
+                int(data.get("prize_pool", 0) or 0),
+                data.get("prize_split", ""),
+                data.get("entry_fee", ""),
+                data.get("rounds", ""),
+                data.get("starts_at", ""),
+                int(data.get("max_slots", 32) or 32),
+                data.get("rules_url", ""),
+                tid,
+            ],
+        )
+
+
+async def delete_tournament(tid: int):
+    async with _client() as c:
+        await c.execute(
+            'DELETE FROM tournament_registrations WHERE tournament_id = ?', [tid]
+        )
+        await c.execute('DELETE FROM tournaments WHERE id = ?', [tid])
+
+
+async def set_tournament_status(tid: int, status: str):
+    async with _client() as c:
+        await c.execute(
+            'UPDATE tournaments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [status, tid],
+        )
+
+
+async def get_tournament(tid: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT id, name, description, mode, status, prize_pool, prize_split, '
+            'entry_fee, rounds, starts_at, max_slots, rules_url, '
+            'created_at, updated_at '
+            'FROM tournaments WHERE id = ?',
+            [tid],
+        )
+        if not result.rows:
+            return None
+        r = result.rows[0]
+        return {
+            "id": r[0],
+            "name": r[1],
+            "description": r[2] or "",
+            "mode": r[3],
+            "status": r[4],
+            "prize_pool": r[5] or 0,
+            "prize_split": r[6] or "",
+            "entry_fee": r[7] or "",
+            "rounds": r[8] or "",
+            "starts_at": r[9] or "",
+            "max_slots": r[10] or 32,
+            "rules_url": r[11] or "",
+            "created_at": r[12],
+            "updated_at": r[13],
+        }
+
+
+async def get_all_tournaments():
+    async with _client() as c:
+        result = await c.execute(
+            '''SELECT t.id, t.name, t.description, t.mode, t.status,
+                      t.prize_pool, t.prize_split, t.entry_fee, t.rounds,
+                      t.starts_at, t.max_slots, t.rules_url,
+                      (SELECT COUNT(*) FROM tournament_registrations r
+                       WHERE r.tournament_id = t.id
+                         AND r.status != 'rejected') AS reg_count
+               FROM tournaments t
+               ORDER BY
+                 CASE t.status
+                   WHEN 'live'      THEN 1
+                   WHEN 'open'      THEN 2
+                   WHEN 'draft'     THEN 3
+                   WHEN 'completed' THEN 4
+                   ELSE 5
+                 END,
+                 t.starts_at ASC'''
+        )
+        return [
+            {
+                "id": r[0],
+                "name": r[1],
+                "description": r[2] or "",
+                "mode": r[3],
+                "status": r[4],
+                "prize_pool": r[5] or 0,
+                "prize_split": r[6] or "",
+                "entry_fee": r[7] or "",
+                "rounds": r[8] or "",
+                "starts_at": r[9] or "",
+                "max_slots": r[10] or 32,
+                "rules_url": r[11] or "",
+                "registered": r[12] or 0,
+            }
+            for r in result.rows
+        ]
+
+
+async def register_for_tournament(tid: int, discord_id: int, username: str, mode: str):
+    async with _client() as c:
+        # Reject duplicates
+        existing = await c.execute(
+            'SELECT id FROM tournament_registrations '
+            'WHERE tournament_id = ? AND discord_id = ?',
+            [tid, discord_id],
+        )
+        if existing.rows:
+            return None
+        result = await c.execute(
+            '''INSERT INTO tournament_registrations
+               (tournament_id, discord_id, discord_username, mode)
+               VALUES (?, ?, ?, ?)''',
+            [tid, discord_id, username or "", mode],
+        )
+        return result.last_insert_rowid
+
+
+async def get_tournament_registrations(tid: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT id, discord_id, discord_username, mode, status, registered_at '
+            'FROM tournament_registrations WHERE tournament_id = ? '
+            'ORDER BY registered_at DESC',
+            [tid],
+        )
+        return [
+            {
+                "id": r[0],
+                "discord_id": r[1],
+                "discord_username": r[2] or "",
+                "mode": r[3] or "",
+                "status": r[4] or "pending",
+                "registered_at": r[5],
+            }
+            for r in result.rows
+        ]
+
+
+async def set_registration_status(rid: int, status: str):
+    async with _client() as c:
+        await c.execute(
+            'UPDATE tournament_registrations SET status = ? WHERE id = ?',
+            [status, rid],
+        )
