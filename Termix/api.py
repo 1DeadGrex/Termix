@@ -16,11 +16,21 @@ from utils import database as db
 
 load_dotenv()
 
+# ─────────────────────────────────────────────
+# Config
+# ─────────────────────────────────────────────
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/b73rAp5Sug")
+DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/K8VndtvrHq")
+ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
 
+if ADMIN_KEY == "changeme123":
+    print("⚠️  ADMIN_KEY is still the default — set a strong value in env vars!")
+
+# ─────────────────────────────────────────────
+# Bot reference (set by app.py)
+# ─────────────────────────────────────────────
 _bot = None
 
 def set_bot(bot_instance):
@@ -29,6 +39,9 @@ def set_bot(bot_instance):
     print(f"✅ API: bot reference registered ({type(bot_instance).__name__})")
 
 
+# ─────────────────────────────────────────────
+# Lifespan
+# ─────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.init_db()
@@ -37,15 +50,24 @@ async def lifespan(app: FastAPI):
     print("🛑 API shutting down")
 
 
-app = FastAPI(title="CS2 Tournament API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="CS2 Tournament API", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # TODO: tighten to your Vercel domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ─────────────────────────────────────────────
+# Admin auth helper
+# ─────────────────────────────────────────────
+def require_admin(request: Request):
+    key = request.headers.get("X-Admin-Key") or request.query_params.get("key")
+    if key != ADMIN_KEY:
+        raise HTTPException(status_code=401, detail="Invalid admin key")
 
 
 # ─────────────────────────────────────────────
@@ -153,6 +175,141 @@ async def discord_presence(user_id: int, guild_id: Optional[int] = None):
 
 
 # ─────────────────────────────────────────────
+# Tournaments — public read
+# ─────────────────────────────────────────────
+@app.get("/api/tournaments")
+async def list_tournaments():
+    return await db.get_all_tournaments()
+
+
+@app.get("/api/tournaments/{tid}")
+async def get_tournament(tid: int):
+    t = await db.get_tournament(tid)
+    if not t:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return t
+
+
+# ─────────────────────────────────────────────
+# Tournaments — admin write
+# ─────────────────────────────────────────────
+class TournamentPayload(BaseModel):
+    name: str
+    description: str = ""
+    mode: str = "1v1"
+    status: str = "draft"
+    prize_pool: int = 0
+    prize_split: str = ""
+    entry_fee: str = ""
+    rounds: str = ""
+    starts_at: str = ""
+    max_slots: int = 32
+    rules_url: str = ""
+
+
+@app.post("/api/tournaments")
+async def create_tournament(payload: TournamentPayload, request: Request):
+    require_admin(request)
+    if payload.status not in ("draft", "open", "live", "completed", "cancelled"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    if payload.mode not in ("1v1", "2v2", "5v5"):
+        raise HTTPException(status_code=400, detail="Invalid mode")
+    tid = await db.create_tournament(payload.dict())
+    return {"status": "created", "id": tid}
+
+
+@app.put("/api/tournaments/{tid}")
+async def update_tournament(tid: int, payload: TournamentPayload, request: Request):
+    require_admin(request)
+    existing = await db.get_tournament(tid)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    await db.update_tournament(tid, payload.dict())
+    return {"status": "updated", "id": tid}
+
+
+@app.delete("/api/tournaments/{tid}")
+async def delete_tournament(tid: int, request: Request):
+    require_admin(request)
+    existing = await db.get_tournament(tid)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    await db.delete_tournament(tid)
+    return {"status": "deleted", "id": tid}
+
+
+class StatusPayload(BaseModel):
+    status: str
+
+
+@app.post("/api/tournaments/{tid}/status")
+async def set_tournament_status(tid: int, payload: StatusPayload, request: Request):
+    require_admin(request)
+    if payload.status not in ("draft", "open", "live", "completed", "cancelled"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    existing = await db.get_tournament(tid)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    await db.set_tournament_status(tid, payload.status)
+    return {"status": "ok", "id": tid, "new_status": payload.status}
+
+
+# ─────────────────────────────────────────────
+# Tournament registrations
+# ─────────────────────────────────────────────
+class TournamentRegisterPayload(BaseModel):
+    discord_id: int
+    discord_username: str = ""
+    mode: str = "1v1"
+
+
+@app.post("/api/tournaments/{tid}/register")
+async def register_for_tournament(tid: int, payload: TournamentRegisterPayload):
+    t = await db.get_tournament(tid)
+    if not t:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+
+    if t["status"] != "open":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Registration closed (status: {t['status']})",
+        )
+
+    # Ban check
+    ban = await db.get_ban(payload.discord_id)
+    if ban:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Banned: {ban.get('reason', 'no reason given')}",
+        )
+
+    rid = await db.register_for_tournament(
+        tid, payload.discord_id, payload.discord_username, payload.mode
+    )
+    if rid is None:
+        raise HTTPException(status_code=409, detail="Already registered for this tournament")
+
+    return {"status": "registered", "registration_id": rid}
+
+
+@app.get("/api/tournaments/{tid}/registrations")
+async def list_registrations(tid: int, request: Request):
+    require_admin(request)
+    return await db.get_tournament_registrations(tid)
+
+
+@app.post("/api/tournaments/{tid}/registrations/{rid}")
+async def update_registration(
+    tid: int, rid: int, payload: StatusPayload, request: Request
+):
+    require_admin(request)
+    if payload.status not in ("pending", "approved", "rejected"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    await db.set_registration_status(rid, payload.status)
+    return {"status": "ok", "registration_id": rid, "new_status": payload.status}
+
+
+# ─────────────────────────────────────────────
 # Steam OpenID — Step 1
 # ─────────────────────────────────────────────
 @app.get("/auth/steam")
@@ -256,7 +413,9 @@ async def fetch_steam_profile(steam_id: str) -> Optional[dict]:
 
 
 def _xml_extract(xml: str, tag: str) -> Optional[str]:
-    m = re.search(rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE)
+    m = re.search(
+        rf"<{tag}>\s*<!\[CDATA\[(.*?)\]\]>\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE
+    )
     if m:
         return m.group(1).strip()
     m = re.search(rf"<{tag}>\s*(.*?)\s*</{tag}>", xml, re.DOTALL | re.IGNORECASE)
@@ -274,7 +433,7 @@ async def auth_success():
 
 
 # ─────────────────────────────────────────────
-# Shared VHS page (success AND error)
+# Shared VHS page (success + error)
 # ─────────────────────────────────────────────
 def _vhs_page(
     *,
