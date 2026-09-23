@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERMIX // ADMIN CONSOLE</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230b0907'/><text x='2' y='12' font-family='monospace' font-size='11' fill='%23ff5238'>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0907; --panel:#141008; --panel2:#1d1609; --ink:#0f0c06;
+  --line:#3a2f14; --line2:#5c4918; --deep:#8a6a10; --amber:#ffb000; --amber2:#ffd75e;
+  --txt:#efe6c8; --mut:#a8976a; --dim:#6f6140; --red:#ff5238; --green:#57e389;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-color:var(--line2) var(--bg)}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.55;min-height:100vh}
+body.noscroll{overflow:hidden}
+::selection{background:var(--amber);color:#140d00}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--line2);border:2px solid var(--bg)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+[hidden]{display:none !important}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:var(--amber);text-decoration:none}
+a:hover{color:var(--amber2)}
+.px{font-family:'Press Start 2P',monospace}
+.vt{font-family:'VT323',monospace}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:1100}
+.fx.scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.fx.vig{background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.45))}
+@keyframes blink{50%{opacity:0}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake .4s both}
+.cursor{display:inline-block;width:.62em;height:1em;background:var(--red);vertical-align:-.12em;margin-left:6px;animation:blink 1s steps(1) infinite}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;color:var(--amber);background:var(--panel2);border:1px solid var(--line2);padding:12px 16px;box-shadow:4px 4px 0 #000;text-transform:uppercase;user-select:none;text-align:center}
+.btn:hover:not(:disabled){color:var(--amber2);border-color:var(--amber)}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--amber);color:#140d00;border-color:var(--amber)}
+.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2);color:#140d00}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.danger:hover:not(:disabled){color:#ff8371;border-color:#ff8371}
+.btn.ok{color:var(--green);border-color:var(--green)}
+.btn.ok:hover:not(:disabled){color:#8af0ae;border-color:#8af0ae}
+.btn.sm{padding:8px 10px;font-size:8px}
+
+.panel{background:var(--panel);border:1px solid var(--line);box-shadow:6px 6px 0 #000}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--panel2);border-bottom:1px solid var(--line);padding:12px 16px}
+.phead h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--amber);letter-spacing:1px}
+.phead-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
+.tag.off{color:var(--red);border-color:var(--red)}
+.tag.on{color:var(--green);border-color:var(--green)}
+.pbody{padding:16px}
+
+.badge{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;padding:5px 8px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
+.badge.live{color:var(--red);border-color:var(--red);animation:blink 1.2s steps(1) infinite}
+.badge.open{color:var(--green);border-color:var(--green)}
+.badge.done{color:var(--dim);border-color:var(--line)}
+.badge.warn{color:var(--amber2);border-color:var(--amber)}
+.badge.rejected{color:var(--red);border-color:var(--red)}
+.modetag{font-family:'Press Start 2P',monospace;font-size:8px;border:1px solid var(--amber);color:var(--amber);padding:5px 7px;letter-spacing:1px}
+
+.empty{text-align:center;padding:56px 20px;border:1px dashed var(--line2);background:var(--ink);color:var(--mut);font-family:'VT323',monospace;font-size:21px}
+.empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px;letter-spacing:1px}
+
+.fl{display:block;font-weight:600;font-size:10px;letter-spacing:1.5px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase}
+.inp{width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--amber2);font-family:'VT323',monospace;font-size:20px;padding:8px 10px}
+.inp:focus{outline:none;border-color:var(--amber);box-shadow:3px 3px 0 #000}
+.inp::placeholder{color:var(--dim)}
+select.inp option, select.inp optgroup{background:var(--ink);color:var(--amber2)}
+textarea.inp{min-height:72px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.5}
+.hint{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
+.err-msg{display:none;color:var(--red);font-size:12px;font-weight:600;margin-top:10px;line-height:1.5}
+.err-msg.show{display:block}
+
+#toasts{position:fixed;right:16px;bottom:16px;z-index:1300;display:flex;flex-direction:column;gap:10px;max-width:min(440px,92vw)}
+.toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word;transition:opacity .2s}
+.toast.err{border-color:var(--red);color:#ffb4a5}
+.toast.ok{border-color:var(--green);color:var(--green)}
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gate{width:min(480px,100%)}
+.gate-head{border-bottom:1px solid var(--red)}
+.gate-head h2{color:var(--red) !important}
+.gate-sub{font-family:'VT323',monospace;font-size:19px;color:var(--mut);letter-spacing:1px;border-bottom:1px dashed var(--line);padding-bottom:10px}
+.gate .btn{width:100%;margin-top:20px}
+
+#abar{position:sticky;top:0;z-index:950;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+.abrand{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);text-shadow:2px 2px 0 #000}
+.abrand .red{color:var(--red)}
+.abar-sp{flex:1}
+.awrap{max-width:1280px;margin:0 auto;padding:22px 18px 40px;display:flex;flex-direction:column;gap:22px}
+#ahud{position:sticky;bottom:0;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 18px;background:var(--panel);border-top:1px solid var(--line);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--dim)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.acard{padding:14px;display:flex;flex-direction:column}
+.ac-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.aname{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.75;color:var(--amber2);margin:13px 0 8px;word-wrap:break-word}
+.adesc{font-size:12.5px;color:var(--mut);line-height:1.6;min-height:40px}
+.spec{border:1px solid var(--line);background:var(--ink);margin:12px 0}
+.srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px;letter-spacing:.5px}
+.srow:last-child{border-bottom:none}
+.srow span{color:var(--dim);letter-spacing:1px;white-space:nowrap}
+.srow b{color:var(--txt);font-weight:600;text-align:right;word-break:break-word}
+.aprize{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 12px}
+.aprize .big{font-family:'VT323',monospace;font-size:38px;color:var(--amber);line-height:1;text-shadow:2px 2px 0 #000}
+.abtns{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);letter-spacing:1px;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:hover td{background:var(--panel2)}
+td.vt{font-size:19px}
+.ractions{display:flex;gap:6px}
+.rid{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.mwrap{position:fixed;inset:0;z-index:1050;display:none;align-items:center;justify-content:center;background:rgba(4,3,1,.84);padding:20px}
+.mwrap.open{display:flex}
+.modal{width:min(620px,100%);max-height:92vh;overflow-y:auto;border-color:var(--line2)}
+.mrow{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+
+@media (max-width:640px){
+  .mwrap{padding:0}
+  .modal{width:100%;max-height:100vh;height:100%;border-left:none;border-right:none;box-shadow:none}
+  .f2{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  .abtns{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div class="fx scan" aria-hidden="true"></div>
+<div class="fx vig" aria-hidden="true"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<div id="gate">
+  <div class="gate panel">
+    <div class="phead gate-head"><h2>AUTHENTICATION</h2><span class="tag off">RESTRICTED</span></div>
+    <div class="pbody">
+      <p class="gate-sub">TERMINAL LOCKED — ADMIN CLEARANCE REQUIRED<span class="cursor"></span></p>
+      <form id="gateForm" novalidate>
+        <label class="fl" for="gKey">ADMIN KEY</label>
+        <input id="gKey" class="inp" type="password" placeholder="paste X-Admin-Key" autocomplete="off">
+        <div id="gErr" class="err-msg" role="alert"></div>
+        <button type="submit" id="gGo" class="btn danger">UNLOCK CONSOLE ►</button>
+        <div class="hint">The key is stored in localStorage under <b>termix_admin_key</b> and sent only to the API as the X-Admin-Key header. It never leaves this browser except to the grid API.</div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="dash" hidden>
+  <header id="abar">
+    <div class="abrand">TERMIX <span class="red">// ADMIN CONSOLE</span></div>
+    <div class="abar-sp"></div>
+    <a class="btn sm ghost" href="index.html">VIEW SITE ↗</a>
+    <button id="aRefresh" class="btn sm">⟳ REFRESH</button>
+    <button id="aLogout" class="btn sm danger">LOGOUT</button>
+  </header>
+
+  <main class="awrap">
+    <section class="panel">
+      <div class="phead">
+        <h2>TOURNAMENTS</h2>
+        <div class="phead-r">
+          <span class="tag" id="aTag">SYNC…</span>
+          <button id="aCreate" class="btn sm primary">+ CREATE TOURNAMENT</button>
+        </div>
+      </div>
+      <div class="pbody"><div id="aGrid" class="cards"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="phead">
+        <h2>REGISTRATIONS <span class="vt" id="rFor" style="color:var(--mut);font-size:17px"></span></h2>
+        <span class="tag" id="rTag">IDLE</span>
+      </div>
+      <div class="pbody tblwrap" id="rBody">
+        <div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card to load its queue.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="ahud">
+    <span class="px" style="font-size:8px;color:var(--deep)">TERMIX ADMIN v2.4.0</span>
+    <span>KEY <span id="aKeyMask">——</span></span>
+    <span>UTC <span id="aClock">--:--:--</span></span>
+  </footer>
+</div>
+
+<div id="fWrap" class="mwrap" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+  <div class="modal panel">
+    <div class="phead">
+      <h2 id="fTitle">CREATE TOURNAMENT</h2>
+      <button type="button" id="fClose" class="btn sm ghost" aria-label="Close tournament form">✕</button>
+    </div>
+    <div class="pbody">
+      <form id="fForm" novalidate>
+        <input type="hidden" id="f-id" value="">
+        <label class="fl" for="f-name">NAME <span style="color:var(--red)">(REQUIRED)</span></label>
+        <input id="f-name" class="inp" type="text" maxlength="120" placeholder="NEON SIEGE // 2v2 Cup — NA">
+        <label class="fl" for="f-desc">DESCRIPTION</label>
+        <textarea id="f-desc" class="inp" maxlength="400" placeholder="Short summary for the card."></textarea>
+        <div class="f2">
+          <div>
+            <label class="fl" for="f-mode">GAME MODE</label>
+            <select id="f-mode" class="inp">
+              <option value="1v1">1v1</option>
+              <option value="2v2" selected>2v2</option>
+              <option value="5v5">5v5</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl" for="f-status">STATUS</label>
+            <select id="f-status" class="inp">
+              <option value="draft" selected>draft</option>
+              <option value="open">open</option>
+              <option value="live">live</option>
+              <option value="completed">completed</option>
+              <option value="cancelled">cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl" for="f-prize">PRIZE POOL ($)</label>
+            <input id="f-prize" class="inp" type="number" min="0" step="1" placeholder="420">
+          </div>
+          <div>
+            <label class="fl" for="f-slots">MAX SLOTS</label>
+            <input id="f-slots" class="inp" type="number" min="2" step="1" placeholder="32">
+          </div>
+        </div>
+        <label class="fl" for="f-extra">PRIZE EXTRA <span class="opt" style="color:var(--dim)">(SKINS / ITEMS / NON-CASH — optional)</span></label>
+        <input id="f-extra" class="inp" type="text" maxlength="160" placeholder="e.g. 3x AK-47 Redline FT + 1x AWP Asiimov BS">
+        <label class="fl" for="f-split">PRIZE SPLIT</label>
+        <input id="f-split" class="inp" type="text" maxlength="120" placeholder="$250 / $120 / $50 (1st–3rd)">
+        <label class="fl" for="f-entry">ENTRY</label>
+        <input id="f-entry" class="inp" type="text" maxlength="120" placeholder="FREE — STEAM VERIFICATION REQ.">
+        <label class="fl" for="f-format">FORMAT / ROUNDS</label>
+        <input id="f-format" class="inp" type="text" maxlength="120" placeholder="SINGLE ELIM · BO1 · MR24">
+        <label class="fl" for="f-starts">STARTS AT (YOUR LOCAL TIME → SENT AS UTC)</label>
+        <input id="f-starts" class="inp" type="datetime-local">
+        <label class="fl" for="f-rules">RULES URL</label>
+        <input id="f-rules" class="inp" type="text" maxlength="300" placeholder="https://…">
+        <div class="mrow">
+          <button type="button" id="fCancel" class="btn ghost">CANCEL</button>
+          <button type="submit" id="fSave" class="btn primary">SAVE ►</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+const CFG = {
+  API_BASE: 'https://wgzdxhaeou.apps.bot-hosting.cloud',
+  DISCORD_INVITE: 'https://discord.gg/K8VndtvrHq',
+  ADMIN_URL: 'admin.html',
+  SLOTS: 32,
+  CHECKIN_UTC: 19,
+  FETCH_MS: 10000,
+  ANNOUNCEMENTS: []
+};
+const STATUSES = ['draft', 'open', 'live', 'completed', 'cancelled'];
+const LS_KEY = 'termix_admin_key';
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = n => String(n).padStart(2,'0');
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const fmtMoney = n => '$' + (Number(n)||0).toLocaleString('en-US');
+function fmtPrize(t){
+  if (!t) return '——';
+  const cash = Number(t.prize_pool) || 0;
+  const extra = (t.prize_extra || '').trim();
+  if (!extra) return fmtMoney(cash);
+  if (cash <= 0) return extra;
+  return fmtMoney(cash) + ' + ' + extra;
+}
+function fmtStarts(iso){
+  const d = new Date(iso);
+  if (isNaN(d)) return '——';
+  return MON[d.getUTCMonth()] + ' ' + pad2(d.getUTCDate()) + ' · ' + pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ' UTC';
+}
+function toast(msg, kind){
+  const box = $('#toasts');
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind === 'error' ? ' err' : kind === 'ok' ? ' ok' : '');
+  t.setAttribute('role','status');
+  t.textContent = String(msg);
+  box.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 4000);
+}
+
+async function api(path, { method='GET', body=null, headers={}, timeout=CFG.FETCH_MS } = {}){
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), timeout);
+  try{
+    const opts = { method, signal: c.signal, headers: { ...headers } };
+    if (body !== null){
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+    const r = await fetch(CFG.API_BASE + path, opts);
+    let data = null;
+    try{ data = await r.json(); }catch(e){ data = null; }
+    return { ok:r.ok, status:r.status, data };
+  } finally { clearTimeout(t); }
+}
+function aapi(path, opt = {}){
+  return api(path, { ...opt, headers: { 'X-Admin-Key': S.key, ...(opt.headers || {}) } });
+}
+
+const S = { key:'', tournaments:[], selTid:null };
+
+function gateFail(msg, shake){
+  const el = $('#gErr');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (shake){
+    const inp = $('#gKey');
+    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+  }
+}
+async function tryKey(k){
+  const r = await api('/api/tournaments', { headers: { 'X-Admin-Key': k } });
+  return r.status;
+}
+async function gateSubmit(e){
+  e.preventDefault();
+  $('#gErr').classList.remove('show');
+  const k = $('#gKey').value.trim();
+  if (!k) return gateFail('ENTER THE ADMIN KEY', true);
+  const btn = $('#gGo');
+  btn.disabled = true; btn.textContent = 'CHECKING…';
+  try{
+    const st = await tryKey(k);
+    if (st === 200){
+      S.key = k;
+      localStorage.setItem(LS_KEY, k);
+      enterDash();
+    } else if (st === 401){
+      gateFail('Invalid key.', true);
+    } else {
+      gateFail('UNEXPECTED RESPONSE (' + st + ')', false);
+    }
+  }catch(_){
+    gateFail('UPLINK ERROR — API unreachable. Check the network and retry.', false);
+  } finally {
+    btn.disabled = false; btn.textContent = 'UNLOCK CONSOLE ►';
+  }
+}
+function adminLogout(){
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+function enterDash(){
+  $('#gate').hidden = true;
+  $('#dash').hidden = false;
+  $('#aKeyMask').textContent = S.key.length > 6 ? S.key.slice(0,3) + '…' + S.key.slice(-2) : '•••';
+  loadTournaments();
+}
+
+async function loadTournaments(silent){
+  const tag = $('#aTag');
+  if (!silent){ tag.textContent = 'SYNC…'; tag.classList.remove('off'); }
+  try{
+    const r = await aapi('/api/tournaments');
+    if (r.status === 401){ adminLogout(); return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    S.tournaments = Array.isArray(r.data) ? r.data : [];
+    renderGrid();
+    tag.textContent = 'LIVE · /api/tournaments';
+    tag.classList.add('on');
+  }catch(e){
+    tag.textContent = 'OFFLINE';
+    tag.classList.remove('on');
+    tag.classList.add('off');
+    toast('UPLINK ERROR — could not load tournaments', 'error');
+  }
+}
+function badgeFor(st){
+  const s = String(st).toLowerCase();
+  if (s === 'approved') return '<span class="badge open">APPROVED</span>';
+  if (s === 'rejected') return '<span class="badge rejected">REJECTED</span>';
+  if (s === 'pending')  return '<span class="badge warn">PENDING</span>';
+  return '<span class="badge ' + (s==='live'?'live':s==='open'?'open':'done') + '">' + esc(s.toUpperCase()) + '</span>';
+}
+function renderGrid(){
+  const grid = $('#aGrid');
+  if (!S.tournaments.length){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>NO TOURNAMENTS</b>Hit + CREATE TOURNAMENT to post the first one to the grid.</div>';
+    return;
+  }
+  grid.innerHTML = S.tournaments.map(t => {
+    const slots = Number(t.max_slots) > 0 ? Number(t.max_slots) : CFG.SLOTS;
+    const reg = Math.min(Math.max(Number(t.registered)||0, 0), slots);
+    const hasExtra = !!(t.prize_extra && String(t.prize_extra).trim());
+    return '<article class="acard panel">'
+      + '<div class="ac-top"><span class="modetag">' + esc(String(t.mode||'?').toUpperCase()) + '</span>' + badgeFor(t.status) + '</div>'
+      + '<h3 class="aname">' + esc(t.name || 'UNTITLED') + '</h3>'
+      + '<p class="adesc">' + esc(t.description || '—') + '</p>'
+      + '<div class="spec">'
+      + '<div class="srow"><span>STARTS</span><b>' + fmtStarts(t.starts_at) + '</b></div>'
+      + '<div class="srow"><span>SLOTS</span><b>' + reg + '/' + slots + ' FILLED</b></div>'
+      + (hasExtra ? '<div class="srow"><span>EXTRA PRIZE</span><b>' + esc(t.prize_extra) + '</b></div>' : '')
+      + '<div class="srow"><span>PRIZE SPLIT</span><b>' + esc(t.prize_split || '—') + '</b></div>'
+      + '</div>'
+      + '<div class="aprize"><span class="fl" style="margin:0">PRIZE POOL</span><span class="big" style="font-size:' + (hasExtra ? '24px' : '38px') + '">' + esc(fmtPrize(t)) + '</span></div>'
+      + '<div class="abtns">'
+      + '<button class="btn sm act" data-act="edit" data-id="' + Number(t.id) + '">EDIT</button>'
+      + '<button class="btn sm act" data-act="regs" data-id="' + Number(t.id) + '">REGISTRATIONS</button>'
+      + '<button class="btn sm act" data-act="status" data-id="' + Number(t.id) + '">STATUS ▾</button>'
+      + '<button class="btn sm danger act" data-act="del" data-id="' + Number(t.id) + '">DEL</button>'
+      + '</div></article>';
+  }).join('');
+}
+async function onGridAction(e){
+  const b = e.target.closest('.act');
+  if (!b || b.disabled) return;
+  const id = Number(b.dataset.id);
+  const t = S.tournaments.find(x => Number(x.id) === id);
+  if (!t) return;
+  const act = b.dataset.act;
+  if (act === 'edit') openForm(t);
+  else if (act === 'regs') loadRegistrations(id);
+  else if (act === 'status') doStatus(t);
+  else if (act === 'del') doDelete(t);
+}
+async function doStatus(t){
+  const v = prompt('NEW STATUS — one of: draft / open / live / completed / cancelled', t.status || '');
+  if (v === null) return;
+  const s = v.trim().toLowerCase();
+  if (!STATUSES.includes(s)) return toast('INVALID STATUS "' + s + '" — allowed: ' + STATUSES.join(' / '), 'error');
+  try{
+    const r = await aapi('/api/tournaments/' + Number(t.id) + '/status', { method:'POST', body:{ status: s } });
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    toast('STATUS → ' + s.toUpperCase(), 'ok');
+    loadTournaments();
+  }catch(ex){
+    toast('STATUS UPDATE FAILED — ' + ex.message, 'error');
+  }
+}
+async function doDelete(t){
+  if (!confirm('DELETE "' + (t.name || '#' + t.id) + '"?\nThis also removes all of its registrations.')) return;
+  try{
+    const r = await aapi('/api/tournaments/' + Number(t.id), { method:'DELETE' });
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    toast('TOURNAMENT DELETED', 'ok');
+    if (S.selTid === Number(t.id)){ S.selTid = null; resetRegs(); }
+    loadTournaments();
+  }catch(ex){
+    toast('DELETE FAILED — ' + ex.message, 'error');
+  }
+}
+
+function toLocalInput(iso){
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function openForm(t){
+  const editing = !!t;
+  $('#fTitle').textContent = editing ? 'EDIT TOURNAMENT #' + Number(t.id) : 'CREATE TOURNAMENT';
+  $('#f-id').value = editing ? Number(t.id) : '';
+  $('#f-name').value = editing ? (t.name || '') : '';
+  $('#f-desc').value = editing ? (t.description || '') : '';
+  $('#f-mode').value = editing && t.mode ? String(t.mode) : '2v2';
+  $('#f-status').value = editing && STATUSES.includes(t.status) ? t.status : 'draft';
+  $('#f-prize').value = editing && t.prize_pool != null ? Number(t.prize_pool) : '';
+  $('#f-slots').value = editing && t.max_slots != null ? Number(t.max_slots) : '';
+  $('#f-extra').value = editing ? (t.prize_extra || '') : '';
+  $('#f-split').value = editing ? (t.prize_split || '') : '';
+  $('#f-entry').value = editing ? (t.entry_fee || '') : '';
+  $('#f-format').value = editing ? (t.rounds || '') : '';
+  $('#f-starts').value = editing && t.starts_at ? toLocalInput(t.starts_at) : '';
+  $('#f-rules').value = editing ? (t.rules_url || '') : '';
+  $('#fWrap').classList.add('open');
+  document.body.classList.add('noscroll');
+  setTimeout(() => $('#f-name').focus(), 60);
+}
+function closeForm(){
+  $('#fWrap').classList.remove('open');
+  document.body.classList.remove('noscroll');
+}
+function buildPayload(){
+  const v = id => $('#' + id).value.trim();
+  const st = $('#f-starts').value;
+  return {
+    name: v('f-name'),
+    description: v('f-desc'),
+    mode: $('#f-mode').value,
+    status: $('#f-status').value,
+    prize_pool: v('f-prize') === '' ? 0 : Number(v('f-prize')),
+    max_slots: v('f-slots') === '' ? CFG.SLOTS : Number(v('f-slots')),
+    prize_extra: v('f-extra'),
+    prize_split: v('f-split'),
+    entry_fee: v('f-entry'),
+    rounds: v('f-format'),
+    starts_at: st ? new Date(st).toISOString() : '',
+    rules_url: v('f-rules')
+  };
+}
+async function onFormSubmit(e){
+  e.preventDefault();
+  const name = $('#f-name').value.trim();
+  if (!name){
+    const el = $('#f-name');
+    el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+    el.focus();
+    return toast('NAME IS REQUIRED', 'error');
+  }
+  const btn = $('#fSave');
+  btn.disabled = true;
+  try{
+    const payload = buildPayload();
+    const editingId = $('#f-id').value;
+    const r = editingId
+      ? await aapi('/api/tournaments/' + Number(editingId), { method:'PUT', body: payload })
+      : await aapi('/api/tournaments', { method:'POST', body: payload });
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    closeForm();
+    toast(editingId ? 'TOURNAMENT UPDATED' : 'TOURNAMENT CREATED', 'ok');
+    loadTournaments();
+  }catch(ex){
+    toast('SAVE FAILED — ' + ex.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function resetRegs(){
+  $('#rFor').textContent = '';
+  $('#rTag').textContent = 'IDLE';
+  $('#rTag').classList.remove('off','on');
+  $('#rBody').innerHTML = '<div class="empty"><b>NO TOURNAMENT SELECTED</b>Click REGISTRATIONS on any tournament card to load its queue.</div>';
+}
+async function loadRegistrations(tid){
+  S.selTid = tid;
+  const t = S.tournaments.find(x => Number(x.id) === Number(tid));
+  $('#rFor').textContent = '· ' + (t ? (t.name || ('#' + tid)) : ('#' + tid));
+  const tag = $('#rTag');
+  tag.textContent = 'SYNC…';
+  tag.classList.remove('off','on');
+  $('#rBody').innerHTML = '<div class="empty"><b>LOADING…</b>Fetching registration queue.</div>';
+  try{
+    const r = await aapi('/api/tournaments/' + Number(tid) + '/registrations');
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    const rows = Array.isArray(r.data) ? r.data : [];
+    tag.textContent = 'LIVE · ' + rows.length + ' ROWS';
+    tag.classList.add('on');
+    if (!rows.length){
+      $('#rBody').innerHTML = '<div class="empty"><b>NO REGISTRATIONS</b>Nobody has signed up for this tournament yet.</div>';
+      return;
+    }
+    $('#rBody').innerHTML = '<table><thead><tr><th>#</th><th>DISCORD ID</th><th>USERNAME</th><th>MODE</th><th>STATUS</th><th>REGISTERED</th><th>ACTIONS</th></tr></thead><tbody>'
+      + rows.map(rr => {
+        const st = String(rr.status || 'pending').toLowerCase();
+        return '<tr>'
+          + '<td class="vt mutc">' + Number(rr.id) + '</td>'
+          + '<td class="vt rid">' + esc(String(rr.discord_id)) + '</td>'
+          + '<td>' + esc(rr.discord_username || '—') + '</td>'
+          + '<td>' + esc(String(rr.mode || '—').toUpperCase()) + '</td>'
+          + '<td>' + badgeFor(st) + '</td>'
+          + '<td class="vt mutc">' + esc(fmtStarts(rr.registered_at) === '——' ? String(rr.registered_at || '—') : fmtStarts(rr.registered_at)) + '</td>'
+          + '<td><div class="ractions">'
+          + '<button class="btn sm ok act-r" data-rid="' + Number(rr.id) + '" data-set="approved" aria-label="Approve registration ' + Number(rr.id) + '">✓</button>'
+          + '<button class="btn sm danger act-r" data-rid="' + Number(rr.id) + '" data-set="rejected" aria-label="Reject registration ' + Number(rr.id) + '">✕</button>'
+          + '</div></td>'
+          + '</tr>';
+      }).join('') + '</tbody></table>';
+  }catch(ex){
+    tag.textContent = 'OFFLINE';
+    tag.classList.add('off');
+    $('#rBody').innerHTML = '<div class="empty"><b>LOAD FAILED</b>' + esc(ex.message) + '</div>';
+  }
+}
+async function onRegAction(e){
+  const b = e.target.closest('.act-r');
+  if (!b || b.disabled) return;
+  const rid = Number(b.dataset.rid);
+  const status = b.dataset.set;
+  $$('.act-r').forEach(x => x.disabled = true);
+  try{
+    const r = await aapi('/api/tournaments/' + Number(S.selTid) + '/registrations/' + rid, { method:'POST', body:{ status } });
+    if (r.status === 401) return adminLogout();
+    if (!r.ok) throw new Error((r.data && r.data.detail) || ('HTTP ' + r.status));
+    toast('REG #' + rid + ' → ' + status.toUpperCase(), 'ok');
+    loadRegistrations(S.selTid);
+    loadTournaments(true);
+  }catch(ex){
+    toast('UPDATE FAILED — ' + ex.message, 'error');
+  } finally {
+    $$('.act-r').forEach(x => x.disabled = false);
+  }
+}
+
+function bindUI(){
+  $('#gateForm').addEventListener('submit', gateSubmit);
+  $('#aLogout').addEventListener('click', adminLogout);
+  $('#aRefresh').addEventListener('click', () => { loadTournaments(); if (S.selTid != null) loadRegistrations(S.selTid); });
+  $('#aCreate').addEventListener('click', () => openForm(null));
+  $('#aGrid').addEventListener('click', onGridAction);
+  $('#rBody').addEventListener('click', onRegAction);
+  $('#fForm').addEventListener('submit', onFormSubmit);
+  $('#fCancel').addEventListener('click', closeForm);
+  $('#fClose').addEventListener('click', closeForm);
+  $('#fWrap').addEventListener('click', e => { if (e.target === $('#fWrap')) closeForm(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+}
+function startClock(){
+  const tick = () => { const el = $('#aClock'); if (el) el.textContent = new Date().toISOString().slice(11,19); };
+  tick(); setInterval(tick, 1000);
+}
+async function init(){
+  try{
+    bindUI();
+    startClock();
+    const stored = localStorage.getItem(LS_KEY);
+    if (stored){
+      $('#gGo').disabled = true; $('#gGo').textContent = 'CHECKING STORED KEY…';
+      try{
+        const st = await tryKey(stored);
+        if (st === 200){
+          S.key = stored;
+          $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
+          enterDash();
+          return;
+        }
+        if (st === 401) localStorage.removeItem(LS_KEY);
+      }catch(_){}
+      $('#gGo').disabled = false; $('#gGo').textContent = 'UNLOCK CONSOLE ►';
+    }
+  }catch(err){
+    toast('BOOT FAULT — ' + (err && err.message ? err.message : 'UNKNOWN'), 'error');
+  }
+}
+setInterval(() => {
+  if (!$('#dash').hidden && document.visibilityState === 'visible' && S.key) loadTournaments(true);
+}, 30000);
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
