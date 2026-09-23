@@ -4,6 +4,7 @@ COUNTING_CHANNEL_ID = 1550477976536088596            # ← put your counting cha
 ANNOUNCE_CHANNEL_ID = 1550190762463993926            # ← auto-announce channel (optional)
 TICKET_CATEGORY_ID = 1550173868033970197             # ← category where tickets get created (optional, 0 = auto)
 SUPPORT_CHANNEL_ID = 1550173868033970197   # used by /ticket to redirect users
+LEADERBOARD_CHANNEL_ID = 1552333221197250570   # auto-leaderboard channel
 
 # ─── Role IDs ───
 STAFF_ROLE_ID = 1550151638877081731                  # ← role ID that can manage tickets + unregister
