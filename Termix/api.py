@@ -26,7 +26,7 @@ DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/9YJpRr2qnR")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
 
 if ADMIN_KEY == "changeme123":
-    print("⚠️  Ahh you reached to frontend to crack the code, i seee!")
+    print("⚠️  ADMIN_KEY is still the default 'changeme123' — set a real one in env vars.")
 
 _bot = None
 
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     print("🛑 API shutting down")
 
 
-app = FastAPI(title="CS2 Tournament API", version="2.3.0", lifespan=lifespan)
+app = FastAPI(title="CS2 Tournament API", version="2.4.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,6 +60,33 @@ def require_admin(request: Request):
     key = request.headers.get("X-Admin-Key") or request.query_params.get("key")
     if key != ADMIN_KEY:
         raise HTTPException(status_code=401, detail="Invalid admin key")
+
+
+# ─────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────
+async def _assign_role_to_discord_user(discord_id: int, role_id: int, reason: str = "Auto role"):
+    """Find the member in any guild the bot is in and grant them the role."""
+    if _bot is None or not role_id:
+        return False
+    for guild in _bot.guilds:
+        role = guild.get_role(role_id)
+        if role is None:
+            continue
+        member = guild.get_member(discord_id)
+        if member is None:
+            try:
+                member = await guild.fetch_member(discord_id)
+            except Exception:
+                continue
+        try:
+            await member.add_roles(role, reason=reason)
+            print(f"[api] granted role {role.name} ({role.id}) to {member} in {guild.name}")
+            return True
+        except Exception as e:
+            print(f"[api] add_roles failed: {e}")
+            return False
+    return False
 
 
 # ─────────────────────────────────────────────
@@ -121,6 +148,17 @@ class RegisterPayload(BaseModel):
 
 @app.post("/api/register")
 async def register(payload: RegisterPayload):
+    # Ban checks
+    if await db.get_ban(payload.user_id):
+        raise HTTPException(status_code=403, detail="Discord account is banned")
+    if await db.get_steam_ban(payload.steam_id):
+        raise HTTPException(status_code=403, detail="Steam account is banned")
+
+    # Steam uniqueness
+    existing = await db.get_player_by_steam_id(payload.steam_id)
+    if existing and existing["user_id"] != payload.user_id:
+        raise HTTPException(status_code=409, detail="Steam ID already linked to another user")
+
     await db.add_player(
         user_id=payload.user_id,
         discord_name=payload.discord_name,
@@ -340,9 +378,20 @@ async def register_for_tournament(tid: int, payload: TournamentRegisterPayload):
     if t["status"] != "open":
         raise HTTPException(status_code=400, detail=f"Registration closed (status: {t['status']})")
 
+    # Discord ban check
     ban = await db.get_ban(payload.discord_id)
     if ban:
         raise HTTPException(status_code=403, detail=f"Banned: {ban.get('reason', 'no reason given')}")
+
+    # Steam ban check (if the player has a linked steam id)
+    player = await db.get_player(payload.discord_id)
+    if player and player.get("steam_id"):
+        sb = await db.get_steam_ban(player["steam_id"])
+        if sb:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Steam account is banned: {sb.get('reason', 'no reason given')}",
+            )
 
     rid = await db.register_for_tournament(
         tid, payload.discord_id, payload.discord_username, payload.mode
@@ -364,8 +413,29 @@ async def update_registration(tid: int, rid: int, payload: StatusPayload, reques
     require_admin(request)
     if payload.status not in ("pending", "approved", "rejected"):
         raise HTTPException(status_code=400, detail="Invalid status")
+
+    reg = await db.get_registration(rid)
+    if not reg or reg["tournament_id"] != tid:
+        raise HTTPException(status_code=404, detail="Registration not found")
+
     await db.set_registration_status(rid, payload.status)
-    return {"status": "ok", "registration_id": rid, "new_status": payload.status}
+
+    # On approval: grant MATCH_MEMBER_ROLE_ID to the discord user (best-effort)
+    role_granted = False
+    if payload.status == "approved":
+        role_id = getattr(config, "MATCH_MEMBER_ROLE_ID", 0) or 0
+        if role_id:
+            role_granted = await _assign_role_to_discord_user(
+                reg["discord_id"], role_id,
+                reason=f"Approved for tournament #{tid}",
+            )
+
+    return {
+        "status": "ok",
+        "registration_id": rid,
+        "new_status": payload.status,
+        "role_granted": role_granted,
+    }
 
 
 # ─────────────────────────────────────────────
@@ -408,6 +478,24 @@ async def steam_callback(discord_id: int, request: Request):
     steam_id64 = claimed_id.rsplit("/", 1)[-1]
     if not steam_id64.isdigit():
         return _vhs_error("VERIFY FAILED", "No SteamID64 in Steam's response.")
+
+    # ── Ban + uniqueness checks ──
+    if await db.get_ban(discord_id):
+        return _vhs_error("ACCESS DENIED", "Your Discord account is banned from Termix.")
+
+    sb = await db.get_steam_ban(steam_id64)
+    if sb:
+        return _vhs_error(
+            "ACCESS DENIED",
+            f"This Steam account is banned: {sb.get('reason', 'no reason given')}",
+        )
+
+    existing = await db.get_player_by_steam_id(steam_id64)
+    if existing and existing["user_id"] != discord_id:
+        return _vhs_error(
+            "ALREADY LINKED",
+            "This Steam account is already linked to another Discord user.",
+        )
 
     profile = await fetch_steam_profile(steam_id64)
     persona = (profile or {}).get("personaname") or "Unknown"
@@ -476,11 +564,7 @@ async def auth_success():
 # ─────────────────────────────────────────────
 # VHS-styled success & error pages
 # ─────────────────────────────────────────────
-def _vhs_success(
-    display_name: str = "Player",
-    steam_id: str = "",
-    avatar: str = "",
-) -> str:
+def _vhs_success(display_name="Player", steam_id="", avatar=""):
     esc_avatar = html_lib.escape(avatar, quote=True)
     esc_name = html_lib.escape(display_name)
     esc_steam = html_lib.escape(steam_id) if steam_id else "NOT-LINKED"
