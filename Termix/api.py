@@ -20,7 +20,7 @@ load_dotenv()
 
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
-SITE_URL = os.getenv("SITE_URL", https://termix-chi.vercel.app/)
+SITE_URL = os.getenv("SITE_URL", "https://termix-chi.vercel.app/")
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
 DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/9YJpRr2qnR")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
