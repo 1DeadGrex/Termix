@@ -34,7 +34,7 @@ a:hover{color:var(--amber2)}
 .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.primary{background:var(--amber);color:#140d00;border-color:var(--amber)}
-.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2)}
+.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2);color:#140d00}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--red);border-color:var(--red)}
 .btn.sm{padding:8px 10px;font-size:8px}
@@ -43,7 +43,6 @@ a:hover{color:var(--amber2)}
 .phead h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--amber);letter-spacing:1px}
 .phead-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .tag{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
-.tag.off{color:var(--red);border-color:var(--red)}
 .pbody{padding:16px}
 .badge{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;padding:5px 8px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
 .badge.live{color:var(--red);border-color:var(--red);animation:blink 1.2s steps(1) infinite}
@@ -121,12 +120,15 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .hero-r .btn{margin-top:auto;align-self:stretch}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
 #prizeWrap{position:relative;border:1px solid var(--line);background:var(--ink);overflow:hidden;aspect-ratio:16/7}
+#prizeWrap.has-link{cursor:pointer}
+#prizeWrap.has-link:hover{border-color:var(--amber)}
 #prizeImg{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) sepia(1) saturate(2.7) hue-rotate(-12deg) contrast(1.3) brightness(.8)}
 .crt-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
 .crt-noise{position:absolute;inset:0;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
 .crt-bar{position:absolute;left:0;right:0;height:22%;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,215,94,.09),transparent);animation:roll 5s linear infinite}
 @keyframes roll{from{top:-25%}to{top:110%}}
 .prize-cap{position:absolute;left:10px;bottom:8px;font-size:15px;color:var(--deep);letter-spacing:1px;pointer-events:none}
+.prize-click{position:absolute;right:10px;bottom:8px;font-size:12px;color:var(--amber);background:rgba(10,8,3,.75);border:1px solid var(--line2);padding:3px 8px;pointer-events:none;font-family:'Press Start 2P',monospace;letter-spacing:1px}
 #feedBox{background:var(--ink);border:1px solid var(--line);height:320px;overflow-y:auto;padding:12px;font-size:19px;line-height:1.35}
 #feedBox .idle{color:var(--dim)}
 .feed-line{margin-bottom:12px}
@@ -141,7 +143,7 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
 .stat{border:1px solid var(--line);background:var(--panel);box-shadow:4px 4px 0 #000;padding:14px 16px}
 .stat .mv{font-size:38px;margin-top:10px}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
 .tcard{padding:14px;display:flex;flex-direction:column}
 .tc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .modetag{font-family:'Press Start 2P',monospace;font-size:8px;border:1px solid var(--amber);color:var(--amber);padding:5px 7px;letter-spacing:1px}
@@ -156,9 +158,12 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .tc-prize .big{font-family:'VT323',monospace;color:var(--amber);line-height:1.1;text-shadow:2px 2px 0 #000;text-align:right;word-break:break-word}
 .slots{display:flex;flex-wrap:wrap;gap:2px}
 .slot{width:10px;height:10px;background:#221a0a;border:1px solid var(--line)}
-.slot.on{background:var(--amber);border-color:var(--deep);box-shadow:0 0 4px rgba(255,176,0,.55)}
-.slots-cap{font-family:'VT323',monospace;font-size:16px;color:var(--dim);letter-spacing:1px;margin:7px 0 13px}
-.tc-btn{margin-top:auto}
+.slot.open{background:var(--green);border-color:#1d3a24;box-shadow:0 0 4px rgba(87,227,137,.35)}
+.slot.low{background:var(--amber);border-color:var(--deep);box-shadow:0 0 4px rgba(255,176,0,.55)}
+.slot.full{background:var(--red);border-color:#7a2015}
+.slots-cap{font-family:'VT323',monospace;font-size:17px;color:var(--mut);letter-spacing:1px;margin:9px 0 4px}
+.slots-cap b{color:var(--txt);font-weight:600}
+.tc-btn{margin-top:auto;margin-top:12px}
 .tc-btn .btn{width:100%}
 .tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -248,12 +253,12 @@ tr.top3 .opname{color:var(--amber2)}
     <div class="side-status" role="status">
       <div class="ss-head">SYS STATUS</div>
       <div class="ss-row"><span>SEASON</span><span class="ss-v">04 · MIDNIGHT OPS</span></div>
-      <div class="ss-row"><span>SLOTS</span><span class="ss-v" id="ssSlots">——</span></div>
+      <div class="ss-row"><span>OPEN SLOTS</span><span class="ss-v" id="ssSlots">——</span></div>
       <div class="ss-row"><span>UPLINK</span><span class="ss-v"><span class="led y" id="ssUplinkLed"></span> <span id="ssUplink">SYNC…</span></span></div>
       <div class="ss-row"><span>BOT</span><span class="ss-v"><span class="led y" id="ssBotLed"></span> <span id="ssBot">SYNC…</span></span></div>
     </div>
     <div class="side-foot">
-      <div>TERMIX v2.5.0 — AMBER BUILD</div>
+      <div>TERMIX v3.0 — AMBER BUILD</div>
       <div><a id="adminLink" href="admin.html">ADMIN</a> · <a class="js-discord" href="#" target="_blank" rel="noopener">DISCORD ↗</a></div>
     </div>
   </aside>
@@ -264,7 +269,7 @@ tr.top3 .opname{color:var(--amber2)}
       <button id="burger" class="btn sm ghost" aria-label="Toggle navigation">☰</button>
       <div class="tb-tag">// 1v1 / 2v2 / 5v5 LADDER — CHECK-IN FRI 18:30 UTC</div>
       <div class="tb-sp"></div>
-      <button id="retryBtn" class="btn sm danger" hidden>⟳ RETRY UPLINK</button>
+      <button id="retryBtn" class="btn sm danger" hidden>⟳ RECONNECT</button>
       <button id="sndBtn" class="btn sm ghost" aria-label="Toggle sound effects" aria-pressed="true">SND:ON</button>
       <button id="tbRegister" class="btn sm primary">REGISTER</button>
     </header>
@@ -274,12 +279,12 @@ tr.top3 .opname{color:var(--amber2)}
     <main id="screens">
       <section id="screen-briefing" class="screen active" aria-label="Briefing">
         <div class="panel">
-          <div class="phead"><h2>01 // BRIEFING</h2><span class="tag" id="tagHero">SYNC…</span></div>
+          <div class="phead"><h2>01 // BRIEFING</h2><span class="tag">FEATURED TOURNAMENT</span></div>
           <div class="pbody hero-grid">
             <div class="hero-l">
               <div id="heroBadge" class="badge warn">STANDBY</div>
-              <h1 id="heroTitle">ESTABLISHING UPLINK<span class="cursor"></span></h1>
-              <p class="hero-sub" id="heroSub">Connecting to the tournament grid…</p>
+              <h1 id="heroTitle">WELCOME TO THE GRID<span class="cursor"></span></h1>
+              <p class="hero-sub" id="heroSub">Loading the next tournament…</p>
               <div class="hero-meta">
                 <div class="meta"><div class="mk">PRIZE POOL</div><div class="mv" id="heroPrize">——</div></div>
                 <div class="meta"><div class="mk">CHECK-IN</div><div class="mv" id="heroCheckin">——</div></div>
@@ -297,17 +302,18 @@ tr.top3 .opname{color:var(--amber2)}
 
         <div class="two-col">
           <div class="panel">
-            <div class="phead"><h2>PRIZE SHOWCASE</h2><span class="tag" id="tagPrize">CRT-FEED</span></div>
+            <div class="phead"><h2>PRIZE SHOWCASE</h2><span class="tag">SEASON 04</span></div>
             <div class="pbody">
-              <div id="prizeWrap" aria-label="Prize showcase — set by admin">
-                <img id="prizeImg" alt="Prize showcase feed">
+              <div id="prizeWrap" aria-label="Prize showcase">
+                <img id="prizeImg" alt="Prize showcase">
                 <div class="crt-lines"></div><div class="crt-noise"></div><div class="crt-bar"></div>
-                <div class="prize-cap">ADMIN-SET PRIZE FEED</div>
+                <div class="prize-cap">TERMIX PRIZE FEED</div>
+                <div class="prize-click" id="prizeClick" hidden>VIEW MARKET ►</div>
               </div>
             </div>
           </div>
           <div class="panel">
-            <div class="phead"><h2>MATCH FEED</h2><span class="tag" id="tagFeed">SYNC…</span></div>
+            <div class="phead"><h2>MATCH FEED</h2><span class="tag">LIVE RESULTS</span></div>
             <div class="pbody"><div id="feedBox" aria-live="polite"><div class="idle">&gt; AWAITING MATCH DATA…</div></div></div>
           </div>
         </div>
@@ -322,28 +328,28 @@ tr.top3 .opname{color:var(--amber2)}
 
       <section id="screen-modes" class="screen" aria-label="Tournament modes">
         <div class="panel">
-          <div class="phead"><h2>02 // MODES — TOURNAMENTS</h2><span class="tag" id="tagModes">SYNC…</span></div>
+          <div class="phead"><h2>02 // MODES — TOURNAMENTS</h2><span class="tag">ACTIVE EVENTS</span></div>
           <div class="pbody"><div id="modesGrid" class="cards"></div></div>
         </div>
       </section>
 
       <section id="screen-rankings" class="screen" aria-label="XP rankings">
         <div class="panel">
-          <div class="phead"><h2>03 // RANKINGS — XP LADDER</h2><span class="tag" id="tagRank">SYNC…</span></div>
+          <div class="phead"><h2>03 // RANKINGS — XP LADDER</h2><span class="tag">TOP 10</span></div>
           <div class="pbody tblwrap" id="rankWrap"></div>
         </div>
       </section>
 
       <section id="screen-matchlog" class="screen" aria-label="Match log">
         <div class="panel">
-          <div class="phead"><h2>04 // MATCH LOG</h2><span class="tag" id="tagLog">SYNC…</span></div>
+          <div class="phead"><h2>04 // MATCH LOG</h2><span class="tag">RECENT RESULTS</span></div>
           <div class="pbody tblwrap" id="logWrap"></div>
         </div>
       </section>
 
       <section id="screen-intel" class="screen" aria-label="Intel">
         <div class="panel">
-          <div class="phead"><h2>05 // INTEL — HOW TO ENTER</h2><span class="tag">STATIC</span></div>
+          <div class="phead"><h2>05 // INTEL — HOW TO ENTER</h2><span class="tag">PROTOCOL</span></div>
           <div class="pbody">
             <div class="steps">
               <div class="step"><div class="s-num">01</div><h3>JOIN THE GRID</h3><p>Enter the Termix Discord server. All match coordination runs through the bot.</p></div>
@@ -358,15 +364,17 @@ tr.top3 .opname{color:var(--amber2)}
           <div class="pbody cmdlist">
             <div class="cmd"><code>/register</code><span>Sign up for the next open tournament in your mode.</span></div>
             <div class="cmd"><code>/whoami</code><span>Show your Discord ↔ Steam linkage, XP and clearance.</span></div>
+            <div class="cmd"><code>/listmatch</code><span>See all active tournaments grouped by mode.</span></div>
             <div class="cmd"><code>/leaderboard</code><span>Top 10 XP earners.</span></div>
             <div class="cmd"><code>/myxp</code><span>Your personal XP, level, distance to next level.</span></div>
+            <div class="cmd"><code>/wincount</code><span>Top 10 by total wins.</span></div>
+            <div class="cmd"><code>/winstreak</code><span>Active winstreaks leaderboard.</span></div>
             <div class="cmd"><code>/matchhistory</code><span>Your personal match log.</span></div>
-            <div class="cmd"><code>/ticket</code><span>Open a ticket — support, report, appeal, other.</span></div>
-            <div class="cmd"><code>/report_match</code><span>Staff only — record a match result.</span></div>
+            <div class="cmd"><code>/ticket</code><span>Open a support ticket — help, report, appeal, other.</span></div>
           </div>
         </div>
         <div class="panel" style="margin-top:22px">
-          <div class="phead"><h2>MODERATION NOTICE</h2><span class="tag off">ENFORCED</span></div>
+          <div class="phead"><h2>MODERATION NOTICE</h2><span class="tag" style="color:var(--red);border-color:var(--red)">ENFORCED</span></div>
           <div class="pbody">
             <p class="modnote"><b>ZERO TOLERANCE.</b> Cheating, smurfing on unregistered accounts, queue dodging, and toxicity toward opponents or staff result in an immediate ban. Ban hits are checked at registration and at check-in. Appeals run through the Discord ticket system only.</p>
           </div>
@@ -375,7 +383,7 @@ tr.top3 .opname{color:var(--amber2)}
     </main>
 
     <footer id="hud">
-      <span class="px">TERMIX v2.5.0</span>
+      <span class="px">TERMIX v3.0</span>
       <span class="hud-i">UPLINK <span class="led y" id="hudUplink"></span> <span id="hudUpTxt">SYNC</span></span>
       <span class="hud-i">BOT <span class="led y" id="hudBot"></span></span>
       <span class="hud-i">PING <span id="hudPing">——</span></span>
@@ -457,9 +465,7 @@ const S = {
   live:false, offlineToastShown:false, snd:true,
   latency:null, botReady:null,
   tournaments:[], players:[], leaderboard:[], matches:[],
-  httpErr:{ tournaments:null, players:null, leaderboard:null, matches:null },
   nameMap:new Map(), topMatchId:0, featured:null,
-  prizeImageLoaded:false,
   reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
 };
 const $  = s => document.querySelector(s);
@@ -490,13 +496,6 @@ function fmtStarts(iso){
 const fmtMatchTime = ts => { const p = parseDB(ts); return p ? pad2(p.mo)+'-'+pad2(p.d)+' '+pad2(p.h)+':'+pad2(p.mi) : '——'; };
 const fmtMatchHM   = ts => { const p = parseDB(ts); return p ? pad2(p.h)+':'+pad2(p.mi) : '--:--'; };
 function nameOf(id){ const n = S.nameMap.get(Number(id)); return n || 'OP-' + String(id).slice(-4); }
-function setTag(sel, txt, ep){
-  const el = $(sel); if (!el) return;
-  const err = ep ? S.httpErr[ep] : null;
-  if (!S.live){ el.textContent = 'OFFLINE'; el.classList.add('off'); return; }
-  if (err){ el.textContent = 'ERR ' + err + ' · /api/' + ep; el.classList.add('off'); return; }
-  el.textContent = txt; el.classList.remove('off');
-}
 function setLED(sel, state){ const el = $(sel); if (el) el.className = 'led ' + state; }
 function toast(msg, kind){
   const box = $('#toasts');
@@ -514,13 +513,13 @@ function beep(freq, dur){
   if (!S.snd || !AC) return;
   try{ const o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.value=freq; g.gain.value=.025; o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }catch(e){}
 }
-async function api(path, { method='GET', body=null, headers={}, timeout=CFG.FETCH_MS } = {}){
+async function api(path, { method='GET', body=null, timeout=CFG.FETCH_MS } = {}){
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), timeout);
   const t0 = performance.now();
   try{
-    const opts = { method, signal: c.signal, headers: { ...headers } };
-    if (body !== null){ opts.headers['Content-Type']='application/json'; opts.body = typeof body === 'string' ? body : JSON.stringify(body); }
+    const opts = { method, signal: c.signal };
+    if (body !== null){ opts.headers = { 'Content-Type':'application/json' }; opts.body = typeof body === 'string' ? body : JSON.stringify(body); }
     const r = await fetch(CFG.API_BASE + path, opts);
     S.latency = Math.round(performance.now() - t0);
     let data = null; try{ data = await r.json(); }catch(e){ data=null; }
@@ -540,7 +539,7 @@ function bootSequence(){
     window.addEventListener('keydown', skip, { once:true });
     ov.addEventListener('pointerdown', skip, { once:true });
     (async () => {
-      const lines = ['TERMIX BIOS v2.5 — GRID TERMINAL','CPU: Z80-XT @ 4.77 MHZ ................ OK','MEM: 640K CONVENTIONAL ................ OK','VID: AMBER PHOSPHOR CRT ............... OK','SND: SQUAREWAVE BLASTER ............... OK'];
+      const lines = ['TERMIX BIOS v3.0 — GRID TERMINAL','CPU: Z80-XT @ 4.77 MHZ ................ OK','MEM: 640K CONVENTIONAL ................ OK','VID: AMBER PHOSPHOR CRT ............... OK','SND: SQUAREWAVE BLASTER ............... OK'];
       for (const ln of lines){ const div = document.createElement('div'); box.appendChild(div); for (let i=0;i<ln.length;i++){ div.textContent = ln.slice(0,i+1); await sleep(4); } await sleep(40); }
       const net = document.createElement('div'); box.appendChild(net); net.textContent = 'NET: UPLINK TEST';
       const dots = setInterval(() => { net.textContent += '.'; }, 140);
@@ -584,12 +583,6 @@ async function refreshData(){
     api('/api/matches?limit=50').catch(() => null)
   ]);
   if (!t || !p || !l || !m) throw new Error('UPLINK UNREACHABLE');
-  S.httpErr = {
-    tournaments: t.ok ? null : (t.status || 'ERR'),
-    players:     p.ok ? null : (p.status || 'ERR'),
-    leaderboard: l.ok ? null : (l.status || 'ERR'),
-    matches:     m.ok ? null : (m.status || 'ERR')
-  };
   S.tournaments = (t.ok && Array.isArray(t.data)) ? t.data : [];
   S.players     = (p.ok && Array.isArray(p.data)) ? p.data : [];
   S.leaderboard = (l.ok && Array.isArray(l.data)) ? l.data : [];
@@ -615,7 +608,7 @@ function setLive(v){
   setLED('#hudUplink', v ? 'g' : 'r'); setLED('#ssUplinkLed', v ? 'g' : 'r');
   const botOk = v && S.botReady !== false;
   setLED('#hudBot', botOk ? 'g' : 'r'); setLED('#ssBotLed', botOk ? 'g' : 'r');
-  $('#hudUpTxt').textContent = v ? 'OK' : 'DOWN';
+  $('#hudUpTxt').textContent = v ? 'ONLINE' : 'DOWN';
   $('#ssUplink').textContent = v ? 'ONLINE' : 'OFFLINE';
   $('#ssBot').textContent = v ? (S.botReady ? 'READY' : 'WARM-UP') : 'DOWN';
   $('#hudPing').textContent = S.latency == null ? '——' : S.latency + 'MS';
@@ -635,20 +628,12 @@ function renderAll(){
 function emptyHTML(head, sub){ return '<div class="empty" style="grid-column:1/-1"><b>' + esc(head) + '</b>' + esc(sub) + ' <span class="cursor"></span></div>'; }
 
 function renderHero(){
-  setTag('#tagHero', 'LIVE · /api/tournaments', 'tournaments');
   const badge = $('#heroBadge'), title = $('#heroTitle'), sub = $('#heroSub');
   const f = S.featured;
   if (!S.live){
     badge.className = 'badge live'; badge.textContent = 'OFFLINE';
     title.innerHTML = 'SIGNAL LOST<span class="cursor"></span>';
-    sub.textContent = 'Uplink to the tournament grid is down. Hit ⟳ RETRY UPLINK in the top bar.';
-    $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true; return;
-  }
-  if (S.httpErr.tournaments){
-    badge.className = 'badge live'; badge.textContent = 'ERR ' + S.httpErr.tournaments;
-    title.innerHTML = 'TOURNAMENT FEED ERROR<span class="cursor"></span>';
-    sub.textContent = 'GET /api/tournaments → HTTP ' + S.httpErr.tournaments + '.';
+    sub.textContent = 'Uplink to the tournament grid is down. Hit ⟳ RECONNECT in the top bar.';
     $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
     $('#heroJoin').hidden = true; return;
   }
@@ -685,10 +670,8 @@ function renderStats(){
 }
 function renderFeed(){
   const box = $('#feedBox');
-  setTag('#tagFeed', 'LIVE · /api/matches', 'matches');
   box.innerHTML = '';
   if (!S.live){ box.innerHTML = '<div class="idle">&gt; OFFLINE — MATCH FEED UNREACHABLE</div>'; return; }
-  if (S.httpErr.matches){ box.innerHTML = '<div class="idle">&gt; FEED ERROR — GET /api/matches → HTTP ' + S.httpErr.matches + '</div>'; return; }
   const top = sortedMatches().slice(0, 10);
   if (!top.length){ box.innerHTML = '<div class="idle">&gt; FEED IDLE — NO MATCHES REPORTED YET <span class="cursor"></span></div>'; S.topMatchId = 0; return; }
   for (const m of top) feedLine(m, false);
@@ -704,14 +687,16 @@ function feedLine(m, animated){
   box.prepend(row);
   const txt = row.querySelector('.fl-txt');
   const paint = () => {
-    txt.innerHTML = '<span class="mut">[' + fmtMatchHM(m.played_at) + ']</span> <span class="mut">#' + Number(m.id) + '</span> '
-      + '<span class="win">' + esc(nameOf(m.winner_id)) + '</span> <span class="mut">def.</span> '
-      + '<span class="lose">' + esc(nameOf(loserId)) + '</span> <span class="score">' + esc(m.score || '—') + '</span>';
+    let html = '<span class="mut">[' + fmtMatchHM(m.played_at) + ']</span> <span class="mut">#' + Number(m.id) + '</span> ';
+    if (m.match_name) html += '<span style="color:var(--amber2)">' + esc(m.match_name) + '</span> ';
+    html += '<span class="win">' + esc(nameOf(m.winner_id)) + '</span> <span class="mut">def.</span> '
+         + '<span class="lose">' + esc(nameOf(loserId)) + '</span> <span class="score">' + esc(m.score || '—') + '</span>';
+    if (m.match_map) html += ' <span class="mut">@ ' + esc(m.match_map) + '</span>';
+    txt.innerHTML = html;
   };
   const drain = () => {
     const li = row.querySelector('.hp.lose i');
     if (!animated || S.reducedMotion){ li.style.transition = 'none'; li.style.width = '0%'; return; }
-    row.querySelector('.hp.lose').classList.add('flash');
     requestAnimationFrame(() => requestAnimationFrame(() => { li.style.width = '0%'; }));
   };
   if (animated && !S.reducedMotion){
@@ -724,13 +709,11 @@ function renderSlotsStatus(){
   const open = S.tournaments.filter(t => t.status === 'open');
   if (!open.length){ el.textContent = '——'; return; }
   const free = open.reduce((a, t) => a + Math.max((Number(t.max_slots) > 0 ? Number(t.max_slots) : CFG.SLOTS) - (Number(t.registered)||0), 0), 0);
-  el.textContent = free + ' FREE';
+  el.textContent = free + ' OPEN';
 }
 function renderModes(){
-  setTag('#tagModes', 'LIVE · /api/tournaments', 'tournaments');
   const grid = $('#modesGrid');
-  if (!S.live){ grid.innerHTML = emptyHTML('GRID OFFLINE', 'Uplink down — tournaments unavailable. Hit ⟳ RETRY UPLINK.'); return; }
-  if (S.httpErr.tournaments){ grid.innerHTML = emptyHTML('TOURNAMENT FEED ERROR', 'GET /api/tournaments → HTTP ' + S.httpErr.tournaments); return; }
+  if (!S.live){ grid.innerHTML = emptyHTML('GRID OFFLINE', 'Uplink down — tournaments unavailable. Hit ⟳ RECONNECT.'); return; }
   const list = S.tournaments.filter(t => t.status !== 'draft');
   if (!list.length){ grid.innerHTML = emptyHTML('NO ACTIVE TOURNAMENTS', 'Check the Discord for announcements.'); return; }
   const order = { live:0, open:1 };
@@ -741,15 +724,28 @@ function cardHTML(t){
   const status = String(t.status||'').toLowerCase();
   const slots = Number(t.max_slots) > 0 ? Number(t.max_slots) : CFG.SLOTS;
   const reg = Math.min(Math.max(Number(t.registered)||0, 0), slots);
+  const left = Math.max(slots - reg, 0);
+  const leftPct = slots > 0 ? left / slots : 0;
+
+  // Progress bar visualizes SLOTS REMAINING (green when many, amber when few, red when full)
   let cells = '';
-  for (let i = 0; i < slots; i++) cells += '<i class="slot' + (i < reg ? ' on' : '') + '"></i>';
+  for (let i = 0; i < slots; i++){
+    const isOpen = i < left;
+    let cls = 'slot';
+    if (isOpen) cls += leftPct > 0.5 ? ' open' : (leftPct > 0.1 ? ' low' : ' low');
+    else cls += ' full';
+    cells += '<i class="' + cls + '"></i>';
+  }
+
   let btn = '';
   if (status === 'live') btn = '<button class="btn danger" disabled>🔴 MATCH LIVE — REGISTRATION CLOSED</button>';
   else if (status === 'open') btn = '<button class="btn primary join" data-id="' + Number(t.id) + '" data-mode="' + esc(t.mode) + '">JOIN ' + esc(String(t.mode||'').toUpperCase()) + ' ►</button>';
   else if (status === 'completed' || status === 'cancelled') btn = '<button class="btn" disabled>' + esc(status.toUpperCase()) + '</button>';
   else btn = '<button class="btn" disabled>REGISTRATION NOT OPEN</button>';
+
   const hasExtra = !!(t.prize_extra && String(t.prize_extra).trim());
   const prizeFontSize = hasExtra ? '22px' : '40px';
+
   return '<article class="tcard panel">'
     + '<div class="tc-top"><span class="modetag">' + esc(String(t.mode||'?').toUpperCase()) + '</span>'
     + '<span class="badge ' + (status==='live'?'live':status==='open'?'open':'done') + '">' + esc(status.toUpperCase()) + '</span></div>'
@@ -763,16 +759,14 @@ function cardHTML(t){
     + '<div class="srow"><span>STARTS</span><b>' + fmtStarts(t.starts_at) + '</b></div>'
     + '</div>'
     + '<div class="tc-prize"><span class="mk">PRIZE POOL</span><span class="big" style="font-size:' + prizeFontSize + '">' + esc(fmtPrize(t)) + '</span></div>'
-    + '<div class="slots" aria-label="' + reg + ' of ' + slots + ' slots filled">' + cells + '</div>'
-    + '<div class="slots-cap">' + reg + '/' + slots + ' FILLED</div>'
+    + '<div class="slots" aria-label="' + left + ' of ' + slots + ' slots remaining">' + cells + '</div>'
+    + '<div class="slots-cap"><b>' + left + '</b> / ' + slots + ' SLOTS LEFT</div>'
     + '<div class="tc-btn">' + btn + '</div>'
     + '</article>';
 }
 function renderRankings(){
-  setTag('#tagRank', 'LIVE · /api/leaderboard', 'leaderboard');
   const wrap = $('#rankWrap');
   if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', 'Rankings unavailable until uplink restores.'); return; }
-  if (S.httpErr.leaderboard){ wrap.innerHTML = emptyHTML('RANKINGS FEED ERROR', 'GET /api/leaderboard → HTTP ' + S.httpErr.leaderboard); return; }
   const lb = [...S.leaderboard].sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
   if (!lb.length){ wrap.innerHTML = emptyHTML('NO RANKINGS YET', 'XP accrues as the server chats.'); return; }
   const maxXp = Math.max(1, ...lb.map(r => Number(r.xp)||0));
@@ -792,38 +786,59 @@ function renderRankings(){
     }).join('') + '</tbody></table>';
 }
 function renderLog(){
-  setTag('#tagLog', 'LIVE · /api/matches', 'matches');
   const wrap = $('#logWrap');
   if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', 'Match log unavailable until uplink restores.'); return; }
-  if (S.httpErr.matches){ wrap.innerHTML = emptyHTML('MATCH FEED ERROR', 'GET /api/matches → HTTP ' + S.httpErr.matches); return; }
   const ms = sortedMatches();
   if (!ms.length){ wrap.innerHTML = emptyHTML('NO MATCHES ON RECORD', 'WAITING FOR FIRST /report_match'); return; }
-  wrap.innerHTML = '<table><thead><tr><th>ID</th><th>WINNER</th><th>LOSER</th><th>SCORE</th><th class="col-opt">MAP</th><th>TIME</th></tr></thead><tbody>'
+  wrap.innerHTML = '<table><thead><tr><th>ID</th><th>MATCH</th><th>WINNER</th><th>LOSER</th><th>SCORE</th><th class="col-opt">MAP</th><th>TIME</th></tr></thead><tbody>'
     + ms.map(m => {
       const loserId = Number(m.winner_id) === Number(m.player1_id) ? m.player2_id : m.player1_id;
-      return '<tr><td class="vt mutc">#' + Number(m.id) + '</td>'
+      return '<tr>'
+        + '<td class="vt mutc">#' + Number(m.id) + '</td>'
+        + '<td class="mutc">' + esc(m.match_name || '—') + '</td>'
         + '<td class="win-t">' + esc(nameOf(m.winner_id)) + '</td>'
         + '<td class="lose-t">' + esc(nameOf(loserId)) + '</td>'
         + '<td class="vt score">' + esc(m.score || '—') + '</td>'
-        + '<td class="col-opt mutc">—</td>'
-        + '<td class="vt mutc">' + fmtMatchTime(m.played_at) + '</td></tr>';
+        + '<td class="col-opt mutc">' + esc(m.match_map || '—') + '</td>'
+        + '<td class="vt mutc">' + fmtMatchTime(m.played_at) + '</td>'
+        + '</tr>';
     }).join('') + '</tbody></table>';
 }
 
-/* ═══ PRIZE IMAGE — admin-set only, no user interaction ═══ */
+/* Prize image — admin-set, click-through to market */
 function renderPrizeImage(){
   const img = $('#prizeImg');
+  const wrap = $('#prizeWrap');
+  const hint = $('#prizeClick');
   const f = S.featured;
   const url = (S.live && f && f.prize_image_url && String(f.prize_image_url).trim()) || '';
+  const marketUrl = (S.live && f && f.prize_market_url && String(f.prize_market_url).trim()) || '';
+
+  // Reset click-through
+  wrap.classList.remove('has-link');
+  hint.hidden = true;
+  wrap.onclick = null;
 
   if (url){
-    // Try loading the admin-set URL. On error → fallback to SVG placeholder.
     const probe = new Image();
-    probe.onload = () => { img.src = url; S.prizeImageLoaded = true; };
+    probe.onload = () => { img.src = url; };
     probe.onerror = () => { defaultPrizeArt(); };
     probe.src = url;
   } else {
     defaultPrizeArt();
+  }
+
+  if (marketUrl){
+    wrap.classList.add('has-link');
+    hint.hidden = false;
+    wrap.onclick = () => window.open(marketUrl, '_blank', 'noopener');
+    wrap.setAttribute('role', 'link');
+    wrap.setAttribute('tabindex', '0');
+    wrap.setAttribute('title', 'Click to view market listing');
+    wrap.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.open(marketUrl, '_blank', 'noopener'); } };
+  } else {
+    wrap.removeAttribute('role'); wrap.removeAttribute('tabindex'); wrap.removeAttribute('title');
+    wrap.onkeydown = null;
   }
 }
 function defaultPrizeArt(){
@@ -932,7 +947,7 @@ function bindUI(){
   $('#backdrop').addEventListener('click', () => toggleDrawer(false));
   $('#retryBtn').addEventListener('click', async () => {
     const b = $('#retryBtn'); b.disabled = true; b.textContent = '⟳ SYNCING…';
-    await loadAll(); b.disabled = false; b.textContent = '⟳ RETRY UPLINK';
+    await loadAll(); b.disabled = false; b.textContent = '⟳ RECONNECT';
   });
   const sndBtn = $('#sndBtn');
   sndBtn.addEventListener('click', () => {
