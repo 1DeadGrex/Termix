@@ -14,7 +14,6 @@ class TicketCloseView(discord.ui.View):
     @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.red, emoji="🔒")
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
-            is_staff = interaction.user.guild_permissions.manage_channels
             await interaction.response.send_message("🔒 Closing in 5s…")
             await asyncio.sleep(5)
             await interaction.channel.delete(reason="Ticket closed")
@@ -22,6 +21,75 @@ class TicketCloseView(discord.ui.View):
             pass
         except Exception as e:
             print(f"[tickets] close failed: {e}")
+
+
+async def _create_ticket_channel(guild: discord.Guild, user: discord.Member, ticket_type: str):
+    """Create a private ticket channel. Raises PermissionError with a user-friendly message."""
+    if guild is None:
+        raise PermissionError("This can only be used in a server.")
+
+    me = guild.me
+    if not me.guild_permissions.manage_channels:
+        raise PermissionError("Bot missing **Manage Channels** — ask an admin.")
+
+    channel_name = f"ticket-{user.name.lower()}-{ticket_type}".replace(" ", "-")[:100]
+    existing = discord.utils.find(lambda c: c.name == channel_name, guild.text_channels)
+    if existing:
+        raise PermissionError(f"You already have a ticket open: {existing.mention}")
+
+    category = None
+    if config.TICKET_CATEGORY_ID:
+        cat = guild.get_channel(config.TICKET_CATEGORY_ID)
+        if isinstance(cat, discord.CategoryChannel):
+            category = cat
+
+    staff_role = None
+    if config.STAFF_ROLE_ID:
+        staff_role = guild.get_role(config.STAFF_ROLE_ID)
+
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        user: discord.PermissionOverwrite(
+            read_messages=True, send_messages=True,
+            attach_files=True, embed_links=True, read_message_history=True,
+        ),
+        me: discord.PermissionOverwrite(
+            read_messages=True, send_messages=True,
+            manage_channels=True, manage_messages=True,
+        ),
+    }
+    if staff_role:
+        overwrites[staff_role] = discord.PermissionOverwrite(
+            read_messages=True, send_messages=True, manage_messages=True,
+        )
+
+    try:
+        channel = await guild.create_text_channel(
+            name=channel_name, category=category, overwrites=overwrites,
+            topic=f"{config.TICKET_TYPES.get(ticket_type, ticket_type)} | Opened by {user} ({user.id})"[:1024],
+        )
+    except discord.Forbidden:
+        raise PermissionError("Bot doesn't have permission to create channels.")
+    except discord.HTTPException as e:
+        raise PermissionError(f"Discord rejected creation: {e}")
+
+    embed = discord.Embed(
+        title=config.TICKET_TYPES.get(ticket_type, ticket_type),
+        description=(
+            f"Hi {user.mention}, staff will be with you shortly.\n\n"
+            f"Describe your issue in detail. If reporting someone, include **proof** "
+            f"(screenshots, clips, IDs)."
+        ),
+        color=0x5865F2,
+    )
+    embed.set_footer(text="Click the lock button below when resolved.")
+    try:
+        await channel.send(embed=embed, view=TicketCloseView())
+        if staff_role:
+            await channel.send(f"{staff_role.mention} — new ticket from {user.mention}")
+    except Exception as e:
+        print(f"[tickets] welcome message failed: {e}")
+    return channel
 
 
 class TicketPanelView(discord.ui.View):
@@ -44,7 +112,7 @@ class TicketPanelView(discord.ui.View):
         except Exception:
             return
         try:
-            channel = await self._create_ticket(interaction, select.values[0])
+            channel = await _create_ticket_channel(interaction.guild, interaction.user, select.values[0])
             await interaction.followup.send(f"✅ Ticket created: {channel.mention}", ephemeral=True)
         except PermissionError as e:
             await interaction.followup.send(f"❌ {e}", ephemeral=True)
@@ -52,69 +120,12 @@ class TicketPanelView(discord.ui.View):
             print(f"[tickets] select_callback error: {e}")
             traceback.print_exc()
             try:
-                await interaction.followup.send(f"❌ Unexpected error: `{type(e).__name__}` — tell staff.", ephemeral=True)
+                await interaction.followup.send(
+                    f"❌ Unexpected error: `{type(e).__name__}` — tell staff.",
+                    ephemeral=True,
+                )
             except Exception:
                 pass
-
-    async def _create_ticket(self, interaction: discord.Interaction, ticket_type: str):
-        guild = interaction.guild
-        user = interaction.user
-        if guild is None:
-            raise PermissionError("This can only be used in a server.")
-
-        me = guild.me
-        if not me.guild_permissions.manage_channels:
-            raise PermissionError("Bot missing **Manage Channels** — ask an admin.")
-
-        channel_name = f"ticket-{user.name.lower()}-{ticket_type}".replace(" ", "-")[:100]
-        existing = discord.utils.find(lambda c: c.name == channel_name, guild.text_channels)
-        if existing:
-            raise PermissionError(f"You already have a ticket open: {existing.mention}")
-
-        category = None
-        if config.TICKET_CATEGORY_ID:
-            cat = guild.get_channel(config.TICKET_CATEGORY_ID)
-            if isinstance(cat, discord.CategoryChannel):
-                category = cat
-
-        staff_role = None
-        if config.STAFF_ROLE_ID:
-            staff_role = guild.get_role(config.STAFF_ROLE_ID)
-
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True, embed_links=True, read_message_history=True),
-            me: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True, manage_messages=True),
-        }
-        if staff_role:
-            overwrites[staff_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
-
-        try:
-            channel = await guild.create_text_channel(
-                name=channel_name, category=category, overwrites=overwrites,
-                topic=f"{config.TICKET_TYPES.get(ticket_type, ticket_type)} | Opened by {user} ({user.id})"[:1024]
-            )
-        except discord.Forbidden:
-            raise PermissionError("Bot doesn't have permission to create channels.")
-        except discord.HTTPException as e:
-            raise PermissionError(f"Discord rejected creation: {e}")
-
-        embed = discord.Embed(
-            title=config.TICKET_TYPES.get(ticket_type, ticket_type),
-            description=(
-                f"Hi {user.mention}, staff will be with you shortly.\n\n"
-                f"Describe your issue in detail. If reporting someone, include **proof** (screenshots, clips, IDs)."
-            ),
-            color=0x5865F2,
-        )
-        embed.set_footer(text="Click the lock button below when resolved.")
-        try:
-            await channel.send(embed=embed, view=TicketCloseView())
-            if staff_role:
-                await channel.send(f"{staff_role.mention} — new ticket from {user.mention}")
-        except Exception as e:
-            print(f"[tickets] welcome message failed: {e}")
-        return channel
 
 
 class Tickets(commands.Cog):
@@ -146,7 +157,6 @@ class Tickets(commands.Cog):
         app_commands.Choice(name="❓ Other", value="other"),
     ])
     async def ticket(self, ctx, ticket_type: app_commands.Choice[str] = None):
-        # If no type given, list the available options instead of an error
         if ticket_type is None:
             await ctx.send(
                 "**Open a ticket** — available types:\n"
@@ -160,21 +170,10 @@ class Tickets(commands.Cog):
             )
             return
 
-        value = ticket_type.value
-
-        # Try to create the ticket right here in the current channel
         try:
-            view = TicketPanelView(self.bot)
-            # Simulate a select interaction by calling the helper directly
-            class _Fake:
-                def __init__(self, guild, user):
-                    self.guild = guild
-                    self.user = user
-            fake = _Fake(ctx.guild, ctx.author)
-            channel = await view._create_ticket(fake, value)
+            channel = await _create_ticket_channel(ctx.guild, ctx.author, ticket_type.value)
             await ctx.send(f"✅ Ticket created: {channel.mention}", ephemeral=True)
         except PermissionError as e:
-            # Fall back to redirecting to the support channel
             await ctx.send(
                 f"⚠️ Couldn't create the ticket here: {e}\n"
                 f"Please use the ticket panel in <#{config.SUPPORT_CHANNEL_ID}>.",
