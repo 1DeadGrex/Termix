@@ -1,6 +1,7 @@
 # cogs/levels.py
 import discord
 from discord.ext import commands, tasks
+import asyncio
 import time
 from utils import database as db
 import config
@@ -64,7 +65,7 @@ class Levels(commands.Cog):
         if not rows:
             await ctx.send(
                 "📭 **No XP on record yet.** Chat in the server to start earning XP — "
-                "10 XP per message, 60s cooldown between earning messages."
+                "10 XP per message, 60s cooldown."
             )
             return
 
@@ -107,7 +108,7 @@ class Levels(commands.Cog):
         embed.add_field(name="To next level", value=f"{to_next} XP (at {next_xp} XP)", inline=False)
         await ctx.send(embed=embed)
 
-    # ─── AUTO LEADERBOARD POST ───
+    # ─── AUTO LEADERBOARD POST (EDIT SAME MESSAGE) ───
     @tasks.loop(hours=6)
     async def leaderboard_update(self):
         await self._post_leaderboard()
@@ -115,8 +116,6 @@ class Levels(commands.Cog):
     @leaderboard_update.before_loop
     async def _before_leaderboard(self):
         await self.bot.wait_until_ready()
-        # Wait 30s after ready to avoid startup spam
-        import asyncio
         await asyncio.sleep(30)
         await self._post_leaderboard()
 
@@ -151,7 +150,29 @@ class Levels(commands.Cog):
                 color=0xFFB000,
             )
             embed.set_footer(text="Use /leaderboard anytime to see this live")
-            await channel.send(embed=embed)
+
+            # Try to edit existing message first
+            edited = False
+            stored_id = await db.get_leaderboard_message_id(guild.id)
+            if stored_id:
+                try:
+                    msg = await channel.fetch_message(int(stored_id))
+                    await msg.edit(embed=embed)
+                    edited = True
+                except discord.NotFound:
+                    await db.clear_leaderboard_message_id(guild.id)
+                except discord.Forbidden:
+                    print("[levels] cannot edit leaderboard message — no permission")
+                except Exception as e:
+                    print(f"[levels] edit failed: {e}")
+
+            if not edited:
+                sent = await channel.send(embed=embed)
+                await db.set_leaderboard_message_id(guild.id, sent.id)
+                print(f"[levels] posted new leaderboard message #{sent.id} in {channel.name}")
+            else:
+                print(f"[levels] edited leaderboard message #{stored_id} in {channel.name}")
+
         except Exception as e:
             print(f"[levels] leaderboard task error: {e}")
 
