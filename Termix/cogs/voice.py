@@ -48,10 +48,9 @@ class Voice(commands.Cog):
                     return
                 except Exception:
                     pass
-            # Channel was deleted out-of-band — clean the stale row
             await db.remove_temp_vc(existing["channel_id"])
 
-        # Category — use the source channel's category by default, or config override
+        # Category
         source_cat = after.channel.category
         category = None
         if config.TEMP_VC_CATEGORY_ID:
@@ -80,7 +79,6 @@ class Voice(commands.Cog):
                     connect=True, view_channel=True, manage_channels=True, move_members=True,
                 )
 
-        # Channel name — sanitize (Discord limit: 100 chars)
         safe_name = member.display_name.strip()[:80] or member.name
         channel_name = f"🔊 {safe_name}'s Team"
 
@@ -109,16 +107,17 @@ class Voice(commands.Cog):
         """Delete temp VCs that become empty (5s grace period to allow reconnects)."""
         if before.channel is None:
             return
-        if before.channel.id == after.channel.id if after.channel else False:
-            return  # no channel change
+        # No channel change → nothing to do
+        if after.channel is not None and before.channel.id == after.channel.id:
+            return
+
         ch = before.channel
         owner_id = await db.get_temp_vc_owner(ch.id)
         if owner_id is None:
             return  # not a temp VC
 
-        # If the channel still has users, nothing to do
+        # If the channel still has users, cancel any pending cleanup
         if len(ch.members) > 0:
-            # Cancel any pending cleanup for this channel
             task = _cleanup_tasks.pop(ch.id, None)
             if task and not task.done():
                 task.cancel()
@@ -178,25 +177,27 @@ class Voice(commands.Cog):
         channel = guild.get_channel(rec["channel_id"])
         if channel is None:
             await db.remove_temp_vc(rec["channel_id"])
-            await interaction.followup.send("❌ Your team VC no longer exists. Rejoin the hub to create a new one.", ephemeral=True)
+            await interaction.followup.send(
+                "❌ Your team VC no longer exists. Rejoin the hub to create a new one.",
+                ephemeral=True,
+            )
             return
 
         try:
             await channel.set_permissions(
                 user,
-                connect=True,
-                speak=True,
-                view_channel=True,
+                connect=True, speak=True, view_channel=True,
                 reason=f"Invited by {interaction.user}",
             )
         except discord.Forbidden:
-            await interaction.followup.send("❌ Bot lacks **Manage Channels** to modify permissions.", ephemeral=True)
+            await interaction.followup.send(
+                "❌ Bot lacks **Manage Channels** to modify permissions.", ephemeral=True
+            )
             return
         except Exception as e:
             await interaction.followup.send(f"❌ Error: `{e}`", ephemeral=True)
             return
 
-        # If invited user is currently in another voice channel, move them
         moved = False
         if user.voice and user.voice.channel and user.voice.channel.id != channel.id:
             try:
