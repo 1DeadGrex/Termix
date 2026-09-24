@@ -20,12 +20,13 @@ load_dotenv()
 
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "https://wgzdxhaeou.apps.bot-hosting.cloud")
+SITE_URL = os.getenv("SITE_URL", https://termix-chi.vercel.app/)
 FRONTEND_URL = os.getenv("FRONTEND_URL", BASE_URL)
-DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/K8VndtvrHq")
+DISCORD_INVITE = os.getenv("DISCORD_INVITE", "https://discord.gg/9YJpRr2qnR")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "changeme123")
 
 if ADMIN_KEY == "changeme123":
-    print("⚠️  ADMIN_KEY is still the default — set a strong value in env vars!")
+    print("⚠️  Ahh you reached to frontend to crack the code, i seee!")
 
 _bot = None
 
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI):
     print("🛑 API shutting down")
 
 
-app = FastAPI(title="CS2 Tournament API", version="2.2.0", lifespan=lifespan)
+app = FastAPI(title="CS2 Tournament API", version="2.3.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -272,7 +273,7 @@ async def announce_tournament(tid: int, request: Request):
             except Exception:
                 channel = None
     if channel is None:
-        raise HTTPException(status_code=503, detail="Announcement channel not reachable (check ANNOUNCE_CHANNEL_ID in config.py)")
+        raise HTTPException(status_code=503, detail="Announcement channel not reachable")
 
     try:
         desc_lines = []
@@ -472,49 +473,156 @@ async def auth_success():
     return {"message": "✅ Steam account linked! You can close this tab."}
 
 
-def _vhs_page(*, title, heading, sub, display_name="Player", steam_id="",
-              avatar="", status_text="ELIGIBLE — CS2 1V1 TOURNAMENT",
-              status_class="status-ok",
-              cta_text="PROCEED TO REGISTRATION FOR TOURNAMENT ►",
-              cta_href="", extra_note=""):
+# ─────────────────────────────────────────────
+# VHS-styled success & error pages
+# ─────────────────────────────────────────────
+def _vhs_success(
+    display_name: str = "Player",
+    steam_id: str = "",
+    avatar: str = "",
+) -> str:
     esc_avatar = html_lib.escape(avatar, quote=True)
     esc_name = html_lib.escape(display_name)
     esc_steam = html_lib.escape(steam_id) if steam_id else "NOT-LINKED"
-    is_err = status_class == "status-err"
-    result_label = "RESULT: FAIL" if is_err else "RESULT: PASS"
-    return f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+    site_url = html_lib.escape(SITE_URL)
+    discord_url = html_lib.escape(DISCORD_INVITE)
+    default_avatar_svg = (
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+        "viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230a0906'/%3E"
+        "%3Crect x='5' y='2' width='6' height='7' fill='%23ffb000'/%3E"
+        "%3Crect x='6' y='4' width='1' height='1' fill='%230a0906'/%3E"
+        "%3Crect x='9' y='4' width='1' height='1' fill='%230a0906'/%3E"
+        "%3Crect x='7' y='6' width='2' height='1' fill='%230a0906'/%3E"
+        "%3Crect x='3' y='10' width='10' height='6' fill='%237a5c0d'/%3E%3C/svg%3E"
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html_lib.escape(title)} — TERMIX CS2</title>
+<title>CLEARANCE GRANTED — TERMIX CS2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-<style>:root{{--bg:#0a0906;--panel:#13100a;--amber:#ffb000;--amber2:#ffd75e;--red:#ff5238;--green:#5ce07f;--txt:#e8dfc4;--dim:#6e6244;--line:#332b16}}
+<style>
+:root{{--bg:#0a0906;--panel:#13100a;--panel2:#1a1508;--ink:#171207;--line:#332b16;--line2:#4d3f1d;--deep:#7a5c0d;--amber:#ffb000;--amber2:#ffd75e;--txt:#e8dfc4;--mut:#9b8c66;--dim:#6e6244;--red:#ff5238;--green:#5ce07f;--disp:'Press Start 2P',monospace;--mono:'VT323',monospace}}
 *{{margin:0;padding:0;box-sizing:border-box}}
-body{{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--txt);font:20px/1.45 'VT323',monospace;padding:34px 18px}}
-.panel{{background:var(--panel);border:1px solid var(--line);max-width:600px;width:100%;padding:32px;text-align:center}}
-h1{{font:22px 'Press Start 2P',monospace;color:{'var(--red)' if is_err else 'var(--amber)'};margin-bottom:14px}}
-p{{color:var(--dim);margin-bottom:20px}}
-a{{display:inline-block;background:var(--amber);color:#140f02;text-decoration:none;padding:14px 24px;font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:2px;margin-top:14px}}
-</style></head><body><div class="panel"><h1>{heading}</h1><p>{sub}</p>
-<p>Code: {esc_name} · Steam: {esc_steam}</p>
-<a href="{cta_href or DISCORD_INVITE}">{cta_text}</a></div></body></html>"""
+body{{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--txt);font:20px/1.45 var(--mono);padding:34px 18px;overflow-x:hidden}}
+::selection{{background:var(--amber);color:#140f02}}
+a{{color:var(--amber);text-decoration:none}}
+.fx-scan{{position:fixed;inset:0;z-index:900;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px)}}
+.fx-vig{{position:fixed;inset:0;z-index:900;pointer-events:none;background:radial-gradient(ellipse 120% 100% at 50% 45%,transparent 60%,rgba(0,0,0,.5) 100%)}}
+@keyframes blink{{50%{{opacity:0}}}}
+.cursor{{display:inline-block;width:9px;height:15px;background:var(--amber);animation:blink 1s steps(1) infinite;vertical-align:-2px}}
+.wrap{{position:relative;z-index:10;width:min(640px,100%)}}
+.panel{{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 0 1px #000,0 24px 60px rgba(0,0,0,.7)}}
+.panel-h{{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel2);font:17px var(--mono);letter-spacing:3px;color:var(--mut);text-transform:uppercase}}
+.panel-h .sq{{width:8px;height:8px;background:var(--green);flex:none;animation:blink 1.3s steps(1) infinite}}
+.panel-h .right{{margin-left:auto;color:var(--dim);letter-spacing:1px}}
+.body{{padding:30px 26px 34px;text-align:center}}
+.granted{{font:clamp(15px,4.6vw,23px) var(--disp);color:var(--amber);line-height:1.55;letter-spacing:1px;text-shadow:2px 0 rgba(255,60,60,.25),-2px 0 rgba(60,220,255,.25),0 0 18px rgba(255,176,0,.22);margin-bottom:10px}}
+.sub{{font:19px var(--mono);letter-spacing:3px;color:var(--dim);margin-bottom:26px}}
+.dossier{{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:stretch;background:var(--ink);border:1px solid var(--line2);padding:16px;text-align:left}}
+.frame{{position:relative;width:150px;height:150px;background:#000;border:1px solid var(--line2);overflow:hidden}}
+.frame img{{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.35) sepia(.85) saturate(2.1) hue-rotate(-12deg) contrast(1.22) brightness(.86)}}
+.idrows{{display:flex;flex-direction:column;justify-content:center;min-width:0}}
+.kv{{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font:20px var(--mono);align-items:baseline}}
+.kv:last-child{{border-bottom:none}}
+.kv b{{color:var(--dim);font-weight:normal;letter-spacing:2px;min-width:110px;font-size:16px;flex:none}}
+.kv .val{{color:var(--txt);letter-spacing:1px;word-break:break-all;min-width:0}}
+.kv .val.ok{{color:var(--green)}}
+.kv .val.who{{color:var(--amber2);font-size:22px}}
+.status{{display:inline-flex;align-items:center;gap:9px;color:var(--green);border:1px solid #1d3a24;background:#0d1a10;font:16px var(--mono);letter-spacing:3px;padding:6px 14px;margin-top:26px}}
+.led{{width:8px;height:8px;background:var(--green);animation:blink 1.6s steps(1) infinite;flex:none}}
+.cta-grid{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}}
+.btn{{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:16px/1.25 var(--mono);letter-spacing:2px;padding:15px 20px;cursor:pointer;border:2px solid;text-decoration:none;text-align:center;transition:transform .08s}}
+.btn-primary{{background:var(--amber);color:#140f02;border-color:var(--amber2) var(--deep) var(--deep) var(--amber2)}}
+.btn-primary:hover{{background:var(--amber2)}}
+.btn-primary:active{{transform:translate(1px,1px)}}
+.btn-ghost{{background:var(--panel2);color:var(--amber);border-color:var(--line2)}}
+.btn-ghost:hover{{color:var(--amber2);border-color:var(--amber)}}
+.btn-ghost:active{{transform:translate(1px,1px)}}
+.foot{{border-top:1px solid var(--line);padding:10px 16px;font:15px var(--mono);color:var(--dim);letter-spacing:1px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}}
+@media (max-width:540px){{.dossier{{grid-template-columns:1fr;justify-items:center}}.frame{{width:132px;height:132px}}.idrows{{width:100%}}.cta-grid{{grid-template-columns:1fr}}}}
+</style>
+</head>
+<body>
+<div class="fx-scan" aria-hidden="true"></div>
+<div class="fx-vig" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="panel-h">
+      <span class="sq"></span>STEAM LINK — VERIFIED
+      <span class="right">RESULT: PASS</span>
+    </div>
+    <div class="body">
+      <div class="granted">✓ ACCESS GRANTED</div>
+      <div class="sub">// STEAM ↔ DISCORD LINK ESTABLISHED //</div>
+
+      <div class="dossier">
+        <div class="frame">
+          <img src="{esc_avatar or default_avatar_svg}" alt="Steam avatar">
+        </div>
+        <div class="idrows">
+          <div class="kv"><b>CODENAME</b><span class="val who">{esc_name}</span></div>
+          <div class="kv"><b>STEAM ID64</b><span class="val">{esc_steam}</span></div>
+          <div class="kv"><b>STATUS</b><span class="val ok">VERIFIED ✓</span></div>
+        </div>
+      </div>
+
+      <div class="status"><i class="led"></i>ELIGIBLE FOR TOURNAMENT ENTRY</div>
+
+      <div class="cta-grid">
+        <a class="btn btn-primary" href="{site_url}">🎮 REGISTER FOR MATCH ►</a>
+        <a class="btn btn-ghost" href="{discord_url}">💬 HEAD TO DISCORD ►</a>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>TERMIX // GRID v3.0</span>
+      <span>YOU MAY CLOSE THIS TAB <span class="cursor"></span></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
 
 
 @app.get("/register-success", response_class=HTMLResponse)
-async def register_success(steam_id: Optional[str] = None, name: Optional[str] = None, avatar: Optional[str] = None):
-    return _vhs_page(
-        title="CLEARANCE GRANTED", heading="✓ ACCESS GRANTED",
-        sub="// STEAM ↔ DISCORD LINK ESTABLISHED //",
+async def register_success(
+    steam_id: Optional[str] = None,
+    name: Optional[str] = None,
+    avatar: Optional[str] = None,
+):
+    return _vhs_success(
         display_name=name if name and name != "Unknown" else "Player",
-        steam_id=steam_id or "", avatar=avatar or "",
+        steam_id=steam_id or "",
+        avatar=avatar or "",
     )
 
 
 def _vhs_error(title: str, message: str, status_code: int = 400):
+    discord_url = html_lib.escape(DISCORD_INVITE)
     return HTMLResponse(
-        _vhs_page(title=title, heading="✗ ACCESS DENIED",
-                  sub=f"// {html_lib.escape(message).upper()} //",
-                  status_text="CLEARANCE FAILED — TRY AGAIN OR CONTACT STAFF",
-                  status_class="status-err",
-                  cta_text="RETURN TO DISCORD ►"),
+        f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html_lib.escape(title)} — TERMIX</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{{--bg:#0a0906;--panel:#13100a;--amber:#ffb000;--amber2:#ffd75e;--red:#ff5238;--txt:#e8dfc4;--dim:#6e6244;--line:#332b16}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--txt);font:20px/1.5 'VT323',monospace;padding:34px 18px}}
+.panel{{background:var(--panel);border:1px solid var(--line);max-width:600px;width:100%;padding:34px 28px;text-align:center;box-shadow:0 0 0 1px #000,0 24px 60px rgba(0,0,0,.7)}}
+h1{{font:20px 'Press Start 2P',monospace;color:var(--red);margin-bottom:18px;letter-spacing:1px}}
+p{{color:var(--dim);margin-bottom:22px;font-size:19px}}
+a{{display:inline-block;background:var(--amber);color:#140f02;text-decoration:none;padding:15px 24px;font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:2px}}
+a:hover{{background:var(--amber2)}}
+</style></head>
+<body><div class="panel"><h1>✗ {html_lib.escape(title)}</h1>
+<p>{html_lib.escape(message)}</p>
+<a href="{discord_url}">RETURN TO DISCORD ►</a>
+</div></body></html>""",
         status_code=status_code,
     )
