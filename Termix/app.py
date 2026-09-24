@@ -26,10 +26,9 @@ except Exception as e:
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.voice_states = True          # ← needed for on_voice_state_update
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# Give the API a live reference to the bot
 api.set_bot(bot)
 
 
@@ -45,12 +44,10 @@ COGS_TO_LOAD = [
     "cogs.server_info",
     "cogs.tickets",
     "cogs.welcome",
+    "cogs.voice",                     # ← new
 ]
 
 
-# ─────────────────────────────────────────────
-# Rich presence rotation
-# ─────────────────────────────────────────────
 STATUSES = [
     ("playing", "Counter-Strike 2"),
     ("watching", "1v1 Tournament"),
@@ -92,48 +89,37 @@ async def before_rotate():
     await bot.wait_until_ready()
 
 
-# ─────────────────────────────────────────────
-# Global error handler — friendly messages
-# ─────────────────────────────────────────────
 @bot.event
 async def on_command_error(ctx, error):
-    # Allow cogs with their own handlers to take precedence
     if hasattr(ctx.command, "on_error"):
         return
     if isinstance(error, commands.CommandNotFound):
-        return  # ignore unknown prefixes silently
+        return
 
     if isinstance(error, commands.MissingPermissions):
         perms = ", ".join(f"`{p}`" for p in (error.missing_permissions or []))
-        await ctx.send(f"🚫 Only staff with {perms} can use `{ctx.command.qualified_name}`.", ephemeral=False)
+        await ctx.send(f"🚫 Only staff with {perms} can use `{ctx.command.qualified_name}`.")
         return
-
     if isinstance(error, commands.MissingRole):
         await ctx.send(f"🚫 Only {error.missing_role} can use `{ctx.command.qualified_name}`.")
         return
-
     if isinstance(error, commands.MissingAnyRole):
         roles = ", ".join(str(r) for r in (error.missing_roles or []))
         await ctx.send(f"🚫 Only these roles can use `{ctx.command.qualified_name}`: {roles}")
         return
-
     if isinstance(error, commands.CheckFailure):
         await ctx.send(f"🚫 {error} — you don't have permission to use `{ctx.command.qualified_name}`.")
         return
-
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(f"❓ Missing argument: `{error.param.name}`. See `/help {ctx.command.qualified_name}`.")
         return
-
     if isinstance(error, commands.BadArgument):
         await ctx.send(f"❓ {error} — check your input format.")
         return
-
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f"⏳ Slow down — try again in `{error.retry_after:.1f}s`.")
         return
 
-    # Unhandled — tell the user to contact staff, and log for us
     print(f"[command error] {ctx.command}: {type(error).__name__}: {error}")
     try:
         import traceback
@@ -146,9 +132,6 @@ async def on_command_error(ctx, error):
     )
 
 
-# ─────────────────────────────────────────────
-# on_ready
-# ─────────────────────────────────────────────
 @bot.event
 async def on_ready():
     print(f"\n✅ {bot.user} is online!")
@@ -166,9 +149,6 @@ async def on_ready():
     print("─" * 50)
 
 
-# ─────────────────────────────────────────────
-# Run bot
-# ─────────────────────────────────────────────
 async def run_bot():
     async with bot:
         for cog in COGS_TO_LOAD:
@@ -180,9 +160,6 @@ async def run_bot():
         await bot.start(os.getenv("DISCORD_TOKEN"))
 
 
-# ─────────────────────────────────────────────
-# Run API
-# ─────────────────────────────────────────────
 async def run_api():
     port = int(os.getenv("SERVER_PORT") or os.getenv("PORT") or "8000")
     print(f"🌐 Starting API on port {port}")
@@ -193,9 +170,6 @@ async def run_api():
     await server.serve()
 
 
-# ─────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────
 async def main():
     await db.init_db()
     print("✅ DB initialized")
