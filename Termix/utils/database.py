@@ -12,7 +12,6 @@ TURSO_URL = (
              .rstrip("/")
 )
 
-print(f"🗄️  TURSO_URL raw  : {_raw_url!r}")
 print(f"🗄️  TURSO_URL used : {TURSO_URL!r}")
 print(f"🗄️  TURSO_TOKEN    : {'set (' + str(len(TURSO_TOKEN)) + ' chars)' if TURSO_TOKEN else 'MISSING'}")
 
@@ -72,6 +71,14 @@ async def init_db():
             user_id INTEGER PRIMARY KEY,
             reason TEXT,
             banned_by INTEGER,
+            steam_id TEXT DEFAULT '',
+            banned_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
+        await c.execute('''CREATE TABLE IF NOT EXISTS steam_bans (
+            steam_id TEXT PRIMARY KEY,
+            reason TEXT,
+            banned_by INTEGER,
+            linked_discord_id INTEGER,
             banned_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
         await c.execute('''CREATE TABLE IF NOT EXISTS tournaments (
@@ -113,11 +120,33 @@ async def init_db():
         )''')
 
         # Migrations for old DBs
-        await _ensure_column(c, "matches", "match_name", "TEXT DEFAULT ''")
-        await _ensure_column(c, "matches", "match_map", "TEXT DEFAULT ''")
-        await _ensure_column(c, "tournaments", "prize_extra", "TEXT DEFAULT ''")
-        await _ensure_column(c, "tournaments", "prize_image_url", "TEXT DEFAULT ''")
+        await _ensure_column(c, "matches",     "match_name", "TEXT DEFAULT ''")
+        await _ensure_column(c, "matches",     "match_map",  "TEXT DEFAULT ''")
+        await _ensure_column(c, "tournaments", "prize_extra",      "TEXT DEFAULT ''")
+        await _ensure_column(c, "tournaments", "prize_image_url",  "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_market_url", "TEXT DEFAULT ''")
+        await _ensure_column(c, "bans",        "steam_id",         "TEXT DEFAULT ''")
+
+        # Backfill: any old Discord ban → also create a steam ban row if the player has a steam id
+        try:
+            result = await c.execute(
+                '''SELECT b.user_id, p.steam_id
+                   FROM bans b
+                   LEFT JOIN players p ON p.user_id = b.user_id
+                   WHERE (b.steam_id IS NULL OR b.steam_id = '')
+                     AND p.steam_id IS NOT NULL AND p.steam_id != '' '''
+            )
+            for uid, sid in result.rows:
+                await c.execute('UPDATE bans SET steam_id = ? WHERE user_id = ?', [sid, uid])
+                await c.execute(
+                    '''INSERT INTO steam_bans (steam_id, reason, banned_by, linked_discord_id)
+                       SELECT ?, reason, banned_by, user_id FROM bans WHERE user_id = ?
+                       ON CONFLICT(steam_id) DO NOTHING''',
+                    [sid, uid],
+                )
+                print(f"✅ Schema: backfilled steam_ban for {sid}")
+        except Exception as e:
+            print(f"[db] steam ban backfill skipped: {e}")
 
 
 # ─────────────────────────────────────────────
@@ -143,6 +172,25 @@ async def get_setting(key: str):
 async def delete_setting(key: str):
     async with _client() as c:
         await c.execute('DELETE FROM settings WHERE key = ?', [key])
+
+
+# ─────────────────────────────────────────────
+# Leaderboard message persistence
+# ─────────────────────────────────────────────
+async def get_leaderboard_message_id(guild_id: int):
+    val = await get_setting(f"lb_msg_id_{guild_id}")
+    try:
+        return int(val) if val else None
+    except (TypeError, ValueError):
+        return None
+
+
+async def set_leaderboard_message_id(guild_id: int, message_id: int):
+    await set_setting(f"lb_msg_id_{guild_id}", str(message_id))
+
+
+async def clear_leaderboard_message_id(guild_id: int):
+    await delete_setting(f"lb_msg_id_{guild_id}")
 
 
 # ─────────────────────────────────────────────
@@ -212,6 +260,22 @@ async def get_player(user_id):
             'SELECT user_id, discord_name, steam_id, verified, registered_at '
             'FROM players WHERE user_id = ?',
             [user_id],
+        )
+        if not result.rows:
+            return None
+        r = result.rows[0]
+        return {
+            "user_id": r[0], "discord_name": r[1], "steam_id": r[2],
+            "verified": bool(r[3]), "registered_at": r[4],
+        }
+
+
+async def get_player_by_steam_id(steam_id: str):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT user_id, discord_name, steam_id, verified, registered_at '
+            'FROM players WHERE steam_id = ? LIMIT 1',
+            [steam_id],
         )
         if not result.rows:
             return None
@@ -375,34 +439,105 @@ async def get_winstreaks(limit=10):
 
 
 # ─────────────────────────────────────────────
-# Bans
+# Bans (Discord + Steam)
 # ─────────────────────────────────────────────
 async def add_ban(user_id, reason, banned_by):
+    """Ban a Discord user. Also auto-bans their linked Steam ID (if any)."""
     async with _client() as c:
+        # Look up the player's steam_id, if they have one
+        p = await c.execute('SELECT steam_id FROM players WHERE user_id = ?', [user_id])
+        steam_id = (p.rows[0][0] if p.rows and p.rows[0][0] else "") or ""
+
         await c.execute(
-            '''INSERT INTO bans (user_id, reason, banned_by) VALUES (?, ?, ?)
+            '''INSERT INTO bans (user_id, reason, banned_by, steam_id) VALUES (?, ?, ?, ?)
                ON CONFLICT(user_id) DO UPDATE SET
-                   reason = excluded.reason,
-                   banned_by = excluded.banned_by''',
-            [user_id, reason, banned_by],
+                   reason   = excluded.reason,
+                   banned_by = excluded.banned_by,
+                   steam_id  = excluded.steam_id''',
+            [user_id, reason, banned_by, steam_id],
         )
+
+        if steam_id:
+            await c.execute(
+                '''INSERT INTO steam_bans (steam_id, reason, banned_by, linked_discord_id)
+                   VALUES (?, ?, ?, ?)
+                   ON CONFLICT(steam_id) DO UPDATE SET
+                       reason            = excluded.reason,
+                       banned_by         = excluded.banned_by,
+                       linked_discord_id = excluded.linked_discord_id''',
+                [steam_id, reason, banned_by, user_id],
+            )
 
 
 async def remove_ban(user_id):
+    """Unban a Discord user + their linked Steam ban (if any)."""
     async with _client() as c:
+        p = await c.execute('SELECT steam_id FROM bans WHERE user_id = ?', [user_id])
+        steam_id = (p.rows[0][0] if p.rows and p.rows[0][0] else "") or ""
         await c.execute('DELETE FROM bans WHERE user_id = ?', [user_id])
+        if steam_id:
+            await c.execute('DELETE FROM steam_bans WHERE steam_id = ?', [steam_id])
 
 
 async def get_ban(user_id):
     async with _client() as c:
         result = await c.execute(
-            'SELECT user_id, reason, banned_by, banned_at FROM bans WHERE user_id = ?',
+            'SELECT user_id, reason, banned_by, steam_id, banned_at FROM bans WHERE user_id = ?',
             [user_id],
         )
         if not result.rows:
             return None
         r = result.rows[0]
-        return {"user_id": r[0], "reason": r[1], "banned_by": r[2], "banned_at": r[3]}
+        return {"user_id": r[0], "reason": r[1], "banned_by": r[2],
+                "steam_id": r[3] or "", "banned_at": r[4]}
+
+
+async def add_steam_ban(steam_id: str, reason: str, banned_by: int, linked_discord_id: int = 0):
+    async with _client() as c:
+        await c.execute(
+            '''INSERT INTO steam_bans (steam_id, reason, banned_by, linked_discord_id)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(steam_id) DO UPDATE SET
+                   reason            = excluded.reason,
+                   banned_by         = excluded.banned_by,
+                   linked_discord_id = excluded.linked_discord_id''',
+            [steam_id, reason, banned_by, linked_discord_id],
+        )
+
+
+async def remove_steam_ban(steam_id: str):
+    async with _client() as c:
+        await c.execute('DELETE FROM steam_bans WHERE steam_id = ?', [steam_id])
+
+
+async def get_steam_ban(steam_id: str):
+    if not steam_id:
+        return None
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT steam_id, reason, banned_by, linked_discord_id, banned_at '
+            'FROM steam_bans WHERE steam_id = ?',
+            [steam_id],
+        )
+        if not result.rows:
+            return None
+        r = result.rows[0]
+        return {"steam_id": r[0], "reason": r[1], "banned_by": r[2],
+                "linked_discord_id": r[3], "banned_at": r[4]}
+
+
+async def get_all_steam_bans(limit: int = 30):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT steam_id, reason, banned_by, linked_discord_id, banned_at '
+            'FROM steam_bans ORDER BY banned_at DESC '
+            f'LIMIT {int(limit)}',
+        )
+        return [
+            {"steam_id": r[0], "reason": r[1], "banned_by": r[2],
+             "linked_discord_id": r[3], "banned_at": r[4]}
+            for r in result.rows
+        ]
 
 
 # ─────────────────────────────────────────────
@@ -566,6 +701,21 @@ async def get_tournament_registrations(tid: int):
              "mode": r[3] or "", "status": r[4] or "pending", "registered_at": r[5]}
             for r in result.rows
         ]
+
+
+async def get_registration(rid: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT id, tournament_id, discord_id, discord_username, mode, status, registered_at '
+            'FROM tournament_registrations WHERE id = ?',
+            [rid],
+        )
+        if not result.rows:
+            return None
+        r = result.rows[0]
+        return {"id": r[0], "tournament_id": r[1], "discord_id": r[2],
+                "discord_username": r[3] or "", "mode": r[4] or "",
+                "status": r[5] or "pending", "registered_at": r[6]}
 
 
 async def set_registration_status(rid: int, status: str):
