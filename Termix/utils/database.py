@@ -106,8 +106,13 @@ async def init_db():
             key TEXT PRIMARY KEY,
             value TEXT
         )''')
+        await c.execute('''CREATE TABLE IF NOT EXISTS voice_channels (
+            channel_id INTEGER PRIMARY KEY,
+            owner_id INTEGER NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
 
-        # Migrations for older databases
+        # Migrations for old DBs
         await _ensure_column(c, "matches", "match_name", "TEXT DEFAULT ''")
         await _ensure_column(c, "matches", "match_map", "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_extra", "TEXT DEFAULT ''")
@@ -138,6 +143,51 @@ async def get_setting(key: str):
 async def delete_setting(key: str):
     async with _client() as c:
         await c.execute('DELETE FROM settings WHERE key = ?', [key])
+
+
+# ─────────────────────────────────────────────
+# Voice channels (temp VCs)
+# ─────────────────────────────────────────────
+async def add_temp_vc(channel_id: int, owner_id: int):
+    async with _client() as c:
+        await c.execute(
+            '''INSERT INTO voice_channels (channel_id, owner_id) VALUES (?, ?)
+               ON CONFLICT(channel_id) DO UPDATE SET owner_id = excluded.owner_id''',
+            [channel_id, owner_id],
+        )
+
+
+async def get_temp_vc_by_owner(owner_id: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT channel_id, owner_id FROM voice_channels WHERE owner_id = ? LIMIT 1',
+            [owner_id],
+        )
+        if not result.rows:
+            return None
+        return {"channel_id": result.rows[0][0], "owner_id": result.rows[0][1]}
+
+
+async def get_temp_vc_owner(channel_id: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT owner_id FROM voice_channels WHERE channel_id = ?',
+            [channel_id],
+        )
+        if not result.rows:
+            return None
+        return result.rows[0][0]
+
+
+async def remove_temp_vc(channel_id: int):
+    async with _client() as c:
+        await c.execute('DELETE FROM voice_channels WHERE channel_id = ?', [channel_id])
+
+
+async def get_all_temp_vcs():
+    async with _client() as c:
+        result = await c.execute('SELECT channel_id, owner_id FROM voice_channels')
+        return [{"channel_id": r[0], "owner_id": r[1]} for r in result.rows]
 
 
 # ─────────────────────────────────────────────
@@ -284,7 +334,6 @@ async def add_xp(user_id, guild_id, amount=10):
 # Wins / Winstreak stats
 # ─────────────────────────────────────────────
 async def get_wins_leaderboard(limit=10):
-    """Top players by total match wins (all-time)."""
     async with _client() as c:
         sql = (
             'SELECT winner_id, COUNT(*) AS wins FROM matches '
@@ -296,7 +345,7 @@ async def get_wins_leaderboard(limit=10):
 
 
 async def get_winstreaks(limit=10):
-    """Current winstreak per player, sorted desc. Walks each player's match history from newest."""
+    """Current winstreak per player — walks each player's match history from newest."""
     async with _client() as c:
         result = await c.execute(
             'SELECT winner_id, player1_id, player2_id '
@@ -313,7 +362,7 @@ async def get_winstreaks(limit=10):
     streaks = {}
     for uid, results in history.items():
         streak = 0
-        for r in results:      # most recent first
+        for r in results:
             if r:
                 streak += 1
             else:
