@@ -1,8 +1,21 @@
 # cogs/registration.py
 import discord
 from discord.ext import commands
+from discord import app_commands
 import os
+import config
 from utils import database as db
+
+
+def _is_staff(member: discord.Member) -> bool:
+    """True if the member is admin OR has the configured staff role."""
+    if member.guild_permissions.administrator:
+        return True
+    if config.STAFF_ROLE_ID:
+        role = member.guild.get_role(config.STAFF_ROLE_ID)
+        if role and role in member.roles:
+            return True
+    return False
 
 
 class Registration(commands.Cog):
@@ -50,26 +63,37 @@ class Registration(commands.Cog):
         await ctx.send(f"✅ Unregistered {member.mention} (`{member.id}`).")
 
     # ─── WHOAMI ───
-    @commands.hybrid_command(name='whoami', description='Show registration status (IDs are click-to-copy)')
+    @commands.hybrid_command(name='whoami', description='Show registration info (IDs are copy-friendly)')
+    @app_commands.describe(member="Whose info to look up — staff/admin only for others")
     async def whoami(self, ctx, member: discord.Member = None):
         target = member or ctx.author
+
+        # Non-staff can only view their own info
+        if target.id != ctx.author.id and not _is_staff(ctx.author):
+            await ctx.send(
+                "🚫 You can only view **your own** registration info. "
+                "Ask a staff member to look up other operatives.",
+                ephemeral=True,
+            )
+            return
+
         row = await db.get_player(target.id)
 
         if not row:
             embed = discord.Embed(
                 title=f"❌ {target.display_name} — Not Registered",
                 description=(
-                    f"Run `/register` to start Steam verification, "
-                    f"or use the Register button on the website."
+                    "Run `/register` to start Steam verification, "
+                    "or use the Register button on the website."
                 ),
                 color=0xFF5238,
             )
             embed.add_field(
-                name="Discord ID (copy this for the website)",
+                name="Discord ID (copy for the website)",
                 value=f"`{target.id}`",
                 inline=False,
             )
-            await ctx.send(embed=embed, ephemeral=(target == ctx.author))
+            await ctx.send(embed=embed)
             return
 
         user_id       = row["user_id"]
@@ -80,17 +104,18 @@ class Registration(commands.Cog):
 
         embed = discord.Embed(
             title=f"🎮 {target.display_name}",
+            description="Copy the values below and paste them on the website.",
             color=0x00AAFF,
         )
-        embed.add_field(name="Discord Username", value=discord_name, inline=False)
+        embed.add_field(name="Discord Username", value=f"`{discord_name}`", inline=False)
         embed.add_field(name="Discord ID", value=f"`{user_id}`", inline=False)
         embed.add_field(name="Steam ID", value=f"`{steam_id}`", inline=False)
         embed.add_field(name="Verified", value="✅ Yes" if verified else "❌ No", inline=True)
-        embed.add_field(name="Registered", value=registered_at, inline=True)
-        embed.set_footer(text="Click any value in a code block to copy it")
+        embed.add_field(name="Registered", value=f"`{registered_at}`", inline=True)
+        embed.set_footer(text="Long-press a code block to copy • click on desktop")
         embed.set_thumbnail(url=target.display_avatar.url)
 
-        await ctx.send(embed=embed, ephemeral=(target == ctx.author))
+        await ctx.send(embed=embed)
 
     # ─── DEV: FORCE REGISTER ───
     @commands.hybrid_command(name='force_register', description='[DEV] Register without Steam auth')
