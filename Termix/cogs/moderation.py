@@ -1,8 +1,6 @@
 # cogs/moderation.py
 import discord
 from discord.ext import commands
-import asyncio
-import aiosqlite  # kept for backwards-compat imports, not used here
 from utils import database as db
 
 
@@ -14,7 +12,9 @@ class NukeConfirmView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author_id:
-            await interaction.response.send_message("Only the command author can confirm.", ephemeral=True)
+            await interaction.response.send_message(
+                "Only the command author can confirm.", ephemeral=True
+            )
             return False
         return True
 
@@ -36,46 +36,126 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     # ─── BANS ───
-    @commands.hybrid_command(name='banlist', description='[Staff] View recent ban history')
+    @commands.hybrid_command(name='banlist', description='[Staff] View Discord + Steam bans')
     @commands.has_permissions(view_audit_log=True)
     async def banlist(self, ctx):
-        embed = discord.Embed(title="🔨 Ban History", color=0xff0000)
-        count = 0
-        async for entry in ctx.guild.audit_logs(limit=20, action=discord.AuditLogAction.ban):
+        embed = discord.Embed(title="🔨 Active Bans", color=0xff0000)
+
+        # Discord bans from our own table
+        try:
+            rows = await db.get_all_steam_bans(15)
+        except Exception:
+            rows = []
+
+        if rows:
+            lines = []
+            for r in rows:
+                lines.append(
+                    f"`{r['steam_id']}` — {r['reason'] or 'no reason'}\n"
+                    f"   linked discord: `{r['linked_discord_id'] or '—'}`"
+                )
             embed.add_field(
-                name=f"{entry.target}",
-                value=f"Banned by: {entry.user}\nReason: {entry.reason or 'No reason'}",
+                name="Steam Bans (recent 15)",
+                value="\n".join(lines)[:1020],
                 inline=False,
             )
-            count += 1
-        if count == 0:
-            embed.description = "No bans recorded."
+        else:
+            embed.add_field(name="Steam Bans", value="None recorded.", inline=False)
+
+        # Discord audit-log view
+        audit_lines = []
+        try:
+            async for entry in ctx.guild.audit_logs(
+                limit=10, action=discord.AuditLogAction.ban
+            ):
+                audit_lines.append(
+                    f"{entry.target} — by {entry.user} — {entry.reason or 'no reason'}"
+                )
+        except Exception:
+            pass
+
+        embed.add_field(
+            name="Recent Discord Audit Bans (10)",
+            value="\n".join(audit_lines)[:1020] if audit_lines else "None.",
+            inline=False,
+        )
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name='ban_player', description='[Staff] Ban a player and log it')
+    @commands.hybrid_command(
+        name='ban_player',
+        description='[Staff] Ban a player (Discord + auto-bans their linked Steam ID)'
+    )
     @commands.has_permissions(ban_members=True)
     async def ban_player(self, ctx, member: discord.Member, *, reason: str = "No reason"):
-        await member.ban(reason=reason)
-        await db.add_ban(member.id, reason, ctx.author.id)
-        await ctx.send(f"🔨 {member.mention} banned. Reason: {reason}")
+        # Try Discord ban (best-effort — record even if already gone)
+        try:
+            await member.ban(reason=reason)
+        except discord.Forbidden:
+            await ctx.send("⚠️ Couldn't ban on Discord (missing perms), but recording the ban anyway.")
 
-    @commands.hybrid_command(name='unban', description='[Staff] Unban a user by ID')
+        await db.add_ban(member.id, reason, ctx.author.id)
+
+        # Report what got banned
+        ban_row = await db.get_ban(member.id)
+        steam_id = (ban_row or {}).get("steam_id") or ""
+        extra = f"\n🔒 Steam ID `{steam_id}` also banned." if steam_id else \
+                "\n_(no Steam ID linked — only Discord ban recorded)_"
+        await ctx.send(f"🔨 {member.mention} banned. Reason: {reason}{extra}")
+
+    @commands.hybrid_command(name='unban', description='[Staff] Unban a user by Discord ID')
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, user_id: int, *, reason: str = "No reason provided"):
         try:
             user = await self.bot.fetch_user(user_id)
-            await ctx.guild.unban(user, reason=reason)
         except discord.NotFound:
-            await ctx.send("❌ That user isn't banned or doesn't exist.")
-            return
-        except discord.Forbidden:
-            await ctx.send("❌ I don't have permission to unban members.")
-            return
-        except Exception as e:
-            await ctx.send(f"❌ Error: `{e}`")
-            return
+            user = None
+
+        if user is not None:
+            try:
+                await ctx.guild.unban(user, reason=reason)
+            except discord.NotFound:
+                pass
+            except discord.Forbidden:
+                await ctx.send("❌ I don't have permission to unban members.")
+                return
+            except Exception as e:
+                await ctx.send(f"❌ Error: `{e}`")
+                return
+
         await db.remove_ban(user_id)
-        await ctx.send(f"✅ Unbanned **{user}** (`{user_id}`). Reason: {reason}")
+        await ctx.send(f"✅ Unbanned **{user or user_id}** (`{user_id}`). Reason: {reason}")
+
+    @commands.hybrid_command(
+        name='ban_steam',
+        description='[Staff] Ban a Steam ID directly (blocks registration even on new Discord accounts)'
+    )
+    @commands.has_permissions(ban_members=True)
+    async def ban_steam(self, ctx, steam_id: str, *, reason: str = "No reason"):
+        steam_id = steam_id.strip()
+        if not steam_id.isdigit() or len(steam_id) < 15:
+            await ctx.send("❌ That doesn't look like a SteamID64 (should be a long number).")
+            return
+
+        # Try to find the linked Discord user (for logging)
+        linked = await db.get_player_by_steam_id(steam_id)
+        linked_id = linked["user_id"] if linked else 0
+
+        await db.add_steam_ban(steam_id, reason, ctx.author.id, linked_id)
+        await ctx.send(
+            f"🔒 Steam ID `{steam_id}` banned. Reason: {reason}"
+            + (f"\nLinked Discord: <@{linked_id}>" if linked_id else "")
+        )
+
+    @commands.hybrid_command(name='unban_steam', description='[Staff] Remove a Steam ban')
+    @commands.has_permissions(ban_members=True)
+    async def unban_steam(self, ctx, steam_id: str):
+        steam_id = steam_id.strip()
+        existing = await db.get_steam_ban(steam_id)
+        if not existing:
+            await ctx.send("❌ That Steam ID isn't banned.")
+            return
+        await db.remove_steam_ban(steam_id)
+        await ctx.send(f"✅ Removed Steam ban for `{steam_id}`.")
 
     # ─── CHANNEL MANAGEMENT ───
     @commands.hybrid_command(name='lock', description='[Staff] Lock the channel — only staff can talk')
@@ -117,7 +197,7 @@ class Moderation(commands.Cog):
         view = NukeConfirmView(ctx.author.id)
         warn = await ctx.send(
             "⚠️ **NUKE CONFIRMATION** — this will delete this channel and create a fresh one. "
-            "React below within 15s.",
+            "Click a button within 15s.",
             view=view,
         )
         await view.wait()
@@ -133,7 +213,6 @@ class Moderation(commands.Cog):
                 pass
             return
 
-        # Clone with same permissions, position, topic
         try:
             new_channel = await ctx.channel.clone(reason=f"Nuke by {ctx.author}")
             await new_channel.edit(position=ctx.channel.position)
@@ -163,7 +242,7 @@ class Moderation(commands.Cog):
             return
         try:
             deleted = await ctx.channel.purge(limit=amount + 1)
-            msg = await ctx.send(f"🧹 Deleted {len(deleted) - 1} messages.", delete_after=5)
+            await ctx.send(f"🧹 Deleted {len(deleted) - 1} messages.", delete_after=5)
         except discord.Forbidden:
             await ctx.send("❌ Missing **Manage Messages**.", ephemeral=True)
         except Exception as e:
