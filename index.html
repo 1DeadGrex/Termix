@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TERMIX // CS2 TOURNAMENT GRID</title>
-<meta name="description" content="TERMIX — CS2 1v1 / 2v2 / 5v5 tournament grid. Live tournaments, XP ladder, match log.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230b0907'/><text x='2' y='12' font-family='monospace' font-size='11' fill='%23ffb000'>T</text></svg>">
+<title>ERVSE // CS2 TOURNAMENT GRID</title>
+<meta name="description" content="ERVSE — CS2 1v1 / 2v2 / 5v5 tournament grid. Live tournaments, XP ladder, match log.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230b0907'/><text x='2' y='12' font-family='monospace' font-size='11' fill='%23ffb000'>E</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -34,16 +34,14 @@ a:hover{color:var(--amber2)}
 .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:none}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.primary{background:var(--amber);color:#140d00;border-color:var(--amber)}
-.btn.primary:hover:not(:disabled){background:var(--amber2);border-color:var(--amber2);color:#140d00}
+.btn.primary:hover:not(:disabled){background:var(--amber2);color:#140d00}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--red);border-color:var(--red)}
 .btn.sm{padding:8px 10px;font-size:8px}
 .panel{background:var(--panel);border:1px solid var(--line);box-shadow:6px 6px 0 #000}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--panel2);border-bottom:1px solid var(--line);padding:12px 16px}
 .phead h2{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--amber);letter-spacing:1px}
-.phead-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .tag{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--mut);border:1px solid var(--line);background:var(--ink);padding:4px 8px;white-space:nowrap}
-.pbody{padding:16px}
 .badge{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:1px;padding:5px 8px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
 .badge.live{color:var(--red);border-color:var(--red);animation:blink 1.2s steps(1) infinite}
 .badge.open{color:var(--green);border-color:var(--green)}
@@ -55,12 +53,10 @@ a:hover{color:var(--amber2)}
 .led.y{background:var(--amber2);box-shadow:0 0 6px var(--amber2)}
 @keyframes blink{50%{opacity:0}}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.shake{animation:shake .4s both}
 .cursor{display:inline-block;width:.62em;height:1em;background:var(--amber);vertical-align:-.12em;margin-left:6px;animation:blink 1s steps(1) infinite}
 .empty{text-align:center;padding:56px 20px;border:1px dashed var(--line2);background:var(--ink);color:var(--mut);font-family:'VT323',monospace;font-size:21px}
-.empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px;letter-spacing:1px}
+.empty b{display:block;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--amber);margin-bottom:14px}
 .fl{display:block;font-weight:600;font-size:10px;letter-spacing:1.5px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase}
-.fl .opt{color:var(--dim)}
 .inp{width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--amber2);font-family:'VT323',monospace;font-size:20px;padding:8px 10px}
 .inp:focus{outline:none;border-color:var(--amber);box-shadow:3px 3px 0 #000}
 .inp::placeholder{color:var(--dim)}
@@ -70,7 +66,6 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .err-msg.show{display:block}
 .check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:11.5px;color:var(--mut);cursor:pointer;line-height:1.6}
 .check input{margin-top:2px;accent-color:var(--amber);width:15px;height:15px;flex:none}
-.check:hover{color:var(--txt)}
 .shell{display:flex;min-height:100vh}
 #sidebar{width:250px;flex:0 0 250px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;padding:16px 14px;z-index:1000}
 .logo{border:1px solid var(--line2);background:var(--panel2);padding:14px;box-shadow:4px 4px 0 #000}
@@ -87,8 +82,6 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .ss-row:last-child{border-bottom:none}
 .ss-row .ss-v{color:var(--txt)}
 .side-foot{margin-top:auto;font-size:10px;color:var(--dim);letter-spacing:1px;line-height:1.9}
-.side-foot a{color:var(--mut)}
-.side-foot a:hover{color:var(--amber)}
 #backdrop{position:fixed;inset:0;background:rgba(5,4,2,.7);z-index:900;opacity:0;pointer-events:none;transition:opacity .2s}
 #backdrop.open{opacity:1;pointer-events:auto}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -97,8 +90,7 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .tb-tag{font-family:'VT323',monospace;font-size:18px;color:var(--deep);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-sp{flex:1}
 #marquee{border-bottom:1px solid var(--line);background:var(--ink);overflow:hidden;white-space:nowrap}
-.mq-track{display:inline-block;padding:6px 0;animation:mq 42s linear infinite;will-change:transform}
-#marquee:hover .mq-track{animation-play-state:paused}
+.mq-track{display:inline-block;padding:6px 0;animation:mq 42s linear infinite}
 .mq-i{font-family:'VT323',monospace;font-size:19px;color:var(--deep);letter-spacing:1px;margin-right:44px}
 .mq-i b{color:var(--amber);font-weight:400}
 .mq-sep{color:var(--line2);margin-left:44px}
@@ -107,28 +99,22 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .screen{display:none}
 .screen.active{display:block}
 .hero-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:24px}
-#heroBadge{margin-bottom:16px}
-#heroTitle{font-family:'Press Start 2P',monospace;font-size:clamp(16px,2.6vw,27px);line-height:1.55;color:var(--amber);text-shadow:3px 3px 0 #000;word-wrap:break-word}
+#heroTitle{font-family:'Press Start 2P',monospace;font-size:clamp(16px,2.6vw,27px);line-height:1.55;color:var(--amber);text-shadow:3px 3px 0 #000}
 .hero-sub{color:var(--mut);font-size:13px;margin:14px 0 18px;max-width:60ch}
 .hero-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .meta{border:1px solid var(--line);background:var(--ink);padding:10px 12px}
 .mk{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);letter-spacing:1px}
 .mv{font-family:'VT323',monospace;font-size:26px;color:var(--amber2);margin-top:8px;line-height:1;word-break:break-word}
 .hero-r{border:1px solid var(--line);background:var(--ink);padding:18px;display:flex;flex-direction:column;align-items:flex-start;box-shadow:4px 4px 0 #000}
-.cd{font-family:'VT323',monospace;font-size:clamp(40px,4.6vw,58px);color:var(--amber);line-height:1;margin:12px 0 6px;text-shadow:2px 2px 0 #000;letter-spacing:2px}
-.cd-sub{font-size:11px;color:var(--dim);letter-spacing:1px}
-.hero-r .btn{margin-top:auto;align-self:stretch}
+.cd{font-family:'VT323',monospace;font-size:clamp(40px,4.6vw,58px);color:var(--amber);line-height:1;margin:12px 0 6px;text-shadow:2px 2px 0 #000}
+.cd-sub{font-size:11px;color:var(--dim)}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
 #prizeWrap{position:relative;border:1px solid var(--line);background:var(--ink);overflow:hidden;aspect-ratio:16/7}
 #prizeWrap.has-link{cursor:pointer}
-#prizeWrap.has-link:hover{border-color:var(--amber)}
 #prizeImg{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) sepia(1) saturate(2.7) hue-rotate(-12deg) contrast(1.3) brightness(.8)}
 .crt-lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
-.crt-noise{position:absolute;inset:0;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
-.crt-bar{position:absolute;left:0;right:0;height:22%;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,215,94,.09),transparent);animation:roll 5s linear infinite}
-@keyframes roll{from{top:-25%}to{top:110%}}
-.prize-cap{position:absolute;left:10px;bottom:8px;font-size:15px;color:var(--deep);letter-spacing:1px;pointer-events:none}
-.prize-click{position:absolute;right:10px;bottom:8px;font-size:12px;color:var(--amber);background:rgba(10,8,3,.75);border:1px solid var(--line2);padding:3px 8px;pointer-events:none;font-family:'Press Start 2P',monospace;letter-spacing:1px}
+.prize-cap{position:absolute;left:10px;bottom:8px;font-size:15px;color:var(--deep);letter-spacing:1px}
+.prize-click{position:absolute;right:10px;bottom:8px;font-size:12px;color:var(--amber);background:rgba(10,8,3,.75);border:1px solid var(--line2);padding:3px 8px;font-family:'Press Start 2P',monospace}
 #feedBox{background:var(--ink);border:1px solid var(--line);height:320px;overflow-y:auto;padding:12px;font-size:19px;line-height:1.35}
 #feedBox .idle{color:var(--dim)}
 .feed-line{margin-bottom:12px}
@@ -147,34 +133,30 @@ select.inp option{background:var(--ink);color:var(--amber2)}
 .tcard{padding:14px;display:flex;flex-direction:column}
 .tc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .modetag{font-family:'Press Start 2P',monospace;font-size:8px;border:1px solid var(--amber);color:var(--amber);padding:5px 7px;letter-spacing:1px}
-.tname{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.75;color:var(--amber2);margin:13px 0 8px;word-wrap:break-word}
+.tname{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.75;color:var(--amber2);margin:13px 0 8px}
 .tdesc{font-size:12.5px;color:var(--mut);line-height:1.6;min-height:40px}
 .spec{border:1px solid var(--line);background:var(--ink);margin:12px 0}
 .srow{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-bottom:1px dashed var(--line);font-size:10px}
 .srow:last-child{border-bottom:none}
-.srow span{color:var(--dim);letter-spacing:1px;white-space:nowrap}
-.srow b{color:var(--txt);font-weight:600;text-align:right;word-break:break-word}
-.tc-prize{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 10px}
-.tc-prize .big{font-family:'VT323',monospace;color:var(--amber);line-height:1.1;text-shadow:2px 2px 0 #000;text-align:right;word-break:break-word}
+.srow span{color:var(--dim);letter-spacing:1px}
+.srow b{color:var(--txt);font-weight:600;text-align:right}
 .slots{display:flex;flex-wrap:wrap;gap:2px}
 .slot{width:10px;height:10px;background:#221a0a;border:1px solid var(--line)}
-.slot.open{background:var(--green);border-color:#1d3a24;box-shadow:0 0 4px rgba(87,227,137,.35)}
-.slot.low{background:var(--amber);border-color:var(--deep);box-shadow:0 0 4px rgba(255,176,0,.55)}
+.slot.open{background:var(--green);border-color:#1d3a24}
+.slot.low{background:var(--amber);border-color:var(--deep)}
 .slot.full{background:var(--red);border-color:#7a2015}
 .slots-cap{font-family:'VT323',monospace;font-size:17px;color:var(--mut);letter-spacing:1px;margin:9px 0 4px}
 .slots-cap b{color:var(--txt);font-weight:600}
-.tc-btn{margin-top:auto;margin-top:12px}
-.tc-btn .btn{width:100%}
 .tblwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);letter-spacing:1px;white-space:nowrap}
+th{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--dim);text-align:left;padding:10px;border-bottom:1px solid var(--line2);letter-spacing:1px}
 td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
-tbody tr:hover td{background:var(--panel2)}
+tbody tr:hover td{background:var(--panel2);cursor:pointer}
 td.vt{font-size:19px}
 .rankb{display:inline-block;font-family:'Press Start 2P',monospace;font-size:8px;border:1px solid var(--line2);color:var(--mut);padding:5px 7px}
 tr.top3 .rankb{color:var(--amber);border-color:var(--amber)}
 tr.top3 .opname{color:var(--amber2)}
-.opname{font-weight:600;word-break:break-word}
+.opname{font-weight:600}
 .lvl{color:var(--mut)}
 .xp{color:var(--amber2)}
 .rankbar{display:inline-flex;gap:2px}
@@ -186,7 +168,7 @@ tr.top3 .opname{color:var(--amber2)}
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .step{border:1px solid var(--line);background:var(--ink);padding:14px;box-shadow:4px 4px 0 #000}
 .s-num{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--amber);text-shadow:2px 2px 0 #000}
-.step h3{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--amber2);margin:12px 0 8px;letter-spacing:1px;line-height:1.7}
+.step h3{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--amber2);margin:12px 0 8px;letter-spacing:1px}
 .step p{font-size:12px;color:var(--mut);line-height:1.65}
 .cmdlist{border:1px solid var(--line);background:var(--ink)}
 .cmd{display:flex;gap:16px;align-items:baseline;padding:10px 14px;border-bottom:1px dashed var(--line)}
@@ -197,9 +179,8 @@ tr.top3 .opname{color:var(--amber2)}
 .modnote b{color:var(--red)}
 #hud{position:sticky;bottom:0;margin-top:auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 16px;background:var(--panel);border-top:1px solid var(--line);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--dim);z-index:940}
 #hud .px{font-size:8px;color:var(--deep)}
-.hud-i{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.hud-i{display:inline-flex;align-items:center;gap:7px}
 .hud-sp{flex:1}
-#hud a{color:var(--mut)}
 #modalWrap{position:fixed;inset:0;z-index:1050;display:none;align-items:center;justify-content:center;background:rgba(4,3,1,.84);padding:20px}
 #modalWrap.open{display:flex}
 .modal{width:min(580px,100%);max-height:92vh;overflow-y:auto;border-color:var(--line2)}
@@ -207,7 +188,7 @@ tr.top3 .opname{color:var(--amber2)}
 .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .chip{display:block;position:relative;border:1px solid var(--line2);background:var(--ink);padding:10px 6px;text-align:center;cursor:pointer}
 .chip input{position:absolute;opacity:0;width:1px;height:1px}
-.chip-b{display:block;font-family:'Press Start 2P',monospace;font-size:11px;color:var(--mut);border:1px solid transparent;padding:4px 0}
+.chip-b{display:block;font-family:'Press Start 2P',monospace;font-size:11px;color:var(--mut);padding:4px 0}
 .chip-s{display:block;font-size:10px;color:var(--dim);margin-top:6px;letter-spacing:1px}
 .chip:hover{border-color:var(--amber)}
 .chip input:checked ~ .chip-b{color:#140d00;background:var(--amber)}
@@ -222,47 +203,70 @@ tr.top3 .opname{color:var(--amber2)}
 .toast{background:var(--panel2);border:1px solid var(--amber);box-shadow:4px 4px 0 #000;padding:11px 14px;font-size:12px;font-weight:600;color:var(--amber2);word-break:break-word}
 .toast.err{border-color:var(--red);color:#ffb4a5}
 .toast.ok{border-color:var(--green);color:var(--green)}
-#bios{position:fixed;inset:0;z-index:2000;background:#050402;color:var(--amber);font-family:'VT323',monospace;font-size:21px;line-height:1.55;padding:46px;cursor:pointer}
-#biosText div{word-break:break-all}
-#biosText::after{content:'▮';animation:blink .9s steps(1) infinite}
-#biosText .ok{color:var(--green)}
-#biosText .bad{color:var(--red)}
-.bios-cue{position:absolute;left:46px;bottom:36px;color:var(--dim);font-size:17px;letter-spacing:2px}
-@media (max-width:860px){#sidebar{position:fixed;left:0;top:0;bottom:0;height:100%;transform:translateX(-102%);transition:transform .22s steps(5);box-shadow:8px 0 0 rgba(0,0,0,.5)}#sidebar.open{transform:none}#burger{display:inline-flex}.hero-grid{grid-template-columns:1fr}}
-@media (max-width:640px){.two-col{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.hero-meta{grid-template-columns:1fr 1fr}.chips{grid-template-columns:1fr}.col-opt{display:none}#modalWrap{padding:0}.modal{width:100%;height:100%;max-height:100vh;border-left:none;border-right:none;box-shadow:none}#toasts{right:10px;left:10px;bottom:10px;max-width:none}}
-@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}.mq-track{animation:none !important}.crt-bar{display:none}#bios{display:none !important}}
+/* Profile modal */
+.pm{width:min(720px,100%)}
+.pm-head{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.pm-av{width:96px;height:96px;background:var(--ink);border:2px solid var(--line2);object-fit:cover;filter:sepia(.7) saturate(1.4)}
+.pm-name{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--amber2);line-height:1.5}
+.pm-sub{font-size:12px;color:var(--mut);margin-top:6px}
+.pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.pm-stat{border:1px solid var(--line);background:var(--ink);padding:9px 10px}
+.pm-stat .mk{font-size:8px}
+.pm-stat .mv{font-size:22px;margin-top:5px}
+.pm-bar{margin-top:14px}
+.pm-bar-lbl{font-size:11px;color:var(--dim);margin-bottom:5px}
+.pm-prog{height:12px;background:#221a0a;border:1px solid var(--line)}
+.pm-prog i{display:block;height:100%;background:var(--amber)}
+.pm-matches{margin-top:16px}
+.pm-match{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px dashed var(--line);font-size:12px}
+.pm-match:last-child{border-bottom:none}
+.pm-w{color:var(--green)}
+.pm-l{color:var(--red)}
+/* Search */
+.search-row{display:flex;gap:8px;margin-bottom:10px}
+.search-row input{flex:1}
+/* Bracket */
+.bracket-wrap{overflow-x:auto;padding:18px;background:var(--ink);border:1px solid var(--line)}
+.bracket-svg{display:block}
+.bracket-slot{fill:#1a1308;stroke:#5c4918;stroke-width:1}
+.bracket-slot.tbd{fill:#0f0c06}
+.bracket-line{stroke:#5c4918;stroke-width:1.5;fill:none}
+.bracket-name{fill:#efe6c8;font:12px 'IBM Plex Mono',monospace}
+.bracket-round{fill:#ffb000;font:9px 'Press Start 2P',monospace;letter-spacing:1px}
+@media (max-width:860px){#sidebar{position:fixed;left:0;top:0;bottom:0;height:100%;transform:translateX(-102%);transition:transform .22s steps(5)}#sidebar.open{transform:none}#burger{display:inline-flex}.hero-grid{grid-template-columns:1fr}}
+@media (max-width:640px){.two-col{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.hero-meta{grid-template-columns:1fr 1fr}.chips{grid-template-columns:1fr}.col-opt{display:none}#modalWrap{padding:0}.modal{width:100%;height:100%;max-height:100vh}#toasts{right:10px;left:10px;bottom:10px;max-width:none}.pm-head{grid-template-columns:1fr;text-align:center}.pm-av{margin:0 auto}.pm-stats{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important}.mq-track{animation:none !important}}
 </style>
 </head>
 <body>
-<div id="bios" aria-hidden="true"><div id="biosText"></div><div class="bios-cue">PRESS ANY KEY TO SKIP</div></div>
 <div class="fx scan" aria-hidden="true"></div>
 <div class="fx vig" aria-hidden="true"></div>
 <div id="toasts" aria-live="polite"></div>
 
 <div class="shell">
   <aside id="sidebar" aria-label="Main navigation">
-    <div class="logo"><div class="logo-t">TERMIX<span class="cursor"></span></div><div class="logo-s">CS2 TOURNAMENT GRID</div></div>
-    <nav class="nav" aria-label="Screens">
+    <div class="logo"><div class="logo-t">ERVSE<span class="cursor"></span></div><div class="logo-s">CS2 TOURNAMENT GRID</div></div>
+    <nav class="nav">
       <button class="nav-btn active" data-screen="briefing"><span class="nnum">01</span>BRIEFING</button>
       <button class="nav-btn" data-screen="modes"><span class="nnum">02</span>MODES</button>
       <button class="nav-btn" data-screen="rankings"><span class="nnum">03</span>RANKINGS</button>
       <button class="nav-btn" data-screen="matchlog"><span class="nnum">04</span>MATCH LOG</button>
-      <button class="nav-btn" data-screen="intel"><span class="nnum">05</span>INTEL</button>
+      <button class="nav-btn" data-screen="bracket"><span class="nnum">05</span>BRACKET</button>
+      <button class="nav-btn" data-screen="intel"><span class="nnum">06</span>INTEL</button>
     </nav>
     <button id="ctaRegister" class="btn primary">REGISTER.EXE ►</button>
-    <div class="side-status" role="status">
+    <div class="side-status">
       <div class="ss-head">SYS STATUS</div>
-      <div class="ss-row"><span>SEASON</span><span class="ss-v">04 · MIDNIGHT OPS</span></div>
       <div class="ss-row"><span>OPEN SLOTS</span><span class="ss-v" id="ssSlots">——</span></div>
       <div class="ss-row"><span>UPLINK</span><span class="ss-v"><span class="led y" id="ssUplinkLed"></span> <span id="ssUplink">SYNC…</span></span></div>
       <div class="ss-row"><span>BOT</span><span class="ss-v"><span class="led y" id="ssBotLed"></span> <span id="ssBot">SYNC…</span></span></div>
     </div>
     <div class="side-foot">
-      <div>TERMIX v3.0 — AMBER BUILD</div>
+      <div>ERVSE v3.0</div>
       <div><a id="adminLink" href="admin.html">ADMIN</a> · <a class="js-discord" href="#" target="_blank" rel="noopener">DISCORD ↗</a></div>
     </div>
   </aside>
-  <div id="backdrop" aria-hidden="true"></div>
+  <div id="backdrop"></div>
 
   <div class="main">
     <header id="topbar">
@@ -270,21 +274,20 @@ tr.top3 .opname{color:var(--amber2)}
       <div class="tb-tag">// 1v1 / 2v2 / 5v5 LADDER — CHECK-IN FRI 18:30 UTC</div>
       <div class="tb-sp"></div>
       <button id="retryBtn" class="btn sm danger" hidden>⟳ RECONNECT</button>
-      <button id="sndBtn" class="btn sm ghost" aria-label="Toggle sound effects" aria-pressed="true">SND:ON</button>
       <button id="tbRegister" class="btn sm primary">REGISTER</button>
     </header>
 
-    <div id="marquee" aria-hidden="true"><div class="mq-track" id="mqTrack"></div></div>
+    <div id="marquee"><div class="mq-track" id="mqTrack"></div></div>
 
     <main id="screens">
-      <section id="screen-briefing" class="screen active" aria-label="Briefing">
+      <section id="screen-briefing" class="screen active">
         <div class="panel">
           <div class="phead"><h2>01 // BRIEFING</h2><span class="tag">FEATURED TOURNAMENT</span></div>
           <div class="pbody hero-grid">
-            <div class="hero-l">
+            <div>
               <div id="heroBadge" class="badge warn">STANDBY</div>
               <h1 id="heroTitle">WELCOME TO THE GRID<span class="cursor"></span></h1>
-              <p class="hero-sub" id="heroSub">Loading the next tournament…</p>
+              <p class="hero-sub" id="heroSub">Loading…</p>
               <div class="hero-meta">
                 <div class="meta"><div class="mk">PRIZE POOL</div><div class="mv" id="heroPrize">——</div></div>
                 <div class="meta"><div class="mk">CHECK-IN</div><div class="mv" id="heroCheckin">——</div></div>
@@ -299,25 +302,21 @@ tr.top3 .opname{color:var(--amber2)}
             </div>
           </div>
         </div>
-
         <div class="two-col">
           <div class="panel">
             <div class="phead"><h2>PRIZE SHOWCASE</h2><span class="tag">SEASON 04</span></div>
             <div class="pbody">
-              <div id="prizeWrap" aria-label="Prize showcase">
-                <img id="prizeImg" alt="Prize showcase">
-                <div class="crt-lines"></div><div class="crt-noise"></div><div class="crt-bar"></div>
-                <div class="prize-cap">TERMIX PRIZE FEED</div>
+              <div id="prizeWrap"><img id="prizeImg" alt="Prize"><div class="crt-lines"></div>
+                <div class="prize-cap">ERVSE PRIZE FEED</div>
                 <div class="prize-click" id="prizeClick" hidden>VIEW MARKET ►</div>
               </div>
             </div>
           </div>
           <div class="panel">
-            <div class="phead"><h2>MATCH FEED</h2><span class="tag">LIVE RESULTS</span></div>
-            <div class="pbody"><div id="feedBox" aria-live="polite"><div class="idle">&gt; AWAITING MATCH DATA…</div></div></div>
+            <div class="phead"><h2>MATCH FEED</h2><span class="tag">LIVE</span></div>
+            <div class="pbody"><div id="feedBox"><div class="idle">&gt; AWAITING MATCH DATA…</div></div></div>
           </div>
         </div>
-
         <div class="stats">
           <div class="stat"><div class="mk">OPERATIVES</div><div class="mv" id="stPlayers">——</div></div>
           <div class="stat"><div class="mk">MATCHES LOGGED</div><div class="mv" id="stMatches">——</div></div>
@@ -326,64 +325,64 @@ tr.top3 .opname{color:var(--amber2)}
         </div>
       </section>
 
-      <section id="screen-modes" class="screen" aria-label="Tournament modes">
-        <div class="panel">
-          <div class="phead"><h2>02 // MODES — TOURNAMENTS</h2><span class="tag">ACTIVE EVENTS</span></div>
-          <div class="pbody"><div id="modesGrid" class="cards"></div></div>
-        </div>
+      <section id="screen-modes" class="screen">
+        <div class="panel"><div class="phead"><h2>02 // MODES</h2><span class="tag">ACTIVE EVENTS</span></div>
+          <div class="pbody"><div id="modesGrid" class="cards"></div></div></div>
       </section>
 
-      <section id="screen-rankings" class="screen" aria-label="XP rankings">
-        <div class="panel">
-          <div class="phead"><h2>03 // RANKINGS — XP LADDER</h2><span class="tag">TOP 10</span></div>
-          <div class="pbody tblwrap" id="rankWrap"></div>
-        </div>
-      </section>
-
-      <section id="screen-matchlog" class="screen" aria-label="Match log">
-        <div class="panel">
-          <div class="phead"><h2>04 // MATCH LOG</h2><span class="tag">RECENT RESULTS</span></div>
-          <div class="pbody tblwrap" id="logWrap"></div>
-        </div>
-      </section>
-
-      <section id="screen-intel" class="screen" aria-label="Intel">
-        <div class="panel">
-          <div class="phead"><h2>05 // INTEL — HOW TO ENTER</h2><span class="tag">PROTOCOL</span></div>
+      <section id="screen-rankings" class="screen">
+        <div class="panel"><div class="phead"><h2>03 // RANKINGS — XP LADDER</h2><span class="tag">CLICK A ROW FOR PROFILE</span></div>
           <div class="pbody">
-            <div class="steps">
-              <div class="step"><div class="s-num">01</div><h3>JOIN THE GRID</h3><p>Enter the Termix Discord server. All match coordination runs through the bot.</p></div>
-              <div class="step"><div class="s-num">02</div><h3>STEAM VERIFY</h3><p>Run /whoami and complete Steam verification. Unverified accounts can't check in.</p></div>
-              <div class="step"><div class="s-num">03</div><h3>CLEARANCE SCAN</h3><p>The bot screens your ID against bans and strikes at registration.</p></div>
-              <div class="step"><div class="s-num">04</div><h3>CHECK-IN</h3><p>Opens 30 min before start. Miss the window and your slot is released.</p></div>
+            <div class="search-row">
+              <input id="lbSearch" class="inp" type="text" placeholder="SEARCH OPERATIVE…" autocomplete="off">
             </div>
-          </div>
+            <div class="tblwrap" id="rankWrap"></div>
+          </div></div>
+      </section>
+
+      <section id="screen-matchlog" class="screen">
+        <div class="panel"><div class="phead"><h2>04 // MATCH LOG</h2><span class="tag">RECENT</span></div>
+          <div class="pbody tblwrap" id="logWrap"></div></div>
+      </section>
+
+      <section id="screen-bracket" class="screen">
+        <div class="panel"><div class="phead"><h2>05 // BRACKET</h2><span class="tag" id="bracketTag">NO LIVE TOURNAMENT</span></div>
+          <div class="pbody"><div id="bracketBody"></div></div></div>
+      </section>
+
+      <section id="screen-intel" class="screen">
+        <div class="panel"><div class="phead"><h2>06 // INTEL</h2><span class="tag">PROTOCOL</span></div>
+          <div class="pbody"><div class="steps">
+            <div class="step"><div class="s-num">01</div><h3>JOIN ERVSE</h3><p>Enter the Discord. All coordination runs through the bot.</p></div>
+            <div class="step"><div class="s-num">02</div><h3>STEAM VERIFY</h3><p>Run /whoami and link your Steam account. Unverified accounts can't check in.</p></div>
+            <div class="step"><div class="s-num">03</div><h3>REGISTER</h3><p>Sign up on this site or with /register in Discord.</p></div>
+            <div class="step"><div class="s-num">04</div><h3>CHECK IN</h3><p>Opens 30 min before start. Miss it and your slot releases.</p></div>
+          </div></div>
         </div>
         <div class="panel" style="margin-top:22px">
           <div class="phead"><h2>BOT COMMANDS</h2><span class="tag">CHEAT-SHEET</span></div>
           <div class="pbody cmdlist">
-            <div class="cmd"><code>/register</code><span>Sign up for the next open tournament in your mode.</span></div>
-            <div class="cmd"><code>/whoami</code><span>Show your Discord ↔ Steam linkage, XP and clearance.</span></div>
-            <div class="cmd"><code>/listmatch</code><span>See all active tournaments grouped by mode.</span></div>
-            <div class="cmd"><code>/leaderboard</code><span>Top 10 XP earners.</span></div>
-            <div class="cmd"><code>/myxp</code><span>Your personal XP, level, distance to next level.</span></div>
-            <div class="cmd"><code>/wincount</code><span>Top 10 by total wins.</span></div>
-            <div class="cmd"><code>/winstreak</code><span>Active winstreaks leaderboard.</span></div>
-            <div class="cmd"><code>/matchhistory</code><span>Your personal match log.</span></div>
-            <div class="cmd"><code>/ticket</code><span>Open a support ticket — help, report, appeal, other.</span></div>
+            <div class="cmd"><code>/register</code><span>Link Steam for tournament entry.</span></div>
+            <div class="cmd"><code>/whoami</code><span>Your Discord/Steam link + XP (private).</span></div>
+            <div class="cmd"><code>/listmatch</code><span>Active tournaments with live slot counts.</span></div>
+            <div class="cmd"><code>/checkin</code><span>Check in to your open registrations.</span></div>
+            <div class="cmd"><code>/leaderboard</code><span>Top 10 by XP.</span></div>
+            <div class="cmd"><code>/myxp</code><span>Your XP, level, E-coins, progress bar.</span></div>
+            <div class="cmd"><code>/confirm_match</code><span>Both players confirm a match result.</span></div>
+            <div class="cmd"><code>/wincount</code><span>Top 10 by wins.</span></div>
+            <div class="cmd"><code>/winstreak</code><span>Current winstreaks.</span></div>
+            <div class="cmd"><code>/ticket</code><span>Open a support ticket.</span></div>
           </div>
         </div>
         <div class="panel" style="margin-top:22px">
-          <div class="phead"><h2>MODERATION NOTICE</h2><span class="tag" style="color:var(--red);border-color:var(--red)">ENFORCED</span></div>
-          <div class="pbody">
-            <p class="modnote"><b>ZERO TOLERANCE.</b> Cheating, smurfing on unregistered accounts, queue dodging, and toxicity toward opponents or staff result in an immediate ban. Ban hits are checked at registration and at check-in. Appeals run through the Discord ticket system only.</p>
-          </div>
+          <div class="phead"><h2>MODERATION</h2><span class="tag" style="color:var(--red);border-color:var(--red)">ENFORCED</span></div>
+          <div class="pbody"><p class="modnote"><b>ZERO TOLERANCE.</b> Cheating, smurfing on unregistered accounts, and toxicity result in immediate ban — including any linked Steam account. Appeals via Discord tickets only.</p></div>
         </div>
       </section>
     </main>
 
     <footer id="hud">
-      <span class="px">TERMIX v3.0</span>
+      <span class="px">ERVSE v3.0</span>
       <span class="hud-i">UPLINK <span class="led y" id="hudUplink"></span> <span id="hudUpTxt">SYNC</span></span>
       <span class="hud-i">BOT <span class="led y" id="hudBot"></span></span>
       <span class="hud-i">PING <span id="hudPing">——</span></span>
@@ -394,46 +393,38 @@ tr.top3 .opname{color:var(--amber2)}
   </div>
 </div>
 
+<!-- Register modal -->
 <div id="modalWrap" role="dialog" aria-modal="true">
   <div class="modal panel">
-    <div class="phead">
-      <h2 id="mTitle">REGISTER FOR TOURNAMENT</h2>
-      <button id="mClose" class="btn sm ghost">✕</button>
-    </div>
+    <div class="phead"><h2 id="mTitle">REGISTER</h2><button id="mClose" class="btn sm ghost">✕</button></div>
     <div class="pbody">
-      <div class="mstep vt" id="mStepLbl">STEP 1 OF 3 · FILL IN YOUR DETAILS</div>
+      <div class="mstep vt" id="mStepLbl">STEP 1 OF 3</div>
       <form id="regForm" novalidate>
         <div id="mStep1">
-          <span class="fl" id="modeLbl">GAME MODE</span>
-          <div class="chips" role="radiogroup" aria-labelledby="modeLbl">
-            <label class="chip"><input type="radio" name="mode" value="1v1" checked><span class="chip-b">1v1</span><span class="chip-s">Solo duel</span></label>
+          <span class="fl">GAME MODE</span>
+          <div class="chips">
+            <label class="chip"><input type="radio" name="mode" value="1v1" checked><span class="chip-b">1v1</span><span class="chip-s">Solo</span></label>
             <label class="chip"><input type="radio" name="mode" value="2v2"><span class="chip-b">2v2</span><span class="chip-s">Wingman</span></label>
-            <label class="chip"><input type="radio" name="mode" value="5v5"><span class="chip-b">5v5</span><span class="chip-s">Full team</span></label>
+            <label class="chip"><input type="radio" name="mode" value="5v5"><span class="chip-b">5v5</span><span class="chip-s">Team</span></label>
           </div>
           <label class="fl" for="mTournament">TOURNAMENT</label>
           <select id="mTournament" class="inp"></select>
           <label class="fl" for="mDiscordId">DISCORD ID</label>
-          <input id="mDiscordId" class="inp" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="e.g. 123456789012345678">
-          <div class="hint">Our Discord bot will check this ID against the bans and strikes tables before allowing registration.</div>
-          <label class="fl" for="mUsername">DISCORD USERNAME <span class="opt">(OPTIONAL)</span></label>
-          <input id="mUsername" class="inp" type="text" autocomplete="off" maxlength="64" placeholder="e.g. deadgrex">
-          <label class="check" for="mTerms">
-            <input type="checkbox" id="mTerms">
-            <span>I agree to the tournament rules, the Termix code of conduct, and confirm that I will use the Steam account I own. Cheating, smurfing, or toxicity will result in an immediate ban.</span>
-          </label>
-          <div id="mErr" class="err-msg" role="alert"></div>
+          <input id="mDiscordId" class="inp" type="text" inputmode="numeric" maxlength="20" placeholder="123456789012345678">
+          <div class="hint">Bot checks this against bans + link tables.</div>
+          <label class="fl" for="mUsername">USERNAME (OPTIONAL)</label>
+          <input id="mUsername" class="inp" type="text" maxlength="64" placeholder="yourname">
+          <label class="check"><input type="checkbox" id="mTerms"><span>I agree to the rules and confirm I own the Steam account I link.</span></label>
+          <div id="mErr" class="err-msg"></div>
           <div class="mrow">
             <button type="button" id="mCancel" class="btn ghost">CANCEL</button>
-            <button type="submit" id="mSubmit" class="btn primary">VERIFY DISCORD ►</button>
+            <button type="submit" id="mSubmit" class="btn primary">VERIFY ►</button>
           </div>
         </div>
         <div id="mStep2" hidden>
-          <div class="okpanel">
-            <div class="okcheck">✓</div>
-            <div class="okt px">REGISTERED</div>
-            <p>You're in. Check-in opens 30 minutes before start.</p>
-            <p class="okid vt" id="mRegId"></p>
-          </div>
+          <div class="okpanel"><div class="okcheck">✓</div><div class="okt px">REGISTERED</div>
+            <p>Check-in opens 30 min before start.</p>
+            <p class="okid vt" id="mRegId"></p></div>
           <div class="mrow">
             <a id="mSteam" class="btn ghost" href="#" target="_blank" rel="noopener">STEAM VERIFY ►</a>
             <a id="mDiscord" class="btn primary" href="#" target="_blank" rel="noopener">OPEN DISCORD ►</a>
@@ -445,33 +436,40 @@ tr.top3 .opname{color:var(--amber2)}
   </div>
 </div>
 
+<!-- Profile modal -->
+<div id="pmWrap" class="mwrap" style="display:none;position:fixed;inset:0;z-index:1060;align-items:center;justify-content:center;background:rgba(4,3,1,.86);padding:20px">
+  <div class="modal panel pm">
+    <div class="phead"><h2>OPERATIVE DOSSIER</h2><button id="pmClose" class="btn sm ghost">✕</button></div>
+    <div class="pbody" id="pmBody"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
 <script>
 'use strict';
 const CFG = {
   API_BASE: 'https://wgzdxhaeou.apps.bot-hosting.cloud',
-  DISCORD_INVITE: 'https://discord.gg/K8VndtvrHq',
+  DISCORD_INVITE: 'https://discord.gg/9YJpRr2qnR',
   ADMIN_URL: 'admin.html',
   SLOTS: 32,
   CHECKIN_UTC: 19,
   FETCH_MS: 10000,
   ANNOUNCEMENTS: [
-    'SEASON 04 "MIDNIGHT OPS" — REGISTRATION OPEN · CHECK-IN FRI 18:30 UTC',
-    'PRIZE POOL RAISED TO $420 COURTESY OF THE TERMIX PATRONS',
-    'STEAM VERIFICATION NOW MANDATORY BEFORE CHECK-IN',
-    'DISCORD GIVEAWAY: 3X SKINS — /giveaway TO ENTER'
+    'ERVSE SEASON 04 — REGISTRATION OPEN · CHECK-IN FRI 18:30 UTC',
+    'E-COINS: EARN 50 PER LEVEL-UP BY CHATTING',
+    'STEAM VERIFICATION MANDATORY BEFORE CHECK-IN',
+    'BOTH PLAYERS MUST /confirm_match FOR RESULTS TO COUNT'
   ]
 };
 const S = {
-  live:false, offlineToastShown:false, snd:true,
+  live:false, offlineToastShown:false,
   latency:null, botReady:null,
   tournaments:[], players:[], leaderboard:[], matches:[],
   nameMap:new Map(), topMatchId:0, featured:null,
-  reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  lbFilter:''
 };
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad2 = n => String(n).padStart(2,'0');
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const fmtMoney = n => '$' + (Number(n)||0).toLocaleString('en-US');
@@ -495,7 +493,7 @@ function fmtStarts(iso){
 }
 const fmtMatchTime = ts => { const p = parseDB(ts); return p ? pad2(p.mo)+'-'+pad2(p.d)+' '+pad2(p.h)+':'+pad2(p.mi) : '——'; };
 const fmtMatchHM   = ts => { const p = parseDB(ts); return p ? pad2(p.h)+':'+pad2(p.mi) : '--:--'; };
-function nameOf(id){ const n = S.nameMap.get(Number(id)); return n || 'OP-' + String(id).slice(-4); }
+function nameOf(id){ return S.nameMap.get(Number(id)) || 'OP-' + String(id).slice(-4); }
 function setLED(sel, state){ const el = $(sel); if (el) el.className = 'led ' + state; }
 function toast(msg, kind){
   const box = $('#toasts');
@@ -503,15 +501,7 @@ function toast(msg, kind){
   t.className = 'toast' + (kind === 'error' ? ' err' : kind === 'ok' ? ' ok' : '');
   t.textContent = String(msg);
   box.appendChild(t);
-  if (kind === 'error') beep(220,.09); else if (kind === 'ok') beep(880,.05);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 4000);
-}
-let AC = null;
-function ensureAC(){ if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } } }
-document.addEventListener('pointerdown', () => { if (S.snd) ensureAC(); }, { once:true, capture:true });
-function beep(freq, dur){
-  if (!S.snd || !AC) return;
-  try{ const o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.value=freq; g.gain.value=.025; o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }catch(e){}
 }
 async function api(path, { method='GET', body=null, timeout=CFG.FETCH_MS } = {}){
   const c = new AbortController();
@@ -526,36 +516,10 @@ async function api(path, { method='GET', body=null, timeout=CFG.FETCH_MS } = {})
     return { ok:r.ok, status:r.status, data };
   } finally { clearTimeout(t); }
 }
-async function pingUplink(){
-  try{ const r = await api('/', { timeout:1500 }); if (r.ok && r.data && r.data.status==='ok'){ S.botReady=!!r.data.bot_ready; return true; } return false; }catch(e){ return false; }
-}
-function bootSequence(){
-  return new Promise(resolve => {
-    const ov = $('#bios'), box = $('#biosText');
-    let done = false;
-    const finish = () => { if (done) return; done = true; try{ ov.remove(); }catch(e){} resolve(); };
-    const kill = setTimeout(finish, 2000);
-    const skip = () => { clearTimeout(kill); finish(); };
-    window.addEventListener('keydown', skip, { once:true });
-    ov.addEventListener('pointerdown', skip, { once:true });
-    (async () => {
-      const lines = ['TERMIX BIOS v3.0 — GRID TERMINAL','CPU: Z80-XT @ 4.77 MHZ ................ OK','MEM: 640K CONVENTIONAL ................ OK','VID: AMBER PHOSPHOR CRT ............... OK','SND: SQUAREWAVE BLASTER ............... OK'];
-      for (const ln of lines){ const div = document.createElement('div'); box.appendChild(div); for (let i=0;i<ln.length;i++){ div.textContent = ln.slice(0,i+1); await sleep(4); } await sleep(40); }
-      const net = document.createElement('div'); box.appendChild(net); net.textContent = 'NET: UPLINK TEST';
-      const dots = setInterval(() => { net.textContent += '.'; }, 140);
-      const pong = await Promise.race([pingUplink(), sleep(1200).then(() => null)]);
-      clearInterval(dots);
-      if (pong === true) net.innerHTML = 'NET: UPLINK OK · ' + (S.latency ?? '??') + 'MS · BOT ' + (S.botReady?'READY':'WARM-UP') + ' <span class="ok">■</span>';
-      else net.innerHTML = 'NET: UPLINK FAILED — OFFLINE MODE <span class="bad">■</span>';
-      await sleep(280); clearTimeout(kill); finish();
-    })();
-  });
-}
 function buildMarquee(){
   const track = $('#mqTrack');
   const items = CFG.ANNOUNCEMENTS.map(a => '<span class="mq-i">' + esc(a) + '<span class="mq-sep">◆</span></span>').join('');
   track.innerHTML = items + items;
-  if (S.reducedMotion) track.style.animation = 'none';
 }
 function startClock(){ const tick = () => { const el = $('#hudClock'); if (el) el.textContent = new Date().toISOString().slice(11,19); }; tick(); setInterval(tick, 1000); }
 let cdTarget = null;
@@ -575,6 +539,7 @@ function tickCountdown(){
   el.textContent = d + 'D ' + pad2(h) + ':' + pad2(m) + ':' + pad2(s);
 }
 setInterval(tickCountdown, 1000);
+
 async function refreshData(){
   const [t, p, l, m] = await Promise.all([
     api('/api/tournaments').catch(() => null),
@@ -617,42 +582,30 @@ async function loadAll(){
   try{ await refreshData(); setLive(true); renderAll(); }
   catch(e){
     setLive(false); renderAll();
-    if (!S.offlineToastShown){ S.offlineToastShown = true; toast('UPLINK OFFLINE — GRID RUNNING ON LOCAL SHELL', 'error'); }
+    if (!S.offlineToastShown){ S.offlineToastShown = true; toast('UPLINK OFFLINE', 'error'); }
   }
 }
 function sortedMatches(){ return [...S.matches].sort((a, b) => (Number(b.id)||0) - (Number(a.id)||0)); }
 function renderAll(){
   renderHero(); renderStats(); renderFeed(); renderModes();
-  renderRankings(); renderLog(); renderSlotsStatus(); renderPrizeImage();
+  renderRankings(); renderLog(); renderSlotsStatus(); renderPrizeImage(); renderBracket();
 }
-function emptyHTML(head, sub){ return '<div class="empty" style="grid-column:1/-1"><b>' + esc(head) + '</b>' + esc(sub) + ' <span class="cursor"></span></div>'; }
+function emptyHTML(head, sub){ return '<div class="empty"><b>' + esc(head) + '</b>' + esc(sub) + '</div>'; }
 
 function renderHero(){
   const badge = $('#heroBadge'), title = $('#heroTitle'), sub = $('#heroSub');
   const f = S.featured;
-  if (!S.live){
-    badge.className = 'badge live'; badge.textContent = 'OFFLINE';
+  if (!S.live){ badge.className = 'badge live'; badge.textContent = 'OFFLINE';
     title.innerHTML = 'SIGNAL LOST<span class="cursor"></span>';
-    sub.textContent = 'Uplink to the tournament grid is down. Hit ⟳ RECONNECT in the top bar.';
-    $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true; return;
-  }
-  if (!f){
-    badge.className = 'badge warn'; badge.textContent = 'NO DATA';
-    title.innerHTML = 'AWAITING TOURNAMENT DATA<span class="cursor"></span>';
-    sub.textContent = 'The grid is online but no tournaments are posted yet.';
-    $('#heroPrize').textContent = '——'; $('#heroCheckin').textContent = '——'; $('#heroFormat').textContent = '——';
-    $('#heroJoin').hidden = true; return;
-  }
+    sub.textContent = 'Uplink down.'; return; }
+  if (!f){ badge.className = 'badge warn'; badge.textContent = 'NO DATA';
+    title.innerHTML = 'AWAITING DATA<span class="cursor"></span>'; return; }
   const st = String(f.status || '').toLowerCase();
   badge.className = 'badge ' + (st === 'live' ? 'live' : st === 'open' ? 'open' : 'done');
   badge.textContent = st.toUpperCase();
   title.innerHTML = esc(f.name || 'UNTITLED') + '<span class="cursor"></span>';
   sub.textContent = f.description || '—';
-  const hPrizeEl = $('#heroPrize');
-  hPrizeEl.textContent = fmtPrize(f);
-  hPrizeEl.style.fontSize = f.prize_extra ? '16px' : '';
-  hPrizeEl.style.lineHeight = f.prize_extra ? '1.3' : '';
+  $('#heroPrize').textContent = fmtPrize(f);
   const sd = f.starts_at ? new Date(f.starts_at) : null;
   $('#heroCheckin').textContent = (sd && !isNaN(sd)) ? fmtStarts(new Date(sd.getTime() - 30*60000).toISOString()) : '——';
   $('#heroFormat').textContent = f.rounds || '——';
@@ -663,17 +616,14 @@ function renderHero(){
 function renderStats(){
   $('#stPlayers').textContent = S.live ? S.players.length : '——';
   $('#stMatches').textContent = S.live ? S.matches.length : '——';
-  const stPrizeEl = $('#stPrize');
-  if (!S.live){ stPrizeEl.textContent = '——'; stPrizeEl.style.fontSize = ''; }
-  else { stPrizeEl.textContent = S.featured ? fmtPrize(S.featured) : '$0'; stPrizeEl.style.fontSize = (S.featured && S.featured.prize_extra) ? '18px' : ''; }
+  $('#stPrize').textContent = (S.live && S.featured) ? fmtPrize(S.featured) : '——';
   $('#stLat').textContent = S.latency == null ? '——' : S.latency + 'MS';
 }
 function renderFeed(){
-  const box = $('#feedBox');
-  box.innerHTML = '';
-  if (!S.live){ box.innerHTML = '<div class="idle">&gt; OFFLINE — MATCH FEED UNREACHABLE</div>'; return; }
+  const box = $('#feedBox'); box.innerHTML = '';
+  if (!S.live){ box.innerHTML = '<div class="idle">&gt; OFFLINE</div>'; return; }
   const top = sortedMatches().slice(0, 10);
-  if (!top.length){ box.innerHTML = '<div class="idle">&gt; FEED IDLE — NO MATCHES REPORTED YET <span class="cursor"></span></div>'; S.topMatchId = 0; return; }
+  if (!top.length){ box.innerHTML = '<div class="idle">&gt; FEED IDLE</div>'; S.topMatchId = 0; return; }
   for (const m of top) feedLine(m, false);
   S.topMatchId = S.matches.reduce((a, m) => Math.max(a, Number(m.id)||0), 0);
 }
@@ -681,27 +631,17 @@ function feedLine(m, animated){
   const box = $('#feedBox');
   const idle = box.querySelector('.idle'); if (idle) idle.remove();
   const loserId = Number(m.winner_id) === Number(m.player1_id) ? m.player2_id : m.player1_id;
-  const plain = '[' + fmtMatchHM(m.played_at) + '] #' + Number(m.id) + ' ' + nameOf(m.winner_id) + ' def. ' + nameOf(loserId) + ' ' + (m.score || '—');
   const row = document.createElement('div'); row.className = 'feed-line';
-  row.innerHTML = '<div class="fl-txt"></div><div class="hp win"><i style="width:100%"></i></div><div class="hp lose"><i style="width:100%"></i></div>';
+  row.innerHTML = '<div class="fl-txt"></div><div class="hp win"><i></i></div><div class="hp lose"><i></i></div>';
   box.prepend(row);
   const txt = row.querySelector('.fl-txt');
-  const paint = () => {
-    let html = '<span class="mut">[' + fmtMatchHM(m.played_at) + ']</span> <span class="mut">#' + Number(m.id) + '</span> ';
-    if (m.match_name) html += '<span style="color:var(--amber2)">' + esc(m.match_name) + '</span> ';
-    html += '<span class="win">' + esc(nameOf(m.winner_id)) + '</span> <span class="mut">def.</span> '
-         + '<span class="lose">' + esc(nameOf(loserId)) + '</span> <span class="score">' + esc(m.score || '—') + '</span>';
-    if (m.match_map) html += ' <span class="mut">@ ' + esc(m.match_map) + '</span>';
-    txt.innerHTML = html;
-  };
-  const drain = () => {
-    const li = row.querySelector('.hp.lose i');
-    if (!animated || S.reducedMotion){ li.style.transition = 'none'; li.style.width = '0%'; return; }
-    requestAnimationFrame(() => requestAnimationFrame(() => { li.style.width = '0%'; }));
-  };
-  if (animated && !S.reducedMotion){
-    (async () => { for (let i = 0; i < plain.length; i++){ txt.textContent = plain.slice(0, i+1); await sleep(9); } paint(); drain(); })();
-  } else { paint(); drain(); }
+  let html = '<span class="mut">[' + fmtMatchHM(m.played_at) + ']</span> <span class="mut">#' + Number(m.id) + '</span> ';
+  if (m.match_name) html += '<span style="color:var(--amber2)">' + esc(m.match_name) + '</span> ';
+  html += '<span class="win">' + esc(nameOf(m.winner_id)) + '</span> <span class="mut">def.</span> '
+       + '<span class="lose">' + esc(nameOf(loserId)) + '</span> <span class="score">' + esc(m.score || '—') + '</span>';
+  if (m.match_map) html += ' <span class="mut">@ ' + esc(m.match_map) + '</span>';
+  txt.innerHTML = html;
+  row.querySelector('.hp.lose i').style.width = '0%';
 }
 function renderSlotsStatus(){
   const el = $('#ssSlots'); if (!el) return;
@@ -713,9 +653,9 @@ function renderSlotsStatus(){
 }
 function renderModes(){
   const grid = $('#modesGrid');
-  if (!S.live){ grid.innerHTML = emptyHTML('GRID OFFLINE', 'Uplink down — tournaments unavailable. Hit ⟳ RECONNECT.'); return; }
+  if (!S.live){ grid.innerHTML = emptyHTML('GRID OFFLINE', ''); return; }
   const list = S.tournaments.filter(t => t.status !== 'draft');
-  if (!list.length){ grid.innerHTML = emptyHTML('NO ACTIVE TOURNAMENTS', 'Check the Discord for announcements.'); return; }
+  if (!list.length){ grid.innerHTML = emptyHTML('NO ACTIVE TOURNAMENTS', ''); return; }
   const order = { live:0, open:1 };
   list.sort((a, b) => ((order[a.status] ?? 2) - (order[b.status] ?? 2)) || (new Date(a.starts_at||0) - new Date(b.starts_at||0)));
   grid.innerHTML = list.map(cardHTML).join('');
@@ -723,29 +663,21 @@ function renderModes(){
 function cardHTML(t){
   const status = String(t.status||'').toLowerCase();
   const slots = Number(t.max_slots) > 0 ? Number(t.max_slots) : CFG.SLOTS;
-  const reg = Math.min(Math.max(Number(t.registered)||0, 0), slots);
-  const left = Math.max(slots - reg, 0);
+  const occupied = Math.min(Math.max(Number(t.registered)||0, 0), slots);
+  const left = Math.max(slots - occupied, 0);
   const leftPct = slots > 0 ? left / slots : 0;
-
-  // Progress bar visualizes SLOTS REMAINING (green when many, amber when few, red when full)
   let cells = '';
   for (let i = 0; i < slots; i++){
     const isOpen = i < left;
     let cls = 'slot';
-    if (isOpen) cls += leftPct > 0.5 ? ' open' : (leftPct > 0.1 ? ' low' : ' low');
+    if (isOpen) cls += leftPct > 0.5 ? ' open' : ' low';
     else cls += ' full';
     cells += '<i class="' + cls + '"></i>';
   }
-
   let btn = '';
-  if (status === 'live') btn = '<button class="btn danger" disabled>🔴 MATCH LIVE — REGISTRATION CLOSED</button>';
+  if (status === 'live') btn = '<button class="btn danger" disabled>🔴 MATCH LIVE</button>';
   else if (status === 'open') btn = '<button class="btn primary join" data-id="' + Number(t.id) + '" data-mode="' + esc(t.mode) + '">JOIN ' + esc(String(t.mode||'').toUpperCase()) + ' ►</button>';
-  else if (status === 'completed' || status === 'cancelled') btn = '<button class="btn" disabled>' + esc(status.toUpperCase()) + '</button>';
-  else btn = '<button class="btn" disabled>REGISTRATION NOT OPEN</button>';
-
-  const hasExtra = !!(t.prize_extra && String(t.prize_extra).trim());
-  const prizeFontSize = hasExtra ? '22px' : '40px';
-
+  else btn = '<button class="btn" disabled>' + esc(status.toUpperCase()) + '</button>';
   return '<article class="tcard panel">'
     + '<div class="tc-top"><span class="modetag">' + esc(String(t.mode||'?').toUpperCase()) + '</span>'
     + '<span class="badge ' + (status==='live'?'live':status==='open'?'open':'done') + '">' + esc(status.toUpperCase()) + '</span></div>'
@@ -754,42 +686,45 @@ function cardHTML(t){
     + '<div class="spec">'
     + '<div class="srow"><span>FORMAT</span><b>' + esc(t.rounds || '—') + '</b></div>'
     + '<div class="srow"><span>ENTRY</span><b>' + esc(t.entry_fee || '—') + '</b></div>'
-    + (hasExtra ? '<div class="srow"><span>EXTRA PRIZE</span><b>' + esc(t.prize_extra) + '</b></div>' : '')
-    + '<div class="srow"><span>PRIZE SPLIT</span><b>' + esc(t.prize_split || '—') + '</b></div>'
     + '<div class="srow"><span>STARTS</span><b>' + fmtStarts(t.starts_at) + '</b></div>'
     + '</div>'
-    + '<div class="tc-prize"><span class="mk">PRIZE POOL</span><span class="big" style="font-size:' + prizeFontSize + '">' + esc(fmtPrize(t)) + '</span></div>'
-    + '<div class="slots" aria-label="' + left + ' of ' + slots + ' slots remaining">' + cells + '</div>'
-    + '<div class="slots-cap"><b>' + left + '</b> / ' + slots + ' SLOTS LEFT</div>'
-    + '<div class="tc-btn">' + btn + '</div>'
+    + '<div class="tc-prize"><span class="mk">PRIZE POOL</span><span class="big" style="font-family:VT323,monospace;font-size:34px;color:var(--amber);text-align:right">' + esc(fmtPrize(t)) + '</span></div>'
+    + '<div class="slots">' + cells + '</div>'
+    + '<div class="slots-cap"><b>' + occupied + '/' + slots + ' FILLED</b>' + (left === 0 ? ' — 🔴 FULL' : ' — ' + left + ' left') + '</div>'
+    + '<div class="tc-btn" style="margin-top:12px">' + btn + '</div>'
     + '</article>';
 }
 function renderRankings(){
   const wrap = $('#rankWrap');
-  if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', 'Rankings unavailable until uplink restores.'); return; }
+  if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', ''); return; }
   const lb = [...S.leaderboard].sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
-  if (!lb.length){ wrap.innerHTML = emptyHTML('NO RANKINGS YET', 'XP accrues as the server chats.'); return; }
+  if (!lb.length){ wrap.innerHTML = emptyHTML('NO RANKINGS YET', ''); return; }
+  const filtered = S.lbFilter
+    ? lb.filter(r => (S.nameMap.get(Number(r.user_id)) || '').toLowerCase().includes(S.lbFilter))
+    : lb;
+  if (!filtered.length){ wrap.innerHTML = emptyHTML('NO MATCH FOR "' + S.lbFilter.toUpperCase() + '"', ''); return; }
   const maxXp = Math.max(1, ...lb.map(r => Number(r.xp)||0));
-  wrap.innerHTML = '<table><thead><tr><th>RANK</th><th>OPERATIVE</th><th class="col-opt">LEVEL</th><th>XP</th><th>PROGRESS</th></tr></thead><tbody>'
-    + lb.map(r => {
+  wrap.innerHTML = '<table><thead><tr><th>RANK</th><th>OPERATIVE</th><th class="col-opt">LEVEL</th><th>XP</th><th>💰</th><th>PROGRESS</th></tr></thead><tbody>'
+    + filtered.map(r => {
       const filled = Math.round((Number(r.xp)||0) / maxXp * 12);
       let segs = '';
       for (let i = 0; i < 12; i++) segs += '<i class="seg' + (i < filled ? ' on' : '') + '"></i>';
       const nm = S.nameMap.get(Number(r.user_id));
       const name = nm || ('UNREGISTERED ·…' + String(r.user_id).slice(-4));
-      return '<tr class="' + (Number(r.rank) <= 3 ? 'top3' : '') + '">'
+      return '<tr class="' + (Number(r.rank) <= 3 ? 'top3' : '') + '" data-uid="' + Number(r.user_id) + '">'
         + '<td><span class="rankb">#' + pad2(r.rank) + '</span></td>'
         + '<td class="opname">' + esc(name) + '</td>'
         + '<td class="vt lvl col-opt">LVL ' + (Number(r.level)||0) + '</td>'
         + '<td class="vt xp">' + (Number(r.xp)||0) + ' XP</td>'
+        + '<td class="vt">' + (Number(r.coins)||0) + '</td>'
         + '<td><span class="rankbar">' + segs + '</span></td></tr>';
     }).join('') + '</tbody></table>';
 }
 function renderLog(){
   const wrap = $('#logWrap');
-  if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', 'Match log unavailable until uplink restores.'); return; }
+  if (!S.live){ wrap.innerHTML = emptyHTML('GRID OFFLINE', ''); return; }
   const ms = sortedMatches();
-  if (!ms.length){ wrap.innerHTML = emptyHTML('NO MATCHES ON RECORD', 'WAITING FOR FIRST /report_match'); return; }
+  if (!ms.length){ wrap.innerHTML = emptyHTML('NO MATCHES ON RECORD', ''); return; }
   wrap.innerHTML = '<table><thead><tr><th>ID</th><th>MATCH</th><th>WINNER</th><th>LOSER</th><th>SCORE</th><th class="col-opt">MAP</th><th>TIME</th></tr></thead><tbody>'
     + ms.map(m => {
       const loserId = Number(m.winner_id) === Number(m.player1_id) ? m.player2_id : m.player1_id;
@@ -804,60 +739,130 @@ function renderLog(){
         + '</tr>';
     }).join('') + '</tbody></table>';
 }
-
-/* Prize image — admin-set, click-through to market */
 function renderPrizeImage(){
-  const img = $('#prizeImg');
-  const wrap = $('#prizeWrap');
-  const hint = $('#prizeClick');
+  const img = $('#prizeImg'), wrap = $('#prizeWrap'), hint = $('#prizeClick');
   const f = S.featured;
   const url = (S.live && f && f.prize_image_url && String(f.prize_image_url).trim()) || '';
   const marketUrl = (S.live && f && f.prize_market_url && String(f.prize_market_url).trim()) || '';
+  wrap.classList.remove('has-link'); hint.hidden = true; wrap.onclick = null;
 
-  // Reset click-through
-  wrap.classList.remove('has-link');
-  hint.hidden = true;
-  wrap.onclick = null;
-
-  if (url){
-    const probe = new Image();
-    probe.onload = () => { img.src = url; };
-    probe.onerror = () => { defaultPrizeArt(); };
-    probe.src = url;
-  } else {
-    defaultPrizeArt();
-  }
+  if (url){ img.src = url; img.onerror = defaultPrizeArt; } else { defaultPrizeArt(); }
 
   if (marketUrl){
-    wrap.classList.add('has-link');
-    hint.hidden = false;
+    wrap.classList.add('has-link'); hint.hidden = false;
     wrap.onclick = () => window.open(marketUrl, '_blank', 'noopener');
-    wrap.setAttribute('role', 'link');
-    wrap.setAttribute('tabindex', '0');
-    wrap.setAttribute('title', 'Click to view market listing');
-    wrap.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.open(marketUrl, '_blank', 'noopener'); } };
-  } else {
-    wrap.removeAttribute('role'); wrap.removeAttribute('tabindex'); wrap.removeAttribute('title');
-    wrap.onkeydown = null;
   }
 }
 function defaultPrizeArt(){
   const f = S.featured;
   const prize = (S.live && f) ? fmtPrize(f) : '$ ——';
-  const fontSize = (S.live && f && f.prize_extra) ? 52 : 92;
-  let grid = '';
-  for (let x = 40; x < 880; x += 80) grid += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="420"/>';
-  for (let y = 40; y < 420; y += 80) grid += '<line x1="0" y1="'+y+'" x2="880" y2="'+y+'"/>';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420">'
     + '<rect width="880" height="420" fill="#0a0805"/>'
-    + '<g stroke="#241c0c" stroke-width="1">' + grid + '</g>'
     + '<rect x="14" y="14" width="852" height="392" fill="none" stroke="#8a6a10" stroke-width="2"/>'
     + '<text x="440" y="140" text-anchor="middle" font-family="monospace" font-size="26" letter-spacing="10" fill="#8a6a10">CHAMPIONSHIP CACHE</text>'
-    + '<text x="440" y="252" text-anchor="middle" font-family="monospace" font-size="' + fontSize + '" fill="#ffb000">' + esc(prize) + '</text>'
-    + '<text x="440" y="312" text-anchor="middle" font-family="monospace" font-size="20" letter-spacing="6" fill="#a8976a">TERMIX // SEASON 04</text>'
-    + '<text x="440" y="368" text-anchor="middle" font-family="monospace" font-size="16" letter-spacing="4" fill="#6f6140">WINNER TAKES THE CACHE</text>'
+    + '<text x="440" y="252" text-anchor="middle" font-family="monospace" font-size="92" fill="#ffb000">' + esc(prize) + '</text>'
+    + '<text x="440" y="312" text-anchor="middle" font-family="monospace" font-size="20" letter-spacing="6" fill="#a8976a">ERVSE // SEASON 04</text>'
     + '</svg>';
   $('#prizeImg').src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+/* BRACKET — simple SVG generator for the featured LIVE tournament */
+function renderBracket(){
+  const body = $('#bracketBody');
+  const tag = $('#bracketTag');
+  const live = S.tournaments.filter(t => t.status === 'live');
+  if (!S.live || !live.length){
+    tag.textContent = 'NO LIVE TOURNAMENT';
+    body.innerHTML = emptyHTML('BRACKET IDLE', 'A bracket appears when a tournament goes live.');
+    return;
+  }
+  const t = live[0];
+  tag.textContent = t.name.toUpperCase() + ' — ' + (t.mode || '').toUpperCase();
+  // Build seeded slots (unfilled for now — we show TBD placeholders)
+  const maxSlots = Number(t.max_slots) || 8;
+  // Round-down to power of 2 for bracket
+  const size = Math.pow(2, Math.floor(Math.log2(maxSlots)));
+  const rounds = Math.log2(size);
+  const slotH = 42, slotGap = 12, colW = 220, colGap = 60;
+  const svgH = Math.max(size * (slotH + slotGap) + 60, 200);
+  const svgW = rounds * (colW + colGap) + 40;
+  let svg = '<svg class="bracket-svg" width="' + svgW + '" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '">';
+  // For each round
+  for (let r = 0; r <= rounds; r++){
+    const x = 20 + r * (colW + colGap);
+    const slotsInRound = size / Math.pow(2, r);
+    const name = r === 0 ? 'SEED' : (slotsInRound === 1 ? 'FINAL' : (slotsInRound === 2 ? 'SEMIS' : (slotsInRound === 4 ? 'QUARTERS' : 'ROUND ' + r)));
+    svg += '<text class="bracket-round" x="' + x + '" y="20">' + esc(name) + '</text>';
+    const availableH = svgH - 40;
+    for (let i = 0; i < slotsInRound; i++){
+      const y = 40 + (availableH / slotsInRound) * i + (availableH / slotsInRound - slotH) / 2;
+      svg += '<rect class="bracket-slot tbd" x="' + x + '" y="' + y + '" width="' + colW + '" height="' + slotH + '" rx="0"/>';
+      svg += '<text class="bracket-name" x="' + (x + 12) + '" y="' + (y + slotH / 2 + 5) + '">TBD</text>';
+    }
+  }
+  svg += '</svg>';
+  body.innerHTML = '<div class="bracket-wrap">' + svg + '</div>'
+    + '<p class="hint" style="margin-top:10px">'
+    + 'Bracket preview — pairings populate as matches are recorded. '
+    + 'Size: ' + size + ' slots · ' + rounds + ' rounds.</p>';
+}
+
+/* Profile modal */
+async function openProfile(uid){
+  const wrap = $('#pmWrap');
+  wrap.style.display = 'flex';
+  $('#pmBody').innerHTML = '<div class="empty">Loading dossier…</div>';
+  try{
+    const r = await api('/api/players/' + uid + '/full', { timeout: 8000 });
+    if (!r.ok || !r.data){ $('#pmBody').innerHTML = '<div class="empty"><b>NO DATA</b></div>'; return; }
+    renderProfile(r.data);
+  } catch(e){
+    $('#pmBody').innerHTML = '<div class="empty"><b>ERROR</b>' + esc(e.message) + '</div>';
+  }
+}
+function renderProfile(d){
+  const p = d.player || {};
+  const xp = d.xp || { xp:0, level:0, coins:0 };
+  const cur = (xp.level ** 2) * 100;
+  const next = ((xp.level + 1) ** 2) * 100;
+  const into = Math.max(0, xp.xp - cur);
+  const need = Math.max(1, next - cur);
+  const pct = Math.min(100, Math.round(into / need * 100));
+  const avatar = 'https://cdn.discordapp.com/embed/avatars/0.png';
+  const matches = d.matches || [];
+  const matchRows = matches.length ? matches.map(m => (
+    '<div class="pm-match">'
+    + '<span class="' + (m.you_won ? 'pm-w' : 'pm-l') + '">' + (m.you_won ? '🟢 W' : '🔴 L') + '</span>'
+    + '<span>vs <b>' + esc(m.opponent_name) + '</b></span>'
+    + '<span class="vt">' + esc(m.score || '—') + '</span>'
+    + '<span class="mutc" style="font-size:11px">' + esc((m.match_name || m.match_map || '').slice(0, 20)) + '</span>'
+    + '</div>'
+  )).join('') : '<div class="empty" style="padding:20px">No matches yet.</div>';
+  $('#pmBody').innerHTML = ''
+    + '<div class="pm-head">'
+    +   '<img class="pm-av" src="' + avatar + '" alt="">'
+    +   '<div><div class="pm-name">' + esc(p.discord_name || 'UNKNOWN') + '</div>'
+    +   '<div class="pm-sub">Discord <code>' + esc(p.user_id) + '</code>'
+    +   (p.steam_name ? ' · Steam <code>' + esc(p.steam_name) + '</code>' : '')
+    +   (p.steam_id ? ' · ID64 <code>' + esc(p.steam_id) + '</code>' : '')
+    +   '<br>Registered ' + esc(String(p.registered_at || '').slice(0, 19))
+    +   ' · ' + (p.verified ? '✅ Verified' : '❌ Not verified')
+    +   '</div></div>'
+    + '</div>'
+    + '<div class="pm-stats">'
+    +   '<div class="pm-stat"><div class="mk">LEVEL</div><div class="mv">' + xp.level + '</div></div>'
+    +   '<div class="pm-stat"><div class="mk">XP</div><div class="mv">' + xp.xp + '</div></div>'
+    +   '<div class="pm-stat"><div class="mk">E-COINS</div><div class="mv">' + (xp.coins||0) + '</div></div>'
+    +   '<div class="pm-stat"><div class="mk">RANK</div><div class="mv">' + (d.rank ? '#' + d.rank : '—') + '</div></div>'
+    + '</div>'
+    + '<div class="pm-bar"><div class="pm-bar-lbl">LEVEL ' + xp.level + ' → ' + (xp.level + 1) + ' · ' + into + '/' + need + ' XP</div>'
+    +   '<div class="pm-prog"><i style="width:' + pct + '%"></i></div></div>'
+    + '<div class="pm-stats" style="margin-top:14px">'
+    +   '<div class="pm-stat"><div class="mk">WINS</div><div class="mv">' + (d.wins||0) + '</div></div>'
+    +   '<div class="pm-stat"><div class="mk">LOSSES</div><div class="mv">' + (d.losses||0) + '</div></div>'
+    +   '<div class="pm-stat"><div class="mk">W/L</div><div class="mv">' + (d.losses ? (d.wins/d.losses).toFixed(2) : '∞') + '</div></div>'
+    + '</div>'
+    + '<div class="pm-matches"><div class="mk" style="margin-bottom:8px">LAST 10 MATCHES</div>' + matchRows + '</div>';
 }
 
 let pollStarted = false;
@@ -866,11 +871,8 @@ function startPolling(){
   pollStarted = true;
   setInterval(async () => {
     if (document.visibilityState !== 'visible' || !S.live) return;
-    const prevTop = S.topMatchId;
-    try{ await refreshData(); setLive(true); renderAll();
-      const fresh = S.matches.filter(m => Number(m.id) > prevTop).sort((a, b) => Number(a.id) - Number(b.id));
-      for (const m of fresh) feedLine(m, true);
-    }catch(e){ setLive(false); renderAll(); }
+    try{ await refreshData(); setLive(true); renderAll(); }
+    catch(e){ setLive(false); renderAll(); }
   }, 30000);
 }
 
@@ -879,21 +881,20 @@ function refreshTournamentOptions(preselect){
   const sel = $('#mTournament');
   const mode = getMode();
   const opts = S.tournaments.filter(t => t.mode === mode && t.status === 'open');
-  if (!opts.length){ sel.innerHTML = '<option value="">— no open ' + esc(mode) + ' tournaments —</option>'; return; }
+  if (!opts.length){ sel.innerHTML = '<option value="">— no open ' + esc(mode) + ' —</option>'; return; }
   sel.innerHTML = opts.map(t => '<option value="' + Number(t.id) + '">' + esc(t.name) + ' · ' + fmtStarts(t.starts_at) + '</option>').join('');
   if (preselect != null && opts.some(t => Number(t.id) === Number(preselect))) sel.value = String(Number(preselect));
 }
 function setStep(n){
   $('#mStep1').hidden = n !== 1; $('#mStep2').hidden = n !== 2;
-  $('#mStepLbl').textContent = n === 1 ? 'STEP 1 OF 3 · FILL IN YOUR DETAILS' : 'STEP 2 OF 3 · CONFIRMED — STEAM VERIFY NEXT';
+  $('#mStepLbl').textContent = n === 1 ? 'STEP 1 OF 2 · FILL IN' : 'STEP 2 · CONFIRMED';
 }
 function openModal(mode, tid){
-  ensureAC(); setStep(1); $('#mErr').classList.remove('show');
+  setStep(1); $('#mErr').classList.remove('show');
   if (mode && ['1v1','2v2','5v5'].includes(mode)){ const r = document.querySelector('input[name="mode"][value="' + mode + '"]'); if (r) r.checked = true; }
   refreshTournamentOptions(tid);
   $('#mDiscordId').value = ''; $('#mUsername').value = ''; $('#mTerms').checked = false;
   $('#modalWrap').classList.add('open'); document.body.classList.add('noscroll');
-  setTimeout(() => $('#mDiscordId').focus(), 60);
 }
 function closeModal(){ $('#modalWrap').classList.remove('open'); document.body.classList.remove('noscroll'); }
 function modalFail(msg, shakeSel){
@@ -902,38 +903,32 @@ function modalFail(msg, shakeSel){
 }
 async function onRegisterSubmit(e){
   e.preventDefault(); $('#mErr').classList.remove('show');
-  const id    = $('#mDiscordId').value.trim();
+  const id = $('#mDiscordId').value.trim();
   const uname = $('#mUsername').value.trim();
-  const mode  = getMode();
-  const tid   = $('#mTournament').value;
+  const mode = getMode();
+  const tid = $('#mTournament').value;
   const terms = $('#mTerms').checked;
-  const btn   = $('#mSubmit');
-  if (!/^\d{17,20}$/.test(id))  return modalFail('INVALID DISCORD ID — must be 17–20 digits', '#mDiscordId');
-  if (!tid)                     return modalFail('SELECT A TOURNAMENT', '#mTournament');
-  if (!terms)                   return modalFail('YOU MUST ACCEPT THE TERMS TO REGISTER', '#mTerms');
+  const btn = $('#mSubmit');
+  if (!/^\d{17,20}$/.test(id)) return modalFail('INVALID DISCORD ID', '#mDiscordId');
+  if (!tid) return modalFail('SELECT A TOURNAMENT', '#mTournament');
+  if (!terms) return modalFail('ACCEPT THE TERMS', '#mTerms');
   btn.disabled = true;
   try{
-    if (!S.live) throw new Error('GRID OFFLINE — try again later');
-    btn.textContent = 'CHECKING GUILD…';
-    let g = null; try{ g = await api('/api/discord/' + id); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
-    if (g.status !== 503){
-      if (g.ok && g.data && g.data.in_guild === false) throw new Error('NOT IN GUILD — join the Discord first');
-      if (!g.ok) throw new Error('DISCORD CHECK FAILED (' + g.status + ')');
-    }
-    btn.textContent = 'SCANNING BANS…';
-    let b = null; try{ b = await api('/api/bans/' + id); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
-    if (b.status === 200) throw new Error('YOU ARE BANNED FROM REGISTERING' + (b.data && b.data.reason ? ' — ' + b.data.reason : ''));
-    btn.textContent = 'REGISTERING…';
+    let g = await api('/api/discord/' + id).catch(() => null);
+    if (g && g.status !== 503 && g.ok && g.data && g.data.in_guild === false)
+      throw new Error('NOT IN GUILD — join the Discord first');
+    let b = await api('/api/bans/' + id).catch(() => null);
+    if (b && b.status === 200) throw new Error('YOU ARE BANNED FROM REGISTERING');
     const payload = '{"discord_id": ' + id + ', "discord_username": ' + JSON.stringify(uname) + ', "mode": ' + JSON.stringify(mode) + '}';
-    let r = null; try{ r = await api('/api/tournaments/' + tid + '/register', { method:'POST', body: payload }); }catch(_){ throw new Error('GRID OFFLINE — try again later'); }
+    const r = await api('/api/tournaments/' + tid + '/register', { method:'POST', body: payload });
     if (r.ok && r.data && r.data.status === 'registered'){
-      $('#mRegId').textContent = 'REG ID #' + (r.data.registration_id ?? '—') + ' · ' + mode.toUpperCase() + ' SLOT SECURED';
+      $('#mRegId').textContent = 'REG #' + (r.data.registration_id ?? '—') + ' · ' + mode.toUpperCase();
       $('#mSteam').href = CFG.API_BASE + '/auth/steam?discord_id=' + id;
       $('#mDiscord').href = CFG.DISCORD_INVITE;
       setStep(2); toast('REGISTRATION CONFIRMED', 'ok');
-    } else throw new Error((r.data && r.data.detail) ? r.data.detail : 'REGISTRATION FAILED (' + r.status + ')');
+    } else throw new Error((r.data && r.data.detail) ? r.data.detail : 'FAILED');
   }catch(ex){ modalFail(ex.message || 'REGISTRATION FAILED'); }
-  finally { btn.disabled = false; btn.textContent = 'VERIFY DISCORD ►'; }
+  finally { btn.disabled = false; btn.textContent = 'VERIFY ►'; }
 }
 function showScreen(id){
   $$('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + id));
@@ -945,45 +940,39 @@ function bindUI(){
   $$('.nav-btn').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.screen)));
   $('#burger').addEventListener('click', () => toggleDrawer(true));
   $('#backdrop').addEventListener('click', () => toggleDrawer(false));
-  $('#retryBtn').addEventListener('click', async () => {
-    const b = $('#retryBtn'); b.disabled = true; b.textContent = '⟳ SYNCING…';
-    await loadAll(); b.disabled = false; b.textContent = '⟳ RECONNECT';
-  });
-  const sndBtn = $('#sndBtn');
-  sndBtn.addEventListener('click', () => {
-    S.snd = !S.snd; sndBtn.textContent = S.snd ? 'SND:ON' : 'SND:OFF'; sndBtn.setAttribute('aria-pressed', String(S.snd));
-    if (S.snd){ ensureAC(); beep(660, .06); }
-  });
+  $('#retryBtn').addEventListener('click', async () => { const b = $('#retryBtn'); b.disabled = true; await loadAll(); b.disabled = false; });
   $('#tbRegister').addEventListener('click', () => openModal());
   $('#ctaRegister').addEventListener('click', () => openModal());
   $('#mClose').addEventListener('click', closeModal);
   $('#mCancel').addEventListener('click', closeModal);
   $('#mClose2').addEventListener('click', closeModal);
   $('#modalWrap').addEventListener('click', e => { if (e.target === $('#modalWrap')) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeModal(); toggleDrawer(false); } });
+  $('#pmWrap').addEventListener('click', e => { if (e.target === $('#pmWrap')) $('#pmWrap').style.display = 'none'; });
+  $('#pmClose').addEventListener('click', () => $('#pmWrap').style.display = 'none');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeModal(); toggleDrawer(false); $('#pmWrap').style.display = 'none'; } });
   $('#regForm').addEventListener('submit', onRegisterSubmit);
   document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => refreshTournamentOptions()));
   $('#modesGrid').addEventListener('click', e => {
     const b = e.target.closest('.join'); if (!b || b.disabled) return;
     openModal(b.dataset.mode, Number(b.dataset.id));
   });
+  // Leaderboard search
+  $('#lbSearch').addEventListener('input', e => { S.lbFilter = e.target.value.trim().toLowerCase(); renderRankings(); });
+  // Leaderboard row click → profile
+  $('#rankWrap').addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-uid]'); if (!tr) return;
+    openProfile(Number(tr.dataset.uid));
+  });
   $('#adminLink').href = CFG.ADMIN_URL;
   $('#adminLinkFoot').href = CFG.ADMIN_URL;
   $$('.js-discord').forEach(a => a.href = CFG.DISCORD_INVITE);
 }
 async function init(){
-  const ov = $('#bios');
-  setTimeout(() => { try{ ov.remove(); }catch(e){} }, 4000);
   try{
-    if (location.protocol === 'file:') toast('SERVE OVER HTTP (e.g. localhost:5500) — file:// will not fetch the API', 'error');
     bindUI(); buildMarquee(); startClock(); tickCountdown();
-    const boot = S.reducedMotion ? Promise.resolve((() => { try{ ov.remove(); }catch(e){} })()) : bootSequence();
-    await Promise.all([boot, loadAll()]);
+    await loadAll();
     startPolling();
-  }catch(err){
-    try{ ov.remove(); }catch(e){}
-    toast('BOOT FAULT — ' + (err && err.message ? err.message : 'UNKNOWN'), 'error');
-  }
+  }catch(err){ toast('BOOT FAULT — ' + (err && err.message ? err.message : 'UNKNOWN'), 'error'); }
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
