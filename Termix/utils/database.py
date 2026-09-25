@@ -47,6 +47,7 @@ async def init_db():
             user_id INTEGER PRIMARY KEY,
             discord_name TEXT,
             steam_id TEXT,
+            steam_name TEXT DEFAULT '',
             verified INTEGER DEFAULT 0,
             registered_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
@@ -65,6 +66,7 @@ async def init_db():
             guild_id INTEGER,
             xp INTEGER DEFAULT 0,
             level INTEGER DEFAULT 0,
+            coins INTEGER DEFAULT 0,
             PRIMARY KEY (user_id, guild_id)
         )''')
         await c.execute('''CREATE TABLE IF NOT EXISTS bans (
@@ -107,7 +109,21 @@ async def init_db():
             discord_username TEXT,
             mode TEXT,
             status TEXT DEFAULT 'pending',
+            checked_in INTEGER DEFAULT 0,
+            checked_in_at TEXT,
             registered_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
+        await c.execute('''CREATE TABLE IF NOT EXISTS pending_matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            winner_id INTEGER,
+            loser_id INTEGER,
+            score TEXT,
+            match_name TEXT DEFAULT '',
+            match_map TEXT DEFAULT '',
+            winner_confirmed INTEGER DEFAULT 0,
+            loser_confirmed INTEGER DEFAULT 0,
+            reported_by INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
         await c.execute('''CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
@@ -118,35 +134,33 @@ async def init_db():
             owner_id INTEGER NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
+        await c.execute('''CREATE TABLE IF NOT EXISTS catcher_channels (
+            channel_id INTEGER PRIMARY KEY,
+            guild_id INTEGER NOT NULL,
+            set_by INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )''')
 
-        # Migrations for old DBs
+        # Migrations
         await _ensure_column(c, "matches",     "match_name", "TEXT DEFAULT ''")
         await _ensure_column(c, "matches",     "match_map",  "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_extra",      "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_image_url",  "TEXT DEFAULT ''")
         await _ensure_column(c, "tournaments", "prize_market_url", "TEXT DEFAULT ''")
         await _ensure_column(c, "bans",        "steam_id",         "TEXT DEFAULT ''")
+        await _ensure_column(c, "players",     "steam_name",       "TEXT DEFAULT ''")
+        await _ensure_column(c, "xp",          "coins",            "INTEGER DEFAULT 0")
+        await _ensure_column(c, "tournament_registrations", "checked_in",    "INTEGER DEFAULT 0")
+        await _ensure_column(c, "tournament_registrations", "checked_in_at", "TEXT")
 
-        # Backfill: any old Discord ban → also create a steam ban row if the player has a steam id
+        # Backfill steam_name from existing steam_id
         try:
-            result = await c.execute(
-                '''SELECT b.user_id, p.steam_id
-                   FROM bans b
-                   LEFT JOIN players p ON p.user_id = b.user_id
-                   WHERE (b.steam_id IS NULL OR b.steam_id = '')
-                     AND p.steam_id IS NOT NULL AND p.steam_id != '' '''
+            await c.execute(
+                "UPDATE players SET steam_name = discord_name "
+                "WHERE steam_name = '' AND steam_id IS NOT NULL AND steam_id != ''"
             )
-            for uid, sid in result.rows:
-                await c.execute('UPDATE bans SET steam_id = ? WHERE user_id = ?', [sid, uid])
-                await c.execute(
-                    '''INSERT INTO steam_bans (steam_id, reason, banned_by, linked_discord_id)
-                       SELECT ?, reason, banned_by, user_id FROM bans WHERE user_id = ?
-                       ON CONFLICT(steam_id) DO NOTHING''',
-                    [sid, uid],
-                )
-                print(f"✅ Schema: backfilled steam_ban for {sid}")
-        except Exception as e:
-            print(f"[db] steam ban backfill skipped: {e}")
+        except Exception:
+            pass
 
 
 # ─────────────────────────────────────────────
@@ -194,7 +208,43 @@ async def clear_leaderboard_message_id(guild_id: int):
 
 
 # ─────────────────────────────────────────────
-# Voice channels (temp VCs)
+# Catcher channels
+# ─────────────────────────────────────────────
+async def add_catcher_channel(channel_id: int, guild_id: int, set_by: int):
+    async with _client() as c:
+        await c.execute(
+            '''INSERT INTO catcher_channels (channel_id, guild_id, set_by)
+               VALUES (?, ?, ?)
+               ON CONFLICT(channel_id) DO UPDATE SET guild_id = excluded.guild_id''',
+            [channel_id, guild_id, set_by],
+        )
+
+
+async def remove_catcher_channel(channel_id: int):
+    async with _client() as c:
+        await c.execute('DELETE FROM catcher_channels WHERE channel_id = ?', [channel_id])
+
+
+async def get_catcher_channels(guild_id: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT channel_id FROM catcher_channels WHERE guild_id = ?',
+            [guild_id],
+        )
+        return [r[0] for r in result.rows]
+
+
+async def is_catcher_channel(channel_id: int) -> bool:
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT 1 FROM catcher_channels WHERE channel_id = ? LIMIT 1',
+            [channel_id],
+        )
+        return bool(result.rows)
+
+
+# ─────────────────────────────────────────────
+# Voice channels
 # ─────────────────────────────────────────────
 async def add_temp_vc(channel_id: int, owner_id: int):
     async with _client() as c:
@@ -241,23 +291,24 @@ async def get_all_temp_vcs():
 # ─────────────────────────────────────────────
 # Players
 # ─────────────────────────────────────────────
-async def add_player(user_id, discord_name, steam_id, verified=False):
+async def add_player(user_id, discord_name, steam_id, verified=False, steam_name=""):
     async with _client() as c:
         await c.execute(
-            '''INSERT INTO players (user_id, discord_name, steam_id, verified)
-               VALUES (?, ?, ?, ?)
+            '''INSERT INTO players (user_id, discord_name, steam_id, steam_name, verified)
+               VALUES (?, ?, ?, ?, ?)
                ON CONFLICT(user_id) DO UPDATE SET
-                   discord_name = excluded.discord_name,
+                   discord_name = COALESCE(NULLIF(excluded.discord_name,''), players.discord_name),
                    steam_id     = excluded.steam_id,
+                   steam_name   = COALESCE(NULLIF(excluded.steam_name,''), players.steam_name),
                    verified     = excluded.verified''',
-            [user_id, discord_name, steam_id, int(bool(verified))],
+            [user_id, discord_name or "", steam_id, steam_name or "", int(bool(verified))],
         )
 
 
 async def get_player(user_id):
     async with _client() as c:
         result = await c.execute(
-            'SELECT user_id, discord_name, steam_id, verified, registered_at '
+            'SELECT user_id, discord_name, steam_id, steam_name, verified, registered_at '
             'FROM players WHERE user_id = ?',
             [user_id],
         )
@@ -266,14 +317,17 @@ async def get_player(user_id):
         r = result.rows[0]
         return {
             "user_id": r[0], "discord_name": r[1], "steam_id": r[2],
-            "verified": bool(r[3]), "registered_at": r[4],
+            "steam_name": r[3] or "", "verified": bool(r[4]),
+            "registered_at": r[5],
         }
 
 
 async def get_player_by_steam_id(steam_id: str):
+    if not steam_id:
+        return None
     async with _client() as c:
         result = await c.execute(
-            'SELECT user_id, discord_name, steam_id, verified, registered_at '
+            'SELECT user_id, discord_name, steam_id, steam_name, verified, registered_at '
             'FROM players WHERE steam_id = ? LIMIT 1',
             [steam_id],
         )
@@ -282,15 +336,19 @@ async def get_player_by_steam_id(steam_id: str):
         r = result.rows[0]
         return {
             "user_id": r[0], "discord_name": r[1], "steam_id": r[2],
-            "verified": bool(r[3]), "registered_at": r[4],
+            "steam_name": r[3] or "", "verified": bool(r[4]),
+            "registered_at": r[5],
         }
 
 
 async def get_all_players():
     async with _client() as c:
-        result = await c.execute('SELECT user_id, discord_name, steam_id, verified FROM players')
+        result = await c.execute(
+            'SELECT user_id, discord_name, steam_id, steam_name, verified FROM players'
+        )
         return [
-            {"user_id": r[0], "discord_name": r[1], "steam_id": r[2], "verified": bool(r[3])}
+            {"user_id": r[0], "discord_name": r[1], "steam_id": r[2],
+             "steam_name": r[3] or "", "verified": bool(r[4])}
             for r in result.rows
         ]
 
@@ -345,18 +403,101 @@ async def get_match_history(user_id, limit=10):
         return [tuple(r) for r in result.rows]
 
 
+async def get_player_record(user_id):
+    """(wins, losses) for a user."""
+    async with _client() as c:
+        wins = await c.execute('SELECT COUNT(*) FROM matches WHERE winner_id = ?', [user_id])
+        losses = await c.execute(
+            'SELECT COUNT(*) FROM matches WHERE (player1_id = ? OR player2_id = ?) AND winner_id != ?',
+            [user_id, user_id, user_id],
+        )
+        return (int(wins.rows[0][0] or 0), int(losses.rows[0][0] or 0))
+
+
 # ─────────────────────────────────────────────
-# XP / Leaderboard
+# Pending matches (score confirmation)
+# ─────────────────────────────────────────────
+async def add_pending_match(winner_id, loser_id, score, match_name, match_map, reported_by):
+    async with _client() as c:
+        # De-dup: if an existing pending exists between these two, replace it
+        await c.execute(
+            '''DELETE FROM pending_matches
+               WHERE (winner_id=? AND loser_id=?) OR (winner_id=? AND loser_id=?)''',
+            [winner_id, loser_id, loser_id, winner_id],
+        )
+        result = await c.execute(
+            '''INSERT INTO pending_matches
+               (winner_id, loser_id, score, match_name, match_map, reported_by)
+               VALUES (?, ?, ?, ?, ?, ?)''',
+            [winner_id, loser_id, score, match_name or "", match_map or "", reported_by],
+        )
+        return result.last_insert_rowid
+
+
+async def get_pending_match(pid: int):
+    async with _client() as c:
+        result = await c.execute(
+            'SELECT id, winner_id, loser_id, score, match_name, match_map, '
+            'winner_confirmed, loser_confirmed, reported_by, created_at '
+            'FROM pending_matches WHERE id = ?',
+            [pid],
+        )
+        if not result.rows:
+            return None
+        r = result.rows[0]
+        return {
+            "id": r[0], "winner_id": r[1], "loser_id": r[2],
+            "score": r[3], "match_name": r[4] or "", "match_map": r[5] or "",
+            "winner_confirmed": bool(r[6]), "loser_confirmed": bool(r[7]),
+            "reported_by": r[8], "created_at": r[9],
+        }
+
+
+async def confirm_pending_match(pid: int, user_id: int):
+    """Mark user's confirmation. Returns (ok, status_string)."""
+    pm = await get_pending_match(pid)
+    if not pm:
+        return False, "not_found"
+    if user_id == pm["winner_id"]:
+        if pm["winner_confirmed"]:
+            return True, "already"
+        async with _client() as c:
+            await c.execute('UPDATE pending_matches SET winner_confirmed = 1 WHERE id = ?', [pid])
+    elif user_id == pm["loser_id"]:
+        if pm["loser_confirmed"]:
+            return True, "already"
+        async with _client() as c:
+            await c.execute('UPDATE pending_matches SET loser_confirmed = 1 WHERE id = ?', [pid])
+    else:
+        return False, "not_participant"
+
+    pm = await get_pending_match(pid)
+    if pm["winner_confirmed"] and pm["loser_confirmed"]:
+        await add_match(pm["winner_id"], pm["loser_id"], pm["score"],
+                        pm["match_name"], pm["match_map"])
+        async with _client() as c:
+            await c.execute('DELETE FROM pending_matches WHERE id = ?', [pid])
+        return True, "both_confirmed"
+    return True, "one_confirmed"
+
+
+async def reject_pending_match(pid: int):
+    async with _client() as c:
+        await c.execute('DELETE FROM pending_matches WHERE id = ?', [pid])
+
+
+# ─────────────────────────────────────────────
+# XP / Leaderboard / Coins
 # ─────────────────────────────────────────────
 async def get_leaderboard(guild_id, limit=20):
     async with _client() as c:
         sql = (
-            'SELECT user_id, xp, level FROM xp WHERE guild_id = ? '
+            'SELECT user_id, xp, level, coins FROM xp WHERE guild_id = ? '
             f'ORDER BY xp DESC LIMIT {int(limit)}'
         )
         result = await _execute(c, sql, [guild_id])
         return [
-            {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2]}
+            {"rank": i, "user_id": r[0], "xp": r[1], "level": r[2], "coins": r[3] or 0}
             for i, r in enumerate(result.rows, 1)
         ]
 
@@ -364,18 +505,41 @@ async def get_leaderboard(guild_id, limit=20):
 async def get_global_leaderboard(limit=10):
     async with _client() as c:
         sql = (
-            'SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level '
+            'SELECT user_id, SUM(xp) AS total_xp, MAX(level) AS level, SUM(coins) AS total_coins '
             'FROM xp GROUP BY user_id ORDER BY total_xp DESC '
             f'LIMIT {int(limit)}'
         )
         result = await _execute(c, sql)
         return [
-            {"rank": i, "user_id": r[0], "xp": r[1] or 0, "level": r[2] or 1}
+            {"rank": i, "user_id": r[0], "xp": r[1] or 0,
+             "level": r[2] or 1, "coins": r[3] or 0}
             for i, r in enumerate(result.rows, 1)
         ]
 
 
-async def add_xp(user_id, guild_id, amount=10):
+async def get_user_xp(user_id, guild_id=None):
+    async with _client() as c:
+        if guild_id:
+            result = await c.execute(
+                'SELECT xp, level, coins FROM xp WHERE user_id = ? AND guild_id = ?',
+                [user_id, guild_id],
+            )
+            if not result.rows:
+                return {"xp": 0, "level": 0, "coins": 0}
+            r = result.rows[0]
+            return {"xp": r[0] or 0, "level": r[1] or 0, "coins": r[2] or 0}
+        result = await c.execute(
+            'SELECT SUM(xp), MAX(level), SUM(coins) FROM xp WHERE user_id = ?',
+            [user_id],
+        )
+        if not result.rows or result.rows[0][0] is None:
+            return {"xp": 0, "level": 0, "coins": 0}
+        r = result.rows[0]
+        return {"xp": r[0] or 0, "level": r[1] or 0, "coins": r[2] or 0}
+
+
+async def add_xp(user_id, guild_id, amount=10, coins_per_level=50):
+    """Add XP. Returns (xp, level, leveled_up, coins_earned)."""
     async with _client() as c:
         await _execute(
             c,
@@ -384,18 +548,28 @@ async def add_xp(user_id, guild_id, amount=10):
             [user_id, guild_id, amount, amount],
         )
         result = await _execute(c,
-            'SELECT xp FROM xp WHERE user_id = ? AND guild_id = ?',
+            'SELECT xp, coins FROM xp WHERE user_id = ? AND guild_id = ?',
             [user_id, guild_id])
         xp = result.rows[0][0] if result.rows else amount
-        level = int((xp / 100) ** 0.5)
+        coins = result.rows[0][1] if result.rows else 0
+
+        new_level = int((xp / 100) ** 0.5)
+        old_level = int(((xp - amount) / 100) ** 0.5) if xp >= amount else 0
+
+        coins_earned = 0
+        leveled_up = new_level > old_level and new_level > 0
+        if leveled_up:
+            coins_earned = coins_per_level * (new_level - old_level)
+
         await _execute(c,
-            'UPDATE xp SET level = ? WHERE user_id = ? AND guild_id = ?',
-            [level, user_id, guild_id])
-        return xp, level
+            'UPDATE xp SET level = ?, coins = coins + ? WHERE user_id = ? AND guild_id = ?',
+            [new_level, coins_earned, user_id, guild_id])
+
+        return xp, new_level, leveled_up, coins_earned
 
 
 # ─────────────────────────────────────────────
-# Wins / Winstreak stats
+# Wins / Winstreaks
 # ─────────────────────────────────────────────
 async def get_wins_leaderboard(limit=10):
     async with _client() as c:
@@ -409,7 +583,6 @@ async def get_wins_leaderboard(limit=10):
 
 
 async def get_winstreaks(limit=10):
-    """Current winstreak per player — walks each player's match history from newest."""
     async with _client() as c:
         result = await c.execute(
             'SELECT winner_id, player1_id, player2_id '
@@ -439,12 +612,10 @@ async def get_winstreaks(limit=10):
 
 
 # ─────────────────────────────────────────────
-# Bans (Discord + Steam)
+# Bans
 # ─────────────────────────────────────────────
 async def add_ban(user_id, reason, banned_by):
-    """Ban a Discord user. Also auto-bans their linked Steam ID (if any)."""
     async with _client() as c:
-        # Look up the player's steam_id, if they have one
         p = await c.execute('SELECT steam_id FROM players WHERE user_id = ?', [user_id])
         steam_id = (p.rows[0][0] if p.rows and p.rows[0][0] else "") or ""
 
@@ -470,7 +641,6 @@ async def add_ban(user_id, reason, banned_by):
 
 
 async def remove_ban(user_id):
-    """Unban a Discord user + their linked Steam ban (if any)."""
     async with _client() as c:
         p = await c.execute('SELECT steam_id FROM bans WHERE user_id = ?', [user_id])
         steam_id = (p.rows[0][0] if p.rows and p.rows[0][0] else "") or ""
@@ -492,7 +662,7 @@ async def get_ban(user_id):
                 "steam_id": r[3] or "", "banned_at": r[4]}
 
 
-async def add_steam_ban(steam_id: str, reason: str, banned_by: int, linked_discord_id: int = 0):
+async def add_steam_ban(steam_id, reason, banned_by, linked_discord_id=0):
     async with _client() as c:
         await c.execute(
             '''INSERT INTO steam_bans (steam_id, reason, banned_by, linked_discord_id)
@@ -505,12 +675,12 @@ async def add_steam_ban(steam_id: str, reason: str, banned_by: int, linked_disco
         )
 
 
-async def remove_steam_ban(steam_id: str):
+async def remove_steam_ban(steam_id):
     async with _client() as c:
         await c.execute('DELETE FROM steam_bans WHERE steam_id = ?', [steam_id])
 
 
-async def get_steam_ban(steam_id: str):
+async def get_steam_ban(steam_id):
     if not steam_id:
         return None
     async with _client() as c:
@@ -526,7 +696,7 @@ async def get_steam_ban(steam_id: str):
                 "linked_discord_id": r[3], "banned_at": r[4]}
 
 
-async def get_all_steam_bans(limit: int = 30):
+async def get_all_steam_bans(limit=30):
     async with _client() as c:
         result = await c.execute(
             'SELECT steam_id, reason, banned_by, linked_discord_id, banned_at '
@@ -671,7 +841,7 @@ async def get_all_tournaments():
         ]
 
 
-async def register_for_tournament(tid: int, discord_id: int, username: str, mode: str):
+async def register_for_tournament(tid, discord_id, username, mode):
     async with _client() as c:
         existing = await c.execute(
             'SELECT id FROM tournament_registrations WHERE tournament_id = ? AND discord_id = ?',
@@ -691,14 +861,15 @@ async def register_for_tournament(tid: int, discord_id: int, username: str, mode
 async def get_tournament_registrations(tid: int):
     async with _client() as c:
         result = await c.execute(
-            'SELECT id, discord_id, discord_username, mode, status, registered_at '
+            'SELECT id, discord_id, discord_username, mode, status, checked_in, registered_at '
             'FROM tournament_registrations WHERE tournament_id = ? '
             'ORDER BY registered_at DESC',
             [tid],
         )
         return [
             {"id": r[0], "discord_id": r[1], "discord_username": r[2] or "",
-             "mode": r[3] or "", "status": r[4] or "pending", "registered_at": r[5]}
+             "mode": r[3] or "", "status": r[4] or "pending",
+             "checked_in": bool(r[5]), "registered_at": r[6]}
             for r in result.rows
         ]
 
@@ -706,8 +877,8 @@ async def get_tournament_registrations(tid: int):
 async def get_registration(rid: int):
     async with _client() as c:
         result = await c.execute(
-            'SELECT id, tournament_id, discord_id, discord_username, mode, status, registered_at '
-            'FROM tournament_registrations WHERE id = ?',
+            'SELECT id, tournament_id, discord_id, discord_username, mode, status, '
+            'checked_in, registered_at FROM tournament_registrations WHERE id = ?',
             [rid],
         )
         if not result.rows:
@@ -715,7 +886,8 @@ async def get_registration(rid: int):
         r = result.rows[0]
         return {"id": r[0], "tournament_id": r[1], "discord_id": r[2],
                 "discord_username": r[3] or "", "mode": r[4] or "",
-                "status": r[5] or "pending", "registered_at": r[6]}
+                "status": r[5] or "pending", "checked_in": bool(r[6]),
+                "registered_at": r[7]}
 
 
 async def set_registration_status(rid: int, status: str):
@@ -724,3 +896,32 @@ async def set_registration_status(rid: int, status: str):
             'UPDATE tournament_registrations SET status = ? WHERE id = ?',
             [status, rid],
         )
+
+
+async def set_registration_checked_in(tid: int, discord_id: int):
+    async with _client() as c:
+        await c.execute(
+            '''UPDATE tournament_registrations
+               SET checked_in = 1, checked_in_at = CURRENT_TIMESTAMP
+               WHERE tournament_id = ? AND discord_id = ?''',
+            [tid, discord_id],
+        )
+
+
+async def get_user_open_registrations(discord_id: int):
+    """Returns list of {tournament_id, name, starts_at} for open/live tournaments where user is approved."""
+    async with _client() as c:
+        result = await c.execute(
+            '''SELECT t.id, t.name, t.starts_at, r.status, r.checked_in
+               FROM tournament_registrations r
+               JOIN tournaments t ON t.id = r.tournament_id
+               WHERE r.discord_id = ?
+                 AND t.status IN ('open','live')
+               ORDER BY t.starts_at ASC''',
+            [discord_id],
+        )
+        return [
+            {"tournament_id": r[0], "name": r[1], "starts_at": r[2],
+             "status": r[3], "checked_in": bool(r[4])}
+            for r in result.rows
+        ]
