@@ -1,4 +1,4 @@
-# cogs/voice.py — Join-to-Create temp voice channels + /party commands
+# cogs/voice.py
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -6,7 +6,6 @@ import asyncio
 import config
 from utils import database as db
 
-# In-memory delay timers for cleanup: {channel_id: asyncio.Task}
 _cleanup_tasks: dict[int, asyncio.Task] = {}
 
 
@@ -14,7 +13,6 @@ class Voice(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # ─── ON VOICE STATE CHANGE ───
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         try:
@@ -24,21 +22,17 @@ class Voice(commands.Cog):
             print(f"[voice] on_voice_state_update error: {e}")
 
     async def _handle_join_to_create(self, member, before, after):
-        """When a user joins the designated 'join to create' VC, spawn their private VC."""
         if after.channel is None:
             return
         if after.channel.id != config.JOIN_TO_CREATE_VC_ID:
             return
         if before.channel and before.channel.id == after.channel.id:
-            return  # just mute/deaf change, no move
-
+            return
         guild = member.guild
         me = guild.me
         if not me.guild_permissions.manage_channels:
-            print("[voice] bot lacks Manage Channels — can't create temp VC")
             return
 
-        # Check if user already owns a live VC
         existing = await db.get_temp_vc_by_owner(member.id)
         if existing:
             ch = guild.get_channel(existing["channel_id"])
@@ -50,7 +44,6 @@ class Voice(commands.Cog):
                     pass
             await db.remove_temp_vc(existing["channel_id"])
 
-        # Category
         source_cat = after.channel.category
         category = None
         if config.TEMP_VC_CATEGORY_ID:
@@ -60,7 +53,6 @@ class Voice(commands.Cog):
         if category is None and source_cat is not None:
             category = source_cat
 
-        # Build permission overwrites
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(connect=False, view_channel=True),
             member: discord.PermissionOverwrite(
@@ -76,54 +68,42 @@ class Voice(commands.Cog):
             staff = guild.get_role(config.STAFF_ROLE_ID)
             if staff:
                 overwrites[staff] = discord.PermissionOverwrite(
-                    connect=True, view_channel=True, manage_channels=True, move_members=True,
+                    connect=True, view_channel=True,
+                    manage_channels=True, move_members=True,
                 )
 
         safe_name = member.display_name.strip()[:80] or member.name
-        channel_name = f"🔊 {safe_name}'s Team"
-
         try:
             new_ch = await guild.create_voice_channel(
-                name=channel_name,
-                category=category,
-                overwrites=overwrites,
+                name=f"🔊 {safe_name}'s Team",
+                category=category, overwrites=overwrites,
                 reason=f"Auto VC for {member}",
             )
-        except discord.Forbidden:
-            print("[voice] missing permission to create voice channel")
-            return
         except Exception as e:
-            print(f"[voice] create_voice_channel failed: {e}")
+            print(f"[voice] create failed: {e}")
             return
 
         await db.add_temp_vc(new_ch.id, member.id)
-
         try:
             await member.move_to(new_ch, reason="Join-to-create")
         except Exception as e:
             print(f"[voice] move_to failed: {e}")
 
     async def _handle_temp_vc_cleanup(self, member, before, after):
-        """Delete temp VCs that become empty (5s grace period to allow reconnects)."""
         if before.channel is None:
             return
-        # No channel change → nothing to do
         if after.channel is not None and before.channel.id == after.channel.id:
             return
-
         ch = before.channel
         owner_id = await db.get_temp_vc_owner(ch.id)
         if owner_id is None:
-            return  # not a temp VC
-
-        # If the channel still has users, cancel any pending cleanup
+            return
         if len(ch.members) > 0:
             task = _cleanup_tasks.pop(ch.id, None)
             if task and not task.done():
                 task.cancel()
             return
 
-        # Schedule a delayed delete
         async def delayed_delete(channel_id):
             try:
                 await asyncio.sleep(5)
@@ -146,7 +126,6 @@ class Voice(commands.Cog):
             finally:
                 _cleanup_tasks.pop(channel_id, None)
 
-        # Cancel previous task if any
         prev = _cleanup_tasks.pop(ch.id, None)
         if prev and not prev.done():
             prev.cancel()
@@ -161,14 +140,13 @@ class Voice(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         if user.bot:
-            await interaction.followup.send("❌ Can't invite bots to team VCs.", ephemeral=True)
+            await interaction.followup.send("❌ Can't invite bots.", ephemeral=True)
             return
 
         rec = await db.get_temp_vc_by_owner(interaction.user.id)
         if not rec:
             await interaction.followup.send(
-                "❌ You don't own a team voice channel.\n"
-                f"Join <#{config.JOIN_TO_CREATE_VC_ID}> to create one.",
+                f"❌ You don't own a team VC. Join <#{config.JOIN_TO_CREATE_VC_ID}> to create one.",
                 ephemeral=True,
             )
             return
@@ -178,11 +156,12 @@ class Voice(commands.Cog):
         if channel is None:
             await db.remove_temp_vc(rec["channel_id"])
             await interaction.followup.send(
-                "❌ Your team VC no longer exists. Rejoin the hub to create a new one.",
+                "❌ Your team VC no longer exists. Rejoin the hub.",
                 ephemeral=True,
             )
             return
 
+        # Grant permission
         try:
             await channel.set_permissions(
                 user,
@@ -191,13 +170,14 @@ class Voice(commands.Cog):
             )
         except discord.Forbidden:
             await interaction.followup.send(
-                "❌ Bot lacks **Manage Channels** to modify permissions.", ephemeral=True
+                "❌ Bot lacks **Manage Channels**.", ephemeral=True
             )
             return
         except Exception as e:
             await interaction.followup.send(f"❌ Error: `{e}`", ephemeral=True)
             return
 
+        # Try to move the user in
         moved = False
         if user.voice and user.voice.channel and user.voice.channel.id != channel.id:
             try:
@@ -206,17 +186,62 @@ class Voice(commands.Cog):
             except Exception as e:
                 print(f"[voice] invite move failed: {e}")
 
-        await interaction.followup.send(
-            f"✅ Invited {user.mention} to {channel.mention}."
-            + (" They were moved in." if moved else " They can join anytime."),
-            ephemeral=True,
+        # Edge case: user has their own temp VC (owner) — don't auto-move, just inform them via DM
+        user_own_vc = await db.get_temp_vc_by_owner(user.id)
+
+        # Build DM info
+        invite_dm_embed = discord.Embed(
+            title="🎧 ERVSE — Party Invitation",
+            description=(
+                f"**{interaction.user.display_name}** invited you to join their team VC "
+                f"{channel.mention}."
+            ),
+            color=0xFFB000,
         )
+        if user_own_vc:
+            invite_dm_embed.add_field(
+                name="Heads-up",
+                value="You currently own your own team VC. If you want to join, "
+                      "end your party first with `/party end`.",
+                inline=False,
+            )
+        if not moved:
+            invite_dm_embed.add_field(
+                name="How to join",
+                value=f"Join the VC manually: {channel.mention}",
+                inline=False,
+            )
+
+        # If moved automatically → NO DM (they already know, no spam)
+        dm_sent = False
+        if not moved:
+            try:
+                await user.send(embed=invite_dm_embed)
+                dm_sent = True
+            except discord.Forbidden:
+                pass
+            except Exception as e:
+                print(f"[voice] invite DM failed: {e}")
+
+        # Respond to inviter
+        if moved:
+            msg = f"✅ {user.mention} has been moved into {channel.mention}."
+        elif user_own_vc:
+            msg = (
+                f"ℹ️ {user.mention} owns their own VC — they've been informed via DM. "
+                f"They'll need to `/party end` before joining yours."
+            )
+        elif dm_sent:
+            msg = f"✅ {user.mention} has been invited and DM'd with details."
+        else:
+            msg = f"⚠️ {user.mention} couldn't be DM'd (DMs closed), but has access to {channel.mention}."
+
+        await interaction.followup.send(msg, ephemeral=True)
 
     @party.command(name="kick", description="Remove a user from your private team VC")
     @app_commands.describe(user="The user to kick")
     async def party_kick(self, interaction: discord.Interaction, user: discord.Member):
         await interaction.response.defer(ephemeral=True)
-
         rec = await db.get_temp_vc_by_owner(interaction.user.id)
         if not rec:
             await interaction.followup.send(
@@ -224,55 +249,45 @@ class Voice(commands.Cog):
                 ephemeral=True,
             )
             return
-
         channel = interaction.guild.get_channel(rec["channel_id"])
         if channel is None:
             await db.remove_temp_vc(rec["channel_id"])
             await interaction.followup.send("❌ Your team VC no longer exists.", ephemeral=True)
             return
-
         if user.id == interaction.user.id:
             await interaction.followup.send("❌ You can't kick yourself.", ephemeral=True)
             return
-
         try:
             await channel.set_permissions(user, overwrite=None, reason=f"Kicked by {interaction.user}")
         except Exception as e:
             await interaction.followup.send(f"❌ Error: `{e}`", ephemeral=True)
             return
-
         if user.voice and user.voice.channel and user.voice.channel.id == channel.id:
             try:
                 await user.move_to(None, reason="Kicked from team VC")
             except Exception:
                 pass
-
         await interaction.followup.send(f"✅ Removed {user.mention} from your VC.", ephemeral=True)
 
     @party.command(name="end", description="Close and delete your private team VC")
     async def party_end(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-
         rec = await db.get_temp_vc_by_owner(interaction.user.id)
         if not rec:
             await interaction.followup.send(
-                f"❌ You don't own a team VC. Join <#{config.JOIN_TO_CREATE_VC_ID}> to create one.",
-                ephemeral=True,
+                f"❌ You don't own a team VC.", ephemeral=True
             )
             return
-
         channel = interaction.guild.get_channel(rec["channel_id"])
         if channel is None:
             await db.remove_temp_vc(rec["channel_id"])
             await interaction.followup.send("✅ Cleaned up stale VC entry.", ephemeral=True)
             return
-
         try:
             await channel.delete(reason=f"Party ended by {interaction.user}")
         except Exception as e:
             await interaction.followup.send(f"❌ Could not delete: `{e}`", ephemeral=True)
             return
-
         await db.remove_temp_vc(rec["channel_id"])
         await interaction.followup.send("✅ Your team VC has been closed.", ephemeral=True)
 
@@ -290,7 +305,7 @@ class Voice(commands.Cog):
         channel = interaction.guild.get_channel(rec["channel_id"])
         if channel is None:
             await db.remove_temp_vc(rec["channel_id"])
-            await interaction.followup.send("❌ Your VC no longer exists — stale entry cleaned.", ephemeral=True)
+            await interaction.followup.send("❌ Your VC no longer exists.", ephemeral=True)
             return
         await interaction.followup.send(
             f"🎧 Your team VC: {channel.mention}\n"
