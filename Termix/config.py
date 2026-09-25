@@ -6,6 +6,7 @@ ANNOUNCE_CHANNEL_ID = 1550190762463993926            # ← auto-announce channel
 TICKET_CATEGORY_ID = 1550173868033970197             # ← category where tickets get created (optional, 0 = auto)
 SUPPORT_CHANNEL_ID = 1550173868033970197   # used by /ticket to redirect users
 LEADERBOARD_CHANNEL_ID = 1552679666027069465   # auto-leaderboard channel
+CATCHER_CHANNEL_ID = 1552883520886808576
 
 # ─── Voice channel auto-create ───
 JOIN_TO_CREATE_VC_ID   = 1550146105382010993   # users join this VC → private VC is created
@@ -13,10 +14,17 @@ TEMP_VC_CATEGORY_ID    = 1550149884466831390                    # optional: cate
 
 # category IDs
 MATCH_MEMBER_CATEGORY_ID = 1550174233521295460    # optional category only match-members can see
+
+# ─── Economy ───
+COINS_PER_LEVEL = 50          # E-coins granted every time you level up
+
 # ─── Role IDs ───
 STAFF_ROLE_ID = 1550151638877081731                  # ← role ID that can manage tickets + unregister
 VERIFIED_ROLE_ID = 1550152298246705272               # ← role given to verified players (optional)
 MATCH_MEMBER_ROLE_ID = 1550152298246705272   # role granted on approval
+
+# ─── Check-in ───
+CHECKIN_WINDOW_MIN = 30       # minutes before starts_at that check-in opens
 
 # ─── Ticket Settings ───
 TICKET_TYPES = {
