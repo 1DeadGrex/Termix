@@ -277,4 +277,25 @@ class Moderation(commands.Cog):
             new_channel = await ctx.channel.clone(reason=f"Nuke by {ctx.author}")
             await new_channel.edit(position=ctx.channel.position)
             await ctx.channel.delete(reason=f"Nuke by {ctx.author}")
-            try: await new_channel.send("
+            try: await new_channel.send("💣 **Channel nuked.**")
+            except Exception: pass
+        except Exception as e:
+            print(f"[moderation] nuke failed: {e}")
+            try: await ctx.send(f"❌ Nuke failed: `{type(e).__name__}`", delete_after=8)
+            except Exception: pass
+
+    # ─── PURGE ───
+    @commands.hybrid_command(name='purge', description='[Staff] Delete the last N messages')
+    @commands.has_permissions(manage_messages=True)
+    async def purge(self, ctx, amount: int = 10):
+        if amount < 1 or amount > 100:
+            await ctx.send("Amount must be 1–100.", ephemeral=True); return
+        try:
+            deleted = await ctx.channel.purge(limit=amount + 1)
+            await ctx.send(f"🧹 Deleted {len(deleted) - 1} messages.", delete_after=5)
+        except Exception as e:
+            await ctx.send(f"❌ Purge failed: `{type(e).__name__}`", ephemeral=True)
+
+
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))
